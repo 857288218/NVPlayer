@@ -29,6 +29,12 @@ android {
     }
 }
 
+repositories {
+    flatDir {
+        dirs 'libs', '../nicevideoplayer/libs'
+    }
+}
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
 //    androidTestCompile(rootProject.ext.dependencies.espresso, {

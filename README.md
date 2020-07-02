@@ -3,7 +3,7 @@
 [![](https://jitpack.io/v/xiaoyanger0825/NiceVieoPlayer.svg)](https://jitpack.io/#xiaoyanger0825/NiceVieoPlayer) [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16) [![作者](https://img.shields.io/badge/%E4%BD%9C%E8%80%85-xiaoyanger0825-orange.svg)](https://github.com/xiaoyanger0825)
 ### Features
 
- * 用IjkPlayer/MediaPlayer + TextureView封装，可切换IjkPlayer、MediaPlayer.
+ * 用IjkPlayer/MediaPlayer + TextureView封装，可切换IjkPlayer、MediaPlayer.支持https
  * 支持本地和网络视频播放.
  * 完美切换小窗口、全屏，可在RecyclerView中无缝全屏.
  * 手势滑动调节播放进度、亮度、声音.
