@@ -33,7 +33,7 @@
             android:textColor="@android:color/white"
             android:textSize="13sp"/>
     </LinearLayout>
-    <!--改变播放位置-->
+    <!--横屏改变播放位置-->
     <LinearLayout
         android:id="@+id/change_position"
         android:layout_width="wrap_content"
@@ -63,7 +63,7 @@
             android:max="100"
             android:progressDrawable="@drawable/pb_change"/>
     </LinearLayout>
-    <!--改变亮度-->
+    <!--横屏改变亮度-->
     <LinearLayout
         android:id="@+id/change_brightness"
         android:layout_width="wrap_content"
@@ -91,7 +91,7 @@
             android:progressDrawable="@drawable/pb_change"/>
 
     </LinearLayout>
-    <!--改变声音-->
+    <!--横屏改变声音-->
     <LinearLayout
         android:id="@+id/change_volume"
         android:layout_width="wrap_content"

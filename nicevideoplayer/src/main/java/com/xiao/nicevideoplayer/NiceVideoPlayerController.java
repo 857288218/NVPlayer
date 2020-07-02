@@ -46,6 +46,13 @@ public abstract class NiceVideoPlayerController
     }
 
     /**
+     * 是否重复播放,默认false
+     */
+    public boolean isLoopPlay() {
+        return false;
+    }
+
+    /**
      * 设置播放的视频的标题
      *
      * @param title 视频标题
@@ -72,7 +79,7 @@ public abstract class NiceVideoPlayerController
     public abstract void setLenght(long length);
 
     /**
-     * 当播放器的播放状态发生变化，在此方法中国你更新不同的播放状态的UI
+     * 当播放器的播放状态发生变化，在此方法中更新不同的播放状态的UI
      *
      * @param playState 播放状态：
      *                  <ul>
