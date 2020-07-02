@@ -46,13 +46,6 @@ public abstract class NiceVideoPlayerController
     }
 
     /**
-     * 是否重复播放,默认false
-     */
-    public boolean isLoopPlay() {
-        return false;
-    }
-
-    /**
      * 设置播放的视频的标题
      *
      * @param title 视频标题

@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -104,6 +105,7 @@ public class NiceVideoPlayer extends FrameLayout
     private int mBufferPercentage;
     private boolean continueFromLastPosition = true;
     private long skipToPosition;
+    private boolean isLoop;
 
     public NiceVideoPlayer(Context context) {
         this(context, null);
@@ -138,6 +140,10 @@ public class NiceVideoPlayer extends FrameLayout
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
         mContainer.addView(mController, params);
+    }
+
+    public void setLooping(boolean looping) {
+        isLoop = looping;
     }
 
     /**
@@ -400,6 +406,8 @@ public class NiceVideoPlayer extends FrameLayout
     private void openMediaPlayer() {
         // 屏幕常亮
         mContainer.setKeepScreenOn(true);
+        //设置是否循环播放
+        mMediaPlayer.setLooping(isLoop);
         // 设置监听
         mMediaPlayer.setOnPreparedListener(mOnPreparedListener);
         mMediaPlayer.setOnVideoSizeChangedListener(mOnVideoSizeChangedListener);

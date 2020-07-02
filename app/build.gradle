@@ -36,5 +36,5 @@ dependencies {
 //    })
     implementation project(':nicevideoplayer')
     implementation rootProject.ext.dependencies.recyclerview
-    implementation rootProject.ext.dependencies.glide
+    implementation "com.github.bumptech.glide:glide:4.9.0"
 }

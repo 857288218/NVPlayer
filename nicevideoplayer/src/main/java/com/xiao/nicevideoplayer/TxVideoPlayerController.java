@@ -144,11 +144,6 @@ public class TxVideoPlayerController
     }
 
     @Override
-    public boolean isLoopPlay() {
-        return true;
-    }
-
-    @Override
     public void setTitle(String title) {
         mTitle.setText(title);
     }
@@ -251,14 +246,10 @@ public class TxVideoPlayerController
                 mError.setVisibility(View.VISIBLE);
                 break;
             case NiceVideoPlayer.STATE_COMPLETED:
-                if (isLoopPlay()) {
-                    mRetry.performClick();
-                } else {
-                    cancelUpdateProgressTimer();
-                    setTopBottomVisible(false);
-                    mImage.setVisibility(View.VISIBLE);
-                    mCompleted.setVisibility(View.VISIBLE);
-                }
+                cancelUpdateProgressTimer();
+                setTopBottomVisible(false);
+                mImage.setVisibility(View.VISIBLE);
+                mCompleted.setVisibility(View.VISIBLE);
                 break;
         }
     }
