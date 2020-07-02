@@ -2,19 +2,20 @@ apply plugin: 'com.android.library'
 
 android {
 
-    compileSdkVersion rootProject.ext.android.compileSdkVersion
-    buildToolsVersion rootProject.ext.android.buildToolsVersion
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion rootProject.ext.android.minSdkVersion
-        targetSdkVersion rootProject.ext.android.targetSdkVersion
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.android.versionCode
         versionName rootProject.ext.android.versionName
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         ndk {
-            abiFilters 'armeabi', 'armeabi-v7a', 'x86'
+            abiFilters "armeabi-v7a", "arm64-v8a"
+//            abiFilters 'armeabi', 'armeabi-v7a', 'x86'
         }
     }
 
@@ -35,16 +36,12 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile(rootProject.ext.dependencies.espresso, {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    implementation rootProject.ext.dependencies.appcompatV7
-    implementation rootProject.ext.dependencies.junit
+    api "com.android.support:appcompat-v7:${supportLibVersion}"
     implementation 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8'
 //    compile 'tv.danmaku.ijk.media:ijkplayer-exo:0.8.3'
     implementation 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.8'
     implementation 'tv.danmaku.ijk.media:ijkplayer-armv5:0.8.8'
-//    compile 'tv.danmaku.ijk.media:ijkplayer-arm64:0.8.3'
+    implementation 'tv.danmaku.ijk.media:ijkplayer-arm64:0.8.8'
     implementation 'tv.danmaku.ijk.media:ijkplayer-x86:0.8.8'
 //    compile 'tv.danmaku.ijk.media:ijkplayer-x86_64:0.8.3'
 }
