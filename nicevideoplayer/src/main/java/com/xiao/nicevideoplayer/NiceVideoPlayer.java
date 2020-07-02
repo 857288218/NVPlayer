@@ -450,6 +450,7 @@ public class NiceVideoPlayer extends FrameLayout
         @Override
         public void onPrepared(IMediaPlayer mp) {
             mCurrentState = STATE_PREPARED;
+            //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("onPrepared ——> STATE_PREPARED");
             mp.start();
@@ -477,7 +478,7 @@ public class NiceVideoPlayer extends FrameLayout
     private IMediaPlayer.OnCompletionListener mOnCompletionListener
             = new IMediaPlayer.OnCompletionListener() {
         @Override
-        public void onCompletion(IMediaPlayer mp) {
+        public void onCompletion(IMediaPlayer mp) {  //设置了循环播放后，就不会再执行这个回调了
             mCurrentState = STATE_COMPLETED;
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("onCompletion ——> STATE_COMPLETED");

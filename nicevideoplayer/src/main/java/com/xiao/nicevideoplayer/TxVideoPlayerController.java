@@ -480,6 +480,7 @@ public class TxVideoPlayerController
 
     @Override
     protected void updateProgress() {
+        //这里更新当前进度文字和进度条可能会出现跳几秒的情况，暂时解决不了。市面上大部分app如西瓜视频也会出现
         long position = mNiceVideoPlayer.getCurrentPosition();
         long duration = mNiceVideoPlayer.getDuration();
         int bufferPercentage = mNiceVideoPlayer.getBufferPercentage();
