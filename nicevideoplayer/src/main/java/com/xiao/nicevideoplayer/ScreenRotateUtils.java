@@ -8,10 +8,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.provider.Settings;
 
-
-/**
- * Created by HRR on 2020/02/22.
- */
 public class ScreenRotateUtils {
     public static float orientationDirection;
     private static int DATA_X = 0;

@@ -21,10 +21,6 @@ import tv.danmaku.ijk.media.player.AndroidMediaPlayer;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
-/**
- * Created by XiaoJianjun on 2017/4/28.
- * 播放器
- */
 public class NiceVideoPlayer extends FrameLayout
         implements INiceVideoPlayer,
         TextureView.SurfaceTextureListener {

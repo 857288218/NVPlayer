@@ -34,13 +34,6 @@ android {
     }
 }
 
-//该模块中引入aar需要加入这个
-repositories {
-    flatDir {
-        dirs 'libs'
-    }
-}
-
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 

@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Created by XiaoJianjun on 2017/6/21.
  * 仿腾讯视频热点列表页播放器控制器.
  */
 public class TxVideoPlayerController

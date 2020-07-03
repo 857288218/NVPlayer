@@ -12,7 +12,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Created by XiaoJianjun on 2017/6/21.
  * 控制器抽象类
  */
 public abstract class NiceVideoPlayerController
