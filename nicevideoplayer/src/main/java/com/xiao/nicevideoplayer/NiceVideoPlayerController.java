@@ -101,7 +101,7 @@ public abstract class NiceVideoPlayerController
     protected abstract void onPlayModeChanged(int playMode);
 
     /**
-     * 重置控制器，将控制器恢复到初始状态。
+     * 重置控制器，将控制器UI恢复到初始状态。
      */
     protected abstract void reset();
 

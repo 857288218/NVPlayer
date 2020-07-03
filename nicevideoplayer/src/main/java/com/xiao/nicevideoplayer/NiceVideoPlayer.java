@@ -450,14 +450,15 @@ public class NiceVideoPlayer extends FrameLayout
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("onPrepared ——> STATE_PREPARED");
             mp.start();
-            // 从上次的保存位置播放
-            if (continueFromLastPosition) {
+            //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
+            if (skipToPosition != 0) {
+                // 跳到指定位置播放
+                mp.seekTo(skipToPosition);
+                skipToPosition = 0;
+            } else if (continueFromLastPosition) {
+                // 从上次的保存位置播放
                 long savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl);
                 mp.seekTo(savedPlayPosition);
-            }
-            // 跳到指定位置播放
-            if (skipToPosition != 0) {
-                mp.seekTo(skipToPosition);
             }
         }
     };
