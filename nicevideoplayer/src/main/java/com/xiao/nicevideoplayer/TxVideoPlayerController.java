@@ -472,6 +472,8 @@ public class TxVideoPlayerController
         if (mNiceVideoPlayer.isBufferingPaused() || mNiceVideoPlayer.isPaused()) {
             mNiceVideoPlayer.restart();
         }
+        // 为什么往前拖动进度条后，进度条还会往后退几秒：seek只支持关键帧，出现这个情况就是原始的视频文件中关键帧比较少，
+        // 播放器会在拖动的位置找最近的关键帧，然后在updateProgress(1秒更一次)时候根据CurrentPosition重新计算正确的progress，所以mSeek可能出现退几秒
         long position = (long) (mNiceVideoPlayer.getDuration() * seekBar.getProgress() / 100f);
         mNiceVideoPlayer.seekTo(position);
         startDismissTopBottomTimer();
@@ -479,7 +481,6 @@ public class TxVideoPlayerController
 
     @Override
     protected void updateProgress() {
-        //这里更新当前进度文字和进度条可能会出现跳几秒的情况，暂时解决不了。市面上大部分app如西瓜视频也会出现
         long position = mNiceVideoPlayer.getCurrentPosition();
         long duration = mNiceVideoPlayer.getDuration();
         int bufferPercentage = mNiceVideoPlayer.getBufferPercentage();
