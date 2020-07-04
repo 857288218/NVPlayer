@@ -1,4 +1,4 @@
-# NiceVieoPlayer
+# 基于NiceVieoPlayer做的扩展
 
 ### Features
 
