@@ -334,6 +334,8 @@ public class NiceVideoPlayer extends FrameLayout
             surfaceHolder = holder;
             openMediaPlayer();
         } else {
+            //todo(rjq) 切后台暂停后，回到前台不主动播放，会黑屏。原因是activity onPause后，SurfaceView会被销毁，会调surfaceDestroyed()方法
+            //下面代码可以解决切后台暂停后，回到前台主动播放黑屏问题，但是不能解决上述问题
             mMediaPlayer.setDisplay(surfaceHolder);
         }
     }

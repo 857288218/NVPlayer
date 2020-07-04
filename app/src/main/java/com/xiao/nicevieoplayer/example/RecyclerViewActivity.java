@@ -72,7 +72,13 @@ public class RecyclerViewActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
+        NiceVideoPlayerManager.instance().suspendNiceVideoPlayer();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+//        NiceVideoPlayerManager.instance().resumeNiceVideoPlayer();
     }
 
     @Override
