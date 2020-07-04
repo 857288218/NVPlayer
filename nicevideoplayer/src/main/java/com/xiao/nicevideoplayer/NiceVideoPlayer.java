@@ -340,7 +340,7 @@ public class NiceVideoPlayer extends FrameLayout
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        mMediaPlayer.setDisplay(null);
+
     }
 
     private void openMediaPlayer() {
