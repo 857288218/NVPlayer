@@ -7,7 +7,7 @@
     android:orientation="vertical"
     tools:context="com.xiao.nicevieoplayer.example.ChangeClarityActivity">
 
-    <com.xiao.nicevideoplayer.NiceVideoPlayer
+    <com.xiao.nicevideoplayer.SurfaceVideoPlayer
         android:id="@+id/nice_video_player"
         android:layout_width="match_parent"
         android:layout_height="180dp"

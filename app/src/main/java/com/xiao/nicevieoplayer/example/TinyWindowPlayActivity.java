@@ -1,13 +1,12 @@
 package com.xiao.nicevieoplayer.example;
 
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.xiao.nicevideoplayer.NiceVideoPlayer;
+import com.xiao.nicevideoplayer.SurfaceVideoPlayer;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevideoplayer.ScreenRotateUtils;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
@@ -15,7 +14,7 @@ import com.xiao.nicevieoplayer.R;
 
 public class TinyWindowPlayActivity extends AppCompatActivity implements ScreenRotateUtils.OrientationChangeListener {
 
-    private NiceVideoPlayer mNiceVideoPlayer;
+    private SurfaceVideoPlayer mNiceVideoPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,8 +24,8 @@ public class TinyWindowPlayActivity extends AppCompatActivity implements ScreenR
     }
 
     private void init() {
-        mNiceVideoPlayer = (NiceVideoPlayer) findViewById(R.id.nice_video_player);
-        mNiceVideoPlayer.setPlayerType(NiceVideoPlayer.TYPE_IJK); // IjkPlayer or MediaPlayer
+        mNiceVideoPlayer = (SurfaceVideoPlayer) findViewById(R.id.nice_video_player);
+        mNiceVideoPlayer.setPlayerType(SurfaceVideoPlayer.TYPE_IJK); // IjkPlayer or MediaPlayer
         String videoUrl = "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-17_17-33-30.mp4";
 //        videoUrl = Environment.getExternalStorageDirectory().getPath().concat("/办公室小野.mp4");
         mNiceVideoPlayer.setUp(videoUrl, null);

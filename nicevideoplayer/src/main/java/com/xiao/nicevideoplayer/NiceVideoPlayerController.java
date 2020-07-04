@@ -75,15 +75,15 @@ public abstract class NiceVideoPlayerController
      *
      * @param playState 播放状态：
      *                  <ul>
-     *                  <li>{@link NiceVideoPlayer#STATE_IDLE}</li>
-     *                  <li>{@link NiceVideoPlayer#STATE_PREPARING}</li>
-     *                  <li>{@link NiceVideoPlayer#STATE_PREPARED}</li>
-     *                  <li>{@link NiceVideoPlayer#STATE_PLAYING}</li>
-     *                  <li>{@link NiceVideoPlayer#STATE_PAUSED}</li>
-     *                  <li>{@link NiceVideoPlayer#STATE_BUFFERING_PLAYING}</li>
-     *                  <li>{@link NiceVideoPlayer#STATE_BUFFERING_PAUSED}</li>
-     *                  <li>{@link NiceVideoPlayer#STATE_ERROR}</li>
-     *                  <li>{@link NiceVideoPlayer#STATE_COMPLETED}</li>
+     *                  <li>{@link SurfaceVideoPlayer#STATE_IDLE}</li>
+     *                  <li>{@link SurfaceVideoPlayer#STATE_PREPARING}</li>
+     *                  <li>{@link SurfaceVideoPlayer#STATE_PREPARED}</li>
+     *                  <li>{@link SurfaceVideoPlayer#STATE_PLAYING}</li>
+     *                  <li>{@link SurfaceVideoPlayer#STATE_PAUSED}</li>
+     *                  <li>{@link SurfaceVideoPlayer#STATE_BUFFERING_PLAYING}</li>
+     *                  <li>{@link SurfaceVideoPlayer#STATE_BUFFERING_PAUSED}</li>
+     *                  <li>{@link SurfaceVideoPlayer#STATE_ERROR}</li>
+     *                  <li>{@link SurfaceVideoPlayer#STATE_COMPLETED}</li>
      *                  </ul>
      */
     protected abstract void onPlayStateChanged(int playState);
@@ -93,9 +93,9 @@ public abstract class NiceVideoPlayerController
      *
      * @param playMode 播放器的模式：
      *                 <ul>
-     *                 <li>{@link NiceVideoPlayer#MODE_NORMAL}</li>
-     *                 <li>{@link NiceVideoPlayer#MODE_FULL_SCREEN}</li>
-     *                 <li>{@link NiceVideoPlayer#MODE_TINY_WINDOW}</li>
+     *                 <li>{@link SurfaceVideoPlayer#MODE_NORMAL}</li>
+     *                 <li>{@link SurfaceVideoPlayer#MODE_FULL_SCREEN}</li>
+     *                 <li>{@link SurfaceVideoPlayer#MODE_TINY_WINDOW}</li>
      *                 </ul>
      */
     protected abstract void onPlayModeChanged(int playMode);
