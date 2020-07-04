@@ -13,6 +13,7 @@ public class CompatHomeKeyActivity extends AppCompatActivity {
 
     private boolean pressedHome;
     private HomeKeyWatcher mHomeKeyWatcher;
+    private boolean isPlaying;   //用于切界面时记录该视频是否是播放状态，如果是播放状态切回来继续播放
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,28 +26,33 @@ public class CompatHomeKeyActivity extends AppCompatActivity {
                 pressedHome = true;
             }
         });
-        pressedHome = false;
-        mHomeKeyWatcher.startWatch();
+//        pressedHome = false;
+//        mHomeKeyWatcher.startWatch();
     }
 
     @Override
     protected void onStop() {
-        // 在OnStop中是release还是suspend播放器，需要看是不是因为按了Home键
-        if (pressedHome) {
-            NiceVideoPlayerManager.instance().suspendNiceVideoPlayer();
-        } else {
-            NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
-        }
         super.onStop();
-        mHomeKeyWatcher.stopWatch();
+        isPlaying = NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer().isPlaying()
+                || NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer().isBufferingPlaying();
+        NiceVideoPlayerManager.instance().suspendNiceVideoPlayer();
+        // 在OnStop中是release还是suspend播放器，需要看是不是因为按了Home键
+//        if (pressedHome) {
+//            NiceVideoPlayerManager.instance().suspendNiceVideoPlayer();
+//        } else {
+//            NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
+//        }
+//        mHomeKeyWatcher.stopWatch();
     }
 
     @Override
     protected void onRestart() {
-        mHomeKeyWatcher.startWatch();
-        pressedHome = false;
+//        mHomeKeyWatcher.startWatch();
+//        pressedHome = false;
         super.onRestart();
-        NiceVideoPlayerManager.instance().resumeNiceVideoPlayer();
+        if (isPlaying) {
+            NiceVideoPlayerManager.instance().resumeNiceVideoPlayer();
+        }
     }
 
     @Override
