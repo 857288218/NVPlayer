@@ -1,5 +1,6 @@
 package com.xiao.nicevieoplayer.example;
 
+import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -23,6 +24,9 @@ public class RecyclerViewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //在某些手机activity和fragment中加载SurfaceView，屏幕会闪一下(黑色)
+        //解决办法：在activity的oncreate方法中加入getWindow().setFormat(PixelFormat.TRANSLUCENT);
+        getWindow().setFormat(PixelFormat.TRANSLUCENT);
         setContentView(R.layout.activity_recycler_view);
         init();
     }
