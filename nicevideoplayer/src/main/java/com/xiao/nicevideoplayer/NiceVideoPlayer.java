@@ -3,14 +3,11 @@ package com.xiao.nicevideoplayer;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
-import android.graphics.SurfaceTexture;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.Gravity;
-import android.view.Surface;
-import android.view.TextureView;
+import android.view.SurfaceHolder;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
@@ -23,66 +20,7 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
 public class NiceVideoPlayer extends FrameLayout
         implements INiceVideoPlayer,
-        TextureView.SurfaceTextureListener {
-
-    /**
-     * 播放错误
-     **/
-    public static final int STATE_ERROR = -1;
-    /**
-     * 播放未开始
-     **/
-    public static final int STATE_IDLE = 0;
-    /**
-     * 播放准备中
-     **/
-    public static final int STATE_PREPARING = 1;
-    /**
-     * 播放准备就绪
-     **/
-    public static final int STATE_PREPARED = 2;
-    /**
-     * 正在播放
-     **/
-    public static final int STATE_PLAYING = 3;
-    /**
-     * 暂停播放
-     **/
-    public static final int STATE_PAUSED = 4;
-    /**
-     * 正在缓冲(播放器正在播放时，缓冲区数据不足，进行缓冲，缓冲区数据足够后恢复播放)
-     **/
-    public static final int STATE_BUFFERING_PLAYING = 5;
-    /**
-     * 正在缓冲(播放器正在播放时，缓冲区数据不足，进行缓冲，此时暂停播放器，继续缓冲，缓冲区数据足够后恢复暂停
-     **/
-    public static final int STATE_BUFFERING_PAUSED = 6;
-    /**
-     * 播放完成
-     **/
-    public static final int STATE_COMPLETED = 7;
-
-    /**
-     * 普通模式
-     **/
-    public static final int MODE_NORMAL = 10;
-    /**
-     * 全屏模式
-     **/
-    public static final int MODE_FULL_SCREEN = 11;
-    /**
-     * 小窗口模式
-     **/
-    public static final int MODE_TINY_WINDOW = 12;
-
-    /**
-     * IjkPlayer
-     **/
-    public static final int TYPE_IJK = 111;
-    /**
-     * MediaPlayer
-     **/
-    public static final int TYPE_NATIVE = 222;
+        SurfaceHolder.Callback {
 
     private int mPlayerType = TYPE_IJK;
     private int mCurrentState = STATE_IDLE;
@@ -92,10 +30,9 @@ public class NiceVideoPlayer extends FrameLayout
     private AudioManager mAudioManager;
     private IMediaPlayer mMediaPlayer;
     private FrameLayout mContainer;
-    private NiceTextureView mTextureView;
+    private NiceSurfaceView surfaceView;
+    private SurfaceHolder surfaceHolder;
     private NiceVideoPlayerController mController;
-    private SurfaceTexture mSurfaceTexture;
-    private Surface mSurface;
     private String mUrl;
     private Map<String, String> mHeaders;
     private int mBufferPercentage;
@@ -176,8 +113,8 @@ public class NiceVideoPlayer extends FrameLayout
             NiceVideoPlayerManager.instance().setCurrentNiceVideoPlayer(this);
             initAudioManager();
             initMediaPlayer();
-            initTextureView();
-            addTextureView();
+            initSurfaceView();
+            addSurfaceView();
         } else {
             LogUtil.d("NiceVideoPlayer只有在mCurrentState == STATE_IDLE时才能调用start方法.");
         }
@@ -373,30 +310,37 @@ public class NiceVideoPlayer extends FrameLayout
         }
     }
 
-    private void initTextureView() {
-        if (mTextureView == null) {
-            mTextureView = new NiceTextureView(mContext);
-            mTextureView.setSurfaceTextureListener(this);
+    private void initSurfaceView() {
+        if (surfaceView == null) {
+            surfaceView = new NiceSurfaceView(mContext);
+            surfaceHolder = surfaceView.getHolder();
+            surfaceHolder.addCallback(this);
         }
     }
 
-    private void addTextureView() {
-        mContainer.removeView(mTextureView);
+    private void addSurfaceView() {
+        mContainer.removeView(surfaceView);
         LayoutParams params = new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Gravity.CENTER);
-        mContainer.addView(mTextureView, 0, params);
+        //添加完surfaceView后，会回调surfaceCreated
+        mContainer.addView(surfaceView, 0, params);
     }
 
     @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-        if (mSurfaceTexture == null) {
-            mSurfaceTexture = surfaceTexture;
-            openMediaPlayer();
-        } else {
-            mTextureView.setSurfaceTexture(mSurfaceTexture);
-        }
+    public void surfaceCreated(SurfaceHolder holder) {
+        openMediaPlayer();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        mMediaPlayer.setDisplay(null);
     }
 
     private void openMediaPlayer() {
@@ -414,10 +358,7 @@ public class NiceVideoPlayer extends FrameLayout
         // 设置dataSource
         try {
             mMediaPlayer.setDataSource(mContext.getApplicationContext(), Uri.parse(mUrl), mHeaders);
-            if (mSurface == null) {
-                mSurface = new Surface(mSurfaceTexture);
-            }
-            mMediaPlayer.setSurface(mSurface);
+            mMediaPlayer.setDisplay(surfaceHolder);
             mMediaPlayer.prepareAsync();
             mCurrentState = STATE_PREPARING;
             mController.onPlayStateChanged(mCurrentState);
@@ -426,19 +367,6 @@ public class NiceVideoPlayer extends FrameLayout
             e.printStackTrace();
             LogUtil.e("打开播放器发生错误", e);
         }
-    }
-
-    @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-    }
-
-    @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        return mSurfaceTexture == null;
-    }
-
-    @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
     }
 
     private IMediaPlayer.OnPreparedListener mOnPreparedListener
@@ -467,7 +395,7 @@ public class NiceVideoPlayer extends FrameLayout
             = new IMediaPlayer.OnVideoSizeChangedListener() {
         @Override
         public void onVideoSizeChanged(IMediaPlayer mp, int width, int height, int sar_num, int sar_den) {
-            mTextureView.adaptVideoSize(width, height);
+            surfaceView.adaptVideoSize(width, height);
             LogUtil.d("onVideoSizeChanged ——> width：" + width + "， height：" + height);
         }
     };
@@ -533,8 +461,8 @@ public class NiceVideoPlayer extends FrameLayout
                 }
             } else if (what == IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED) {
                 // 视频旋转了extra度，需要恢复
-                if (mTextureView != null) {
-                    mTextureView.setRotation(extra);
+                if (surfaceView != null) {
+                    surfaceView.setRotation(extra);
                     LogUtil.d("视频旋转角度：" + extra);
                 }
             } else if (what == IMediaPlayer.MEDIA_INFO_NOT_SEEKABLE) {
@@ -672,15 +600,7 @@ public class NiceVideoPlayer extends FrameLayout
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
-        mContainer.removeView(mTextureView);
-        if (mSurface != null) {
-            mSurface.release();
-            mSurface = null;
-        }
-        if (mSurfaceTexture != null) {
-            mSurfaceTexture.release();
-            mSurfaceTexture = null;
-        }
+        mContainer.removeView(surfaceView);
         mCurrentState = STATE_IDLE;
     }
 
