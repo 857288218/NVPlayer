@@ -200,9 +200,9 @@ public class TxVideoPlayerController
     @Override
     protected void onPlayStateChanged(int playState) {
         switch (playState) {
-            case NiceVideoPlayer.STATE_IDLE:
+            case TextureVideoPlayer.STATE_IDLE:
                 break;
-            case NiceVideoPlayer.STATE_PREPARING:
+            case TextureVideoPlayer.STATE_PREPARING:
                 mImage.setVisibility(View.GONE);
                 mLoading.setVisibility(View.VISIBLE);
                 mLoadText.setText("正在准备...");
@@ -213,38 +213,38 @@ public class TxVideoPlayerController
                 mCenterStart.setVisibility(View.GONE);
                 mLength.setVisibility(View.GONE);
                 break;
-            case NiceVideoPlayer.STATE_PREPARED:
+            case TextureVideoPlayer.STATE_PREPARED:
                 startUpdateProgressTimer();
                 break;
-            case NiceVideoPlayer.STATE_PLAYING:
+            case TextureVideoPlayer.STATE_PLAYING:
                 mLoading.setVisibility(View.GONE);
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 startDismissTopBottomTimer();
                 break;
-            case NiceVideoPlayer.STATE_PAUSED:
+            case TextureVideoPlayer.STATE_PAUSED:
                 mLoading.setVisibility(View.GONE);
                 mRestartPause.setImageResource(R.drawable.ic_player_start);
                 cancelDismissTopBottomTimer();
                 break;
-            case NiceVideoPlayer.STATE_BUFFERING_PLAYING:
+            case TextureVideoPlayer.STATE_BUFFERING_PLAYING:
                 mLoading.setVisibility(View.VISIBLE);
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 mLoadText.setText("正在缓冲...");
                 startDismissTopBottomTimer();
                 break;
-            case NiceVideoPlayer.STATE_BUFFERING_PAUSED:
+            case TextureVideoPlayer.STATE_BUFFERING_PAUSED:
                 mLoading.setVisibility(View.VISIBLE);
                 mRestartPause.setImageResource(R.drawable.ic_player_start);
                 mLoadText.setText("正在缓冲...");
                 cancelDismissTopBottomTimer();
                 break;
-            case NiceVideoPlayer.STATE_ERROR:
+            case TextureVideoPlayer.STATE_ERROR:
                 cancelUpdateProgressTimer();
                 setTopBottomVisible(false);
                 mTop.setVisibility(View.VISIBLE);
                 mError.setVisibility(View.VISIBLE);
                 break;
-            case NiceVideoPlayer.STATE_COMPLETED:
+            case TextureVideoPlayer.STATE_COMPLETED:
                 cancelUpdateProgressTimer();
                 setTopBottomVisible(false);
                 mImage.setVisibility(View.VISIBLE);
@@ -256,7 +256,7 @@ public class TxVideoPlayerController
     @Override
     protected void onPlayModeChanged(int playMode) {
         switch (playMode) {
-            case NiceVideoPlayer.MODE_NORMAL:
+            case TextureVideoPlayer.MODE_NORMAL:
                 mBack.setVisibility(View.GONE);
                 mFullScreen.setImageResource(R.drawable.ic_player_enlarge);
                 mFullScreen.setVisibility(View.VISIBLE);
@@ -267,7 +267,7 @@ public class TxVideoPlayerController
                     hasRegisterBatteryReceiver = false;
                 }
                 break;
-            case NiceVideoPlayer.MODE_FULL_SCREEN:
+            case TextureVideoPlayer.MODE_FULL_SCREEN:
                 mBack.setVisibility(View.VISIBLE);
                 mFullScreen.setVisibility(View.GONE);
                 mFullScreen.setImageResource(R.drawable.ic_player_shrink);
@@ -281,7 +281,7 @@ public class TxVideoPlayerController
                     hasRegisterBatteryReceiver = true;
                 }
                 break;
-            case NiceVideoPlayer.MODE_TINY_WINDOW:
+            case TextureVideoPlayer.MODE_TINY_WINDOW:
                 mBack.setVisibility(View.VISIBLE);
                 mClarity.setVisibility(View.GONE);
                 break;

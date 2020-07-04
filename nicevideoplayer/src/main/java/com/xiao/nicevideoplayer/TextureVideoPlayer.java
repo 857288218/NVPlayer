@@ -5,7 +5,6 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -21,7 +20,7 @@ import tv.danmaku.ijk.media.player.AndroidMediaPlayer;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
-public class NiceVideoPlayer extends FrameLayout
+public class TextureVideoPlayer extends FrameLayout
         implements INiceVideoPlayer,
         TextureView.SurfaceTextureListener {
 
@@ -103,11 +102,11 @@ public class NiceVideoPlayer extends FrameLayout
     private long skipToPosition;
     private boolean isLoop;
 
-    public NiceVideoPlayer(Context context) {
+    public TextureVideoPlayer(Context context) {
         this(context, null);
     }
 
-    public NiceVideoPlayer(Context context, AttributeSet attrs) {
+    public TextureVideoPlayer(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
         init();

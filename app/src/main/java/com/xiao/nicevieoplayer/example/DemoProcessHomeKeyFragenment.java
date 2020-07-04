@@ -8,7 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.xiao.nicevideoplayer.NiceVideoPlayer;
+import com.xiao.nicevideoplayer.TextureVideoPlayer;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.adapter.VideoAdapter;
@@ -44,7 +44,7 @@ public class DemoProcessHomeKeyFragenment extends CompatHomeKeyFragment {
         mRecyclerView.setRecyclerListener(new RecyclerView.RecyclerListener() {
             @Override
             public void onViewRecycled(RecyclerView.ViewHolder holder) {
-                NiceVideoPlayer niceVideoPlayer = ((VideoViewHolder) holder).mVideoPlayer;
+                TextureVideoPlayer niceVideoPlayer = ((VideoViewHolder) holder).mVideoPlayer;
                 if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) {
                     NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
                 }

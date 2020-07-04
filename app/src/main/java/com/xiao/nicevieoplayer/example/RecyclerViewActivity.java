@@ -1,18 +1,15 @@
 package com.xiao.nicevieoplayer.example;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import com.xiao.nicevideoplayer.NiceVideoPlayer;
+import com.xiao.nicevideoplayer.TextureVideoPlayer;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.adapter.VideoAdapter;
-import com.xiao.nicevieoplayer.example.adapter.holder.VideoViewHolder;
-import com.xiao.nicevieoplayer.example.util.AutoPlayUtils;
 import com.xiao.nicevieoplayer.example.util.DataUtil;
 
 public class RecyclerViewActivity extends AppCompatActivity {
@@ -42,7 +39,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
 
             @Override
             public void onChildViewDetachedFromWindow(View view) {
-                NiceVideoPlayer niceVideoPlayer = (NiceVideoPlayer) view.findViewById(R.id.nice_video_player);
+                TextureVideoPlayer niceVideoPlayer = (TextureVideoPlayer) view.findViewById(R.id.nice_video_player);
                 if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) {
                     NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
                 }

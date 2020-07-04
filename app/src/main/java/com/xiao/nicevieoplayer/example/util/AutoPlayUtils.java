@@ -4,8 +4,7 @@ import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import com.xiao.nicevideoplayer.INiceVideoPlayer;
-import com.xiao.nicevideoplayer.NiceVideoPlayer;
+import com.xiao.nicevideoplayer.TextureVideoPlayer;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 
 /**
@@ -27,8 +26,8 @@ public class AutoPlayUtils {
         for (int i = 0; i <= lastVisiblePosition - firstVisiblePosition; i++) {
             View child = recyclerView.getChildAt(i);
             View view = child.findViewById(jzvdId);
-            if (view != null && view instanceof NiceVideoPlayer) {
-                NiceVideoPlayer player = (NiceVideoPlayer) view;
+            if (view != null && view instanceof TextureVideoPlayer) {
+                TextureVideoPlayer player = (TextureVideoPlayer) view;
                 if (getViewVisiblePercent(player) == 1f) {
                     if (positionInList != i + firstVisiblePosition) {
                         if (player.isIdle()) {
