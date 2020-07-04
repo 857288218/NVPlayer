@@ -1,9 +1,8 @@
-# NiceVieoPlayer
+# 基于NiceVieoPlayer做的扩展
 
-[![](https://jitpack.io/v/xiaoyanger0825/NiceVieoPlayer.svg)](https://jitpack.io/#xiaoyanger0825/NiceVieoPlayer) [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16) [![作者](https://img.shields.io/badge/%E4%BD%9C%E8%80%85-xiaoyanger0825-orange.svg)](https://github.com/xiaoyanger0825)
 ### Features
 
- * 用IjkPlayer/MediaPlayer + TextureView封装，可切换IjkPlayer、MediaPlayer.支持https
+ * 用IjkPlayer/MediaPlayer + TextureView封装，可切换IjkPlayer、MediaPlayer.
  * 支持本地和网络视频播放.
  * 完美切换小窗口、全屏，可在RecyclerView中无缝全屏.
  * 手势滑动调节播放进度、亮度、声音.
@@ -13,20 +12,6 @@
 ### Usage
 下载niceviewoplayer库，在AndroidStudio中作为Mudule添加依赖。
 
-或者在Gradle中添加依赖：
-
-```
-allprojects {
-    repositories {
-    ...
-    maven { url 'https://jitpack.io' }
-    }
-}
-
-dependencies {
-    compile 'com.github.xiaoyanger0825:NiceVieoPlayer:v2.2'
-}
-```
 **在对应视频界面所在的Activity的Manifest.xml中需要添加如下配置：**
 ```
 android:configChanges="orientation|keyboardHidden|screenSize"
@@ -120,21 +105,24 @@ public List<Clarity> getClarites() {
 详细参考demo中的`ChangeClarityActivity`
 
 #### 4.在RecyclerView列表中使用
-在ReclerView列表中使用时需要监听itemView回收，以此释放掉对应的播放器
+在ReclerView列表中使用时需要监听itemView离屏，以此释放掉对应的播放器
 ```
-mRecyclerView.setRecyclerListener(new RecyclerView.RecyclerListener() {
-    @Override
-    public void onViewRecycled(RecyclerView.ViewHolder holder) {
-        NiceVideoPlayer niceVideoPlayer = ((VideoViewHolder) holder).mVideoPlayer;
-        if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) {
-            NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
-        }
-    }
+mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+            @Override
+            public void onChildViewAttachedToWindow(View view) {
+
+            }
+
+            @Override
+            public void onChildViewDetachedFromWindow(View view) {
+                SurfaceVideoPlayer niceVideoPlayer = (SurfaceVideoPlayer) view.findViewById(R.id.nice_video_player);
+                if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) {
+                    NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
+                }
+            }
 });
 ```
 详细参考demo中的`RecyclerViewActivity`.
-#### 5.播放时Home键按下以及回到播放界面的处理
-按照上面的做法，在onStop直接释放掉播放器，那么在播放时按下Home键播放器也会被释放掉，如果在此回到播放界面，播放器回到最初始的状态。如果需要在播放的时候按下Home键只是暂停播放器，重新回到播放界面时又继续播放，那么可以参考demo中的`CompatHomeKeyActiivty`，或者对应的Activity集成自`CompatHomeKeyActiivty`，详细参考demo中的`ProcessHome1Activity`。当然，如果是在Fragment中，参考`CompatKeyFragment`，或者继承自`CompatKeyFragment`(外层的Activity还是继承自AppCompat，并处理onBackPress)，详细参考demo中的`ProcessHome2Activity`.
 
 #### 5.自定义控制界面
 ```
