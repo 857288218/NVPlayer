@@ -1,9 +1,8 @@
-# NiceVieoPlayer 扩展
+# NiceVieoPlayer
 
 ### Features
 
- * 用IjkPlayer/MediaPlayer + TextureView/SurfaceView封装，可切换IjkPlayer、MediaPlayer
- * 支持https
+ * 用IjkPlayer/MediaPlayer + TextureView封装，可切换IjkPlayer、MediaPlayer.
  * 支持本地和网络视频播放.
  * 完美切换小窗口、全屏，可在RecyclerView中无缝全屏.
  * 手势滑动调节播放进度、亮度、声音.
@@ -13,7 +12,6 @@
 ### Usage
 下载niceviewoplayer库，在AndroidStudio中作为Mudule添加依赖。
 
-```
 **在对应视频界面所在的Activity的Manifest.xml中需要添加如下配置：**
 ```
 android:configChanges="orientation|keyboardHidden|screenSize"
@@ -107,7 +105,7 @@ public List<Clarity> getClarites() {
 详细参考demo中的`ChangeClarityActivity`
 
 #### 4.在RecyclerView列表中使用
-在ReclerView列表中使用时需要监听itemView离开屏幕，以此释放掉对应的播放器
+在ReclerView列表中使用时需要监听itemView离屏，以此释放掉对应的播放器
 ```
 mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
@@ -122,12 +120,9 @@ mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttach
                     NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
                 }
             }
-        });
+});
 ```
 详细参考demo中的`RecyclerViewActivity`.
-#### 5.播放时Home键按下以及回到播放界面的处理
-参考CompatHomeKeyFragment，根据自己的业务实现
-按照上面的做法，在onStop直接释放掉播放器，那么在播放时按下Home键播放器也会被释放掉，如果在此回到播放界面，播放器回到最初始的状态。如果需要在播放的时候按下Home键只是暂停播放器，重新回到播放界面时又继续播放，那么可以参考demo中的`CompatHomeKeyActiivty`，或者对应的Activity集成自`CompatHomeKeyActiivty`，详细参考demo中的`ProcessHome1Activity`。当然，如果是在Fragment中，参考`CompatKeyFragment`，或者继承自`CompatKeyFragment`(外层的Activity还是继承自AppCompat，并处理onBackPress)，详细参考demo中的`ProcessHome2Activity`.
 
 #### 5.自定义控制界面
 ```
