@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.ViewGroup;
@@ -313,8 +314,7 @@ public class NiceVideoPlayer extends FrameLayout
     private void initSurfaceView() {
         if (surfaceView == null) {
             surfaceView = new NiceSurfaceView(mContext);
-            surfaceHolder = surfaceView.getHolder();
-            surfaceHolder.addCallback(this);
+            surfaceView.getHolder().addCallback(this);
         }
     }
 
@@ -330,7 +330,12 @@ public class NiceVideoPlayer extends FrameLayout
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        openMediaPlayer();
+        if (surfaceHolder == null) {
+            surfaceHolder = holder;
+            openMediaPlayer();
+        } else {
+            mMediaPlayer.setDisplay(surfaceHolder);
+        }
     }
 
     @Override
@@ -340,7 +345,7 @@ public class NiceVideoPlayer extends FrameLayout
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-
+        LogUtil.d("surfaceDestroyed");
     }
 
     private void openMediaPlayer() {
@@ -549,7 +554,7 @@ public class NiceVideoPlayer extends FrameLayout
     @Override
     public void enterTinyWindow() {
         if (mCurrentMode == MODE_TINY_WINDOW) return;
-        this.removeView(mContainer);
+        removeView(mContainer);
 
         ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
@@ -600,6 +605,7 @@ public class NiceVideoPlayer extends FrameLayout
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
+        surfaceHolder = null;
         mContainer.removeView(surfaceView);
         mCurrentState = STATE_IDLE;
     }
