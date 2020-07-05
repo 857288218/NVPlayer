@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.xiao.nicevideoplayer.AliVideoPlayer;
 import com.xiao.nicevideoplayer.SurfaceVideoPlayer;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevideoplayer.ScreenRotateUtils;
@@ -14,7 +15,7 @@ import com.xiao.nicevieoplayer.R;
 
 public class TinyWindowPlayActivity extends AppCompatActivity implements ScreenRotateUtils.OrientationChangeListener {
 
-    private SurfaceVideoPlayer mNiceVideoPlayer;
+    private AliVideoPlayer mNiceVideoPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,11 +25,12 @@ public class TinyWindowPlayActivity extends AppCompatActivity implements ScreenR
     }
 
     private void init() {
-        mNiceVideoPlayer = (SurfaceVideoPlayer) findViewById(R.id.nice_video_player);
-        mNiceVideoPlayer.setPlayerType(SurfaceVideoPlayer.TYPE_IJK); // IjkPlayer or MediaPlayer
+        mNiceVideoPlayer = findViewById(R.id.nice_video_player);
         String videoUrl = "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-17_17-33-30.mp4";
 //        videoUrl = Environment.getExternalStorageDirectory().getPath().concat("/办公室小野.mp4");
         mNiceVideoPlayer.setUp(videoUrl, null);
+        mNiceVideoPlayer.setLooping(true);
+
         TxVideoPlayerController controller = new TxVideoPlayerController(this);
         controller.setTitle("办公室小野开番外了，居然在办公室开澡堂！老板还点赞？");
         controller.setLenght(98000);

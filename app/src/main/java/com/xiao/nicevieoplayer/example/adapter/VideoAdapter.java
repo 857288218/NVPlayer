@@ -13,9 +13,6 @@ import com.xiao.nicevieoplayer.example.bean.Video;
 
 import java.util.List;
 
-/**
- * Created by XiaoJianjun on 2017/5/21.
- */
 
 public class VideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
 

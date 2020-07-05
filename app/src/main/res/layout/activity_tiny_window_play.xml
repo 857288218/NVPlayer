@@ -7,7 +7,7 @@
     android:orientation="vertical"
     tools:context="com.xiao.nicevieoplayer.example.TinyWindowPlayActivity">
 
-    <com.xiao.nicevideoplayer.SurfaceVideoPlayer
+    <com.xiao.nicevideoplayer.AliVideoPlayer
         android:id="@+id/nice_video_player"
         android:layout_width="match_parent"
         android:layout_height="180dp"
