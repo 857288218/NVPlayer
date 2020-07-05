@@ -126,15 +126,15 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public void restart() {
         if (mCurrentState == STATE_PAUSED) {
+            LogUtil.d("STATE_PLAYING");
             aliPlayer.start();
             mCurrentState = STATE_PLAYING;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("STATE_PLAYING");
         } else if (mCurrentState == STATE_BUFFERING_PAUSED) {
+            LogUtil.d("STATE_BUFFERING_PLAYING");
             aliPlayer.start();
             mCurrentState = STATE_BUFFERING_PLAYING;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("STATE_BUFFERING_PLAYING");
         } else if (mCurrentState == STATE_COMPLETED || mCurrentState == STATE_ERROR) {
             aliPlayer.reset();
             openMediaPlayer();
@@ -146,16 +146,16 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public void pause() {
         if (mCurrentState == STATE_PLAYING) {
+            LogUtil.d("STATE_PAUSED");
             aliPlayer.pause();
             mCurrentState = STATE_PAUSED;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("STATE_PAUSED");
         }
         if (mCurrentState == STATE_BUFFERING_PLAYING) {
+            LogUtil.d("STATE_BUFFERING_PAUSED");
             aliPlayer.pause();
             mCurrentState = STATE_BUFFERING_PAUSED;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("STATE_BUFFERING_PAUSED");
         }
     }
 
@@ -386,7 +386,6 @@ public class AliVideoPlayer extends FrameLayout
         @Override
         public void onPrepared() {//自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
             mCurrentState = STATE_PREPARED;
-            //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("onPrepared ——> STATE_PREPARED");
             aliPlayer.start();
@@ -416,9 +415,9 @@ public class AliVideoPlayer extends FrameLayout
             = new IPlayer.OnCompletionListener() {
         @Override
         public void onCompletion() {  //设置了循环播放后，就不会再执行这个回调了
+            LogUtil.d("onCompletion ——> STATE_COMPLETED");
             mCurrentState = STATE_COMPLETED;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("onCompletion ——> STATE_COMPLETED");
             // 清除屏幕常亮
             mContainer.setKeepScreenOn(false);
             // 重置当前播放进度
@@ -442,9 +441,9 @@ public class AliVideoPlayer extends FrameLayout
         @Override
         public void onRenderingStart() {
             //首帧渲染显示事件
+            LogUtil.d("onRenderingStart");
             mCurrentState = STATE_PLAYING;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("onRenderingStart");
         }
     };
 
@@ -452,12 +451,12 @@ public class AliVideoPlayer extends FrameLayout
             = new IPlayer.OnLoadingStatusListener() {
         @Override
         public void onLoadingBegin() {
-            //缓冲开始
+            //缓冲开始, 可能还没播放画面就开始缓冲
             if (mCurrentState == STATE_PAUSED || mCurrentState == STATE_BUFFERING_PAUSED) {
                 mCurrentState = STATE_BUFFERING_PAUSED;
                 LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED");
             } else {
-                mCurrentState = STATE_BUFFERING_PLAYING;
+                mCurrentMode = STATE_BUFFERING_PLAYING;
                 LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING");
             }
             mController.onPlayStateChanged(mCurrentState);
@@ -473,14 +472,14 @@ public class AliVideoPlayer extends FrameLayout
         public void onLoadingEnd() {
             //缓冲结束
             if (mCurrentState == STATE_BUFFERING_PLAYING) {
+                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING");
                 mCurrentState = STATE_PLAYING;
                 mController.onPlayStateChanged(mCurrentState);
-                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING");
             }
             if (mCurrentState == STATE_BUFFERING_PAUSED) {
+                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED");
                 mCurrentState = STATE_PAUSED;
                 mController.onPlayStateChanged(mCurrentState);
-                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED");
             }
         }
     };
@@ -490,10 +489,11 @@ public class AliVideoPlayer extends FrameLayout
         @Override
         public void onInfo(InfoBean infoBean) {
             if (infoBean.getCode().getValue() == InfoCode.AutoPlayStart.getValue()) {
-                //自动播放开始事件;注意：自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
+                // 自动播放开始事件;注意：自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
+                // 还没确认是否会回调onRenderingStart，如果不回调这里需要执行一下onPlayStateChanged（STATE_PLAYING）
+                LogUtil.d("onInfo ——> AutoPlayStart");
                 mCurrentState = STATE_PREPARED;
                 mController.onPlayStateChanged(mCurrentState);
-                LogUtil.d("onInfo ——> AutoPlayStart");
             } else if (infoBean.getCode().getValue() == InfoCode.LoopingStart.getValue()) {
                 //循环播放开始事件,不会回调onPrepared，onRenderingStart，onCompletion
                 LogUtil.d("onInfo ——> LoopingStart");

@@ -9,6 +9,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.DrawableRes;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -208,7 +209,7 @@ public class TxVideoPlayerController
             case INiceVideoPlayer.STATE_IDLE:
                 break;
             case INiceVideoPlayer.STATE_PREPARING:
-                mImage.setVisibility(View.GONE);
+//                mImage.setVisibility(View.GONE);  //当第一帧作为封面时，首帧渲染显示再隐藏封面图
                 mLoading.setVisibility(View.VISIBLE);
                 mLoadText.setText("正在准备...");
                 mError.setVisibility(View.GONE);
@@ -222,11 +223,14 @@ public class TxVideoPlayerController
                 startUpdateProgressTimer();
                 break;
             case INiceVideoPlayer.STATE_PLAYING:
+                mImage.setVisibility(View.GONE);  //当第一帧作为封面时，首帧渲染显示再隐藏封面图
                 mLoading.setVisibility(View.GONE);
+//                LogUtil.d("playing");
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 startDismissTopBottomTimer();
                 break;
             case INiceVideoPlayer.STATE_PAUSED:
+                mImage.setVisibility(View.GONE);    //当第一帧作为封面时，首帧渲染显示再隐藏封面图
                 mLoading.setVisibility(View.GONE);
                 mRestartPause.setImageResource(R.drawable.ic_player_start);
                 cancelDismissTopBottomTimer();
@@ -235,6 +239,7 @@ public class TxVideoPlayerController
                 mLoading.setVisibility(View.VISIBLE);
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 mLoadText.setText("正在缓冲...");
+//                LogUtil.d("buffering");
                 startDismissTopBottomTimer();
                 break;
             case INiceVideoPlayer.STATE_BUFFERING_PAUSED:

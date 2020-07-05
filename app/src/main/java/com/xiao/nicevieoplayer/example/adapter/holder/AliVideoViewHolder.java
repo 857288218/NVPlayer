@@ -5,8 +5,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
-import com.xiao.nicevideoplayer.player.AliVideoPlayer;
+import com.bumptech.glide.request.RequestOptions;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
+import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.bean.Video;
 
@@ -16,7 +17,7 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
 
     public AliVideoViewHolder(View itemView) {
         super(itemView);
-        mVideoPlayer = (AliVideoPlayer) itemView.findViewById(R.id.nice_video_player);
+        mVideoPlayer = itemView.findViewById(R.id.nice_video_player);
         // 将列表中的每个视频设置为默认16:9的比例
         ViewGroup.LayoutParams params = mVideoPlayer.getLayoutParams();
         params.width = itemView.getResources().getDisplayMetrics().widthPixels; // 宽度为屏幕宽度
@@ -34,9 +35,20 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
         // 因为在item不可见时，Controller就reset了
         mController.setTitle(video.getTitle());
         mController.setLenght(video.getLength());
+
+//        Glide.with(itemView.getContext())
+//                .load(video.getImageUrl())
+////                .placeholder(R.drawable.img_default)
+//                .into(mController.imageView());
+        //获取第一帧作为封面
         Glide.with(itemView.getContext())
-                .load(video.getImageUrl())
-//                .placeholder(R.drawable.img_default)
+                .setDefaultRequestOptions(
+                        new RequestOptions()
+                                .frame(1000000)
+                                .fitCenter()
+                )
+                .load(video.getVideoUrl())
+                .placeholder(R.drawable.img_default)
                 .into(mController.imageView());
         mVideoPlayer.setUp(video.getVideoUrl(), null);
     }

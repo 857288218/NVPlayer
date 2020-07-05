@@ -443,7 +443,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         @Override
         public boolean onInfo(IMediaPlayer mp, int what, int extra) {
             if (what == IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-                // 播放器开始渲染，当开始循环播放时，不会回调该方法
+                // 播放器开始渲染，当开始循环播放时，不会回调该方法。回调到这里可能还是没有画面，还需要缓冲
                 mCurrentState = STATE_PLAYING;
                 mController.onPlayStateChanged(mCurrentState);
                 LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING");
@@ -477,7 +477,13 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
                 }
             } else if (what == IMediaPlayer.MEDIA_INFO_NOT_SEEKABLE) {
                 LogUtil.d("视频不能seekTo，为直播视频");
-            } else {
+            }
+//            else if (what == IMediaPlayer.MEDIA_INFO_VIDEO_SEEK_RENDERING_START) {
+//                mCurrentState = STATE_PLAYING;
+//                mController.onPlayStateChanged(mCurrentState);
+//                LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_SEEK_RENDERING_START");
+//            }
+            else {
                 LogUtil.d("onInfo ——> what：" + what);
             }
             return true;
