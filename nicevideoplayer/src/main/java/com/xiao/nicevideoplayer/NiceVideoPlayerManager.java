@@ -1,5 +1,7 @@
 package com.xiao.nicevideoplayer;
 
+import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
+
 /**
  * Created by XiaoJianjun on 2017/5/5.
  * 视频播放器管理器.

@@ -5,8 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
-import com.xiao.nicevideoplayer.AliVideoPlayer;
-import com.xiao.nicevideoplayer.SurfaceVideoPlayer;
+import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.bean.Video;

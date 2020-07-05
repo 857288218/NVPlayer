@@ -1,4 +1,4 @@
-package com.xiao.nicevideoplayer;
+package com.xiao.nicevideoplayer.player;
 
 import java.util.Map;
 

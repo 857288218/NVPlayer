@@ -26,7 +26,13 @@
             android:screenOrientation="portrait">
         </activity>
         <activity
-            android:name=".example.RecyclerViewActivity"
+            android:name=".example.IJKSurfaceListActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="在RecylerView视频列表中"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name=".example.IJKTextureListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="在RecylerView视频列表中"
             android:screenOrientation="portrait">
@@ -41,18 +47,6 @@
             android:name=".example.ChangeClarityActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="在全屏时可以切换清晰度"
-            android:screenOrientation="portrait">
-        </activity>
-        <activity
-            android:name=".example.UseInFragActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="在fragment中使用"
-            android:screenOrientation="portrait">
-        </activity>
-        <activity
-            android:name=".example.ProcessHome1Activity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="Activity中时处理播放时按下Home键"
             android:screenOrientation="portrait">
         </activity>
         <activity

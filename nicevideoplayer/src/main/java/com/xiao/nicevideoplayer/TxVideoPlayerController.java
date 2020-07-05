@@ -18,6 +18,9 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.xiao.nicevideoplayer.player.AliVideoPlayer;
+import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -200,7 +203,7 @@ public class TxVideoPlayerController
     }
 
     @Override
-    protected void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState) {
         switch (playState) {
             case INiceVideoPlayer.STATE_IDLE:
                 break;
@@ -256,7 +259,7 @@ public class TxVideoPlayerController
     }
 
     @Override
-    protected void onPlayModeChanged(int playMode) {
+    public void onPlayModeChanged(int playMode) {
         switch (playMode) {
             case INiceVideoPlayer.MODE_NORMAL:
                 mBack.setVisibility(View.GONE);
@@ -324,7 +327,7 @@ public class TxVideoPlayerController
     };
 
     @Override
-    protected void reset() {
+    public void reset() {
         topBottomVisible = false;
         cancelUpdateProgressTimer();
         cancelDismissTopBottomTimer();
@@ -499,7 +502,7 @@ public class TxVideoPlayerController
     }
 
     @Override
-    protected void updateProgress() {
+    public void updateProgress() {
         long position = mNiceVideoPlayer.getCurrentPosition();
         long duration = mNiceVideoPlayer.getDuration();
         int bufferPercentage = mNiceVideoPlayer.getBufferPercentage();
@@ -513,7 +516,7 @@ public class TxVideoPlayerController
     }
 
     @Override
-    protected void showChangePosition(long duration, int newPositionProgress) {
+    public void showChangePosition(long duration, int newPositionProgress) {
         mChangePositon.setVisibility(View.VISIBLE);
         long newPosition = (long) (duration * newPositionProgress / 100f);
         mChangePositionCurrent.setText(NiceUtil.formatTime(newPosition));
@@ -523,29 +526,29 @@ public class TxVideoPlayerController
     }
 
     @Override
-    protected void hideChangePosition() {
+    public void hideChangePosition() {
         mChangePositon.setVisibility(View.GONE);
     }
 
     @Override
-    protected void showChangeVolume(int newVolumeProgress) {
+    public void showChangeVolume(int newVolumeProgress) {
         mChangeVolume.setVisibility(View.VISIBLE);
         mChangeVolumeProgress.setProgress(newVolumeProgress);
     }
 
     @Override
-    protected void hideChangeVolume() {
+    public void hideChangeVolume() {
         mChangeVolume.setVisibility(View.GONE);
     }
 
     @Override
-    protected void showChangeBrightness(int newBrightnessProgress) {
+    public void showChangeBrightness(int newBrightnessProgress) {
         mChangeBrightness.setVisibility(View.VISIBLE);
         mChangeBrightnessProgress.setProgress(newBrightnessProgress);
     }
 
     @Override
-    protected void hideChangeBrightness() {
+    public void hideChangeBrightness() {
         mChangeBrightness.setVisibility(View.GONE);
     }
 }

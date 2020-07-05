@@ -1,9 +1,11 @@
 package com.xiao.nicevieoplayer.example.base;
 
+import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
+import com.xiao.nicevieoplayer.example.util.HomeKeyWatcher;
 
 /**
  * 在此Activity种，如果视频正在播放或缓冲，按下Home键，暂停视频播放，回到此Activity后继续播放视频；
@@ -18,7 +20,9 @@ public class CompatHomeKeyActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        //在某些手机activity和fragment中加载SurfaceView，屏幕会闪一下(黑色)
+        //解决办法：在activity的oncreate方法中加入getWindow().setFormat(PixelFormat.TRANSLUCENT);
+        getWindow().setFormat(PixelFormat.TRANSLUCENT);
         mHomeKeyWatcher = new HomeKeyWatcher(this);
         mHomeKeyWatcher.setOnHomePressedListener(new HomeKeyWatcher.OnHomePressedListener() {
             @Override
@@ -33,8 +37,9 @@ public class CompatHomeKeyActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        isPlaying = NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer().isPlaying()
-                || NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer().isBufferingPlaying();
+        isPlaying = NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer() != null
+                && (NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer().isPlaying()
+                || NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer().isBufferingPlaying());
         NiceVideoPlayerManager.instance().suspendNiceVideoPlayer();
         // 在OnStop中是release还是suspend播放器，需要看是不是因为按了Home键
 //        if (pressedHome) {

@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment;
 import android.view.View;
 
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
+import com.xiao.nicevieoplayer.example.util.HomeKeyWatcher;
 
 /**
  * Created by XiaoJianjun on 2017/7/7.
@@ -16,6 +17,7 @@ public class CompatHomeKeyFragment extends Fragment {
 
     private boolean pressedHome;
     private HomeKeyWatcher mHomeKeyWatcher;
+    private boolean isPlaying;   //用于切界面时记录该视频是否是播放状态，如果是播放状态切回来继续播放
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -33,22 +35,24 @@ public class CompatHomeKeyFragment extends Fragment {
 
     @Override
     public void onStart() {
-        mHomeKeyWatcher.startWatch();
-        pressedHome = false;
+//        mHomeKeyWatcher.startWatch();
+//        pressedHome = false;
         super.onStart();
         NiceVideoPlayerManager.instance().resumeNiceVideoPlayer();
     }
 
     @Override
     public void onStop() {
-        // 在OnStop中是release还是suspend播放器，需要看是不是因为按了Home键
-        if (pressedHome) {
-            NiceVideoPlayerManager.instance().suspendNiceVideoPlayer();
-        } else {
-            NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
-        }
         super.onStop();
-        mHomeKeyWatcher.stopWatch();
+        NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
+
+        // 在OnStop中是release还是suspend播放器，需要看是不是因为按了Home键
+//        if (pressedHome) {
+//            NiceVideoPlayerManager.instance().suspendNiceVideoPlayer();
+//        } else {
+//            NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
+//        }
+//        mHomeKeyWatcher.stopWatch();
     }
 
 

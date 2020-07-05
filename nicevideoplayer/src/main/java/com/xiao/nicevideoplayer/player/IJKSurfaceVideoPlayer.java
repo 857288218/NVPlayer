@@ -1,4 +1,4 @@
-package com.xiao.nicevideoplayer;
+package com.xiao.nicevideoplayer.player;
 
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -11,6 +11,12 @@ import android.view.SurfaceHolder;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.xiao.nicevideoplayer.LogUtil;
+import com.xiao.nicevideoplayer.NiceSurfaceView;
+import com.xiao.nicevideoplayer.NiceUtil;
+import com.xiao.nicevideoplayer.NiceVideoPlayerController;
+import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -18,7 +24,7 @@ import tv.danmaku.ijk.media.player.AndroidMediaPlayer;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
-public class SurfaceVideoPlayer extends FrameLayout
+public class IJKSurfaceVideoPlayer extends FrameLayout
         implements INiceVideoPlayer,
         SurfaceHolder.Callback {
 
@@ -40,11 +46,11 @@ public class SurfaceVideoPlayer extends FrameLayout
     private long skipToPosition;
     private boolean isLoop;
 
-    public SurfaceVideoPlayer(Context context) {
+    public IJKSurfaceVideoPlayer(Context context) {
         this(context, null);
     }
 
-    public SurfaceVideoPlayer(Context context, AttributeSet attrs) {
+    public IJKSurfaceVideoPlayer(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
         init();
@@ -333,6 +339,7 @@ public class SurfaceVideoPlayer extends FrameLayout
             //下面代码可以解决切后台暂停后，回到前台主动播放黑屏问题，但是不能解决上述问题
             mMediaPlayer.setDisplay(surfaceHolder);
         }
+        LogUtil.d("surfaceCreated");
     }
 
     @Override

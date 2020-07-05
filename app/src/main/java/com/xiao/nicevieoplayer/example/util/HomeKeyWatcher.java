@@ -1,4 +1,4 @@
-package com.xiao.nicevieoplayer.example.base;
+package com.xiao.nicevieoplayer.example.util;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

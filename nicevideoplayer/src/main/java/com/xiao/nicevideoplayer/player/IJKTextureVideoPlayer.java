@@ -1,55 +1,59 @@
-package com.xiao.nicevideoplayer;
+package com.xiao.nicevideoplayer.player;
 
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.graphics.SurfaceTexture;
 import android.media.AudioManager;
-import android.os.Environment;
+import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.Gravity;
-import android.view.SurfaceHolder;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.aliyun.player.AliPlayer;
-import com.aliyun.player.AliPlayerFactory;
-import com.aliyun.player.IPlayer;
-import com.aliyun.player.bean.ErrorInfo;
-import com.aliyun.player.bean.InfoBean;
-import com.aliyun.player.bean.InfoCode;
-import com.aliyun.player.nativeclass.CacheConfig;
-import com.aliyun.player.nativeclass.PlayerConfig;
-import com.aliyun.player.source.UrlSource;
+import com.xiao.nicevideoplayer.LogUtil;
+import com.xiao.nicevideoplayer.NiceTextureView;
+import com.xiao.nicevideoplayer.NiceUtil;
+import com.xiao.nicevideoplayer.NiceVideoPlayerController;
+import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 
+import java.io.IOException;
 import java.util.Map;
 
-public class AliVideoPlayer extends FrameLayout
-        implements INiceVideoPlayer,
-        SurfaceHolder.Callback {
+import tv.danmaku.ijk.media.player.AndroidMediaPlayer;
+import tv.danmaku.ijk.media.player.IMediaPlayer;
+import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
+public class IJKTextureVideoPlayer extends FrameLayout
+        implements INiceVideoPlayer,
+        TextureView.SurfaceTextureListener {
+
+    private int mPlayerType = TYPE_IJK;
     private int mCurrentState = STATE_IDLE;
     private int mCurrentMode = MODE_NORMAL;
 
     private Context mContext;
     private AudioManager mAudioManager;
-    private AliPlayer aliPlayer;
+    private IMediaPlayer mMediaPlayer;
     private FrameLayout mContainer;
-    private NiceSurfaceView surfaceView;
-    private SurfaceHolder surfaceHolder;
+    private NiceTextureView mTextureView;
     private NiceVideoPlayerController mController;
+    private SurfaceTexture mSurfaceTexture;
+    private Surface mSurface;
     private String mUrl;
     private Map<String, String> mHeaders;
     private int mBufferPercentage;
     private boolean continueFromLastPosition = true;
     private long skipToPosition;
     private boolean isLoop;
-    private long currentPosition;
 
-    public AliVideoPlayer(Context context) {
+    public IJKTextureVideoPlayer(Context context) {
         this(context, null);
     }
 
-    public AliVideoPlayer(Context context, AttributeSet attrs) {
+    public IJKTextureVideoPlayer(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
         init();
@@ -85,6 +89,15 @@ public class AliVideoPlayer extends FrameLayout
     }
 
     /**
+     * 设置播放器类型
+     *
+     * @param playerType IjkPlayer or MediaPlayer.
+     */
+    public void setPlayerType(int playerType) {
+        mPlayerType = playerType;
+    }
+
+    /**
      * 是否从上一次的位置继续播放
      *
      * @param continueFromLastPosition true从上一次的位置继续播放
@@ -96,7 +109,11 @@ public class AliVideoPlayer extends FrameLayout
 
     @Override
     public void setSpeed(float speed) {
-        aliPlayer.setSpeed(speed);
+        if (mMediaPlayer instanceof IjkMediaPlayer) {
+            ((IjkMediaPlayer) mMediaPlayer).setSpeed(speed);
+        } else {
+            LogUtil.d("只有IjkPlayer才能设置播放速度");
+        }
     }
 
     @Override
@@ -105,8 +122,8 @@ public class AliVideoPlayer extends FrameLayout
             NiceVideoPlayerManager.instance().setCurrentNiceVideoPlayer(this);
             initAudioManager();
             initMediaPlayer();
-            initSurfaceView();
-            addSurfaceView();
+            initTextureView();
+            addTextureView();
         } else {
             LogUtil.d("NiceVideoPlayer只有在mCurrentState == STATE_IDLE时才能调用start方法.");
         }
@@ -121,17 +138,17 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public void restart() {
         if (mCurrentState == STATE_PAUSED) {
-            aliPlayer.start();
+            mMediaPlayer.start();
             mCurrentState = STATE_PLAYING;
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("STATE_PLAYING");
         } else if (mCurrentState == STATE_BUFFERING_PAUSED) {
-            aliPlayer.start();
+            mMediaPlayer.start();
             mCurrentState = STATE_BUFFERING_PLAYING;
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("STATE_BUFFERING_PLAYING");
         } else if (mCurrentState == STATE_COMPLETED || mCurrentState == STATE_ERROR) {
-            aliPlayer.reset();
+            mMediaPlayer.reset();
             openMediaPlayer();
         } else {
             LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.");
@@ -141,13 +158,13 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public void pause() {
         if (mCurrentState == STATE_PLAYING) {
-            aliPlayer.pause();
+            mMediaPlayer.pause();
             mCurrentState = STATE_PAUSED;
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("STATE_PAUSED");
         }
         if (mCurrentState == STATE_BUFFERING_PLAYING) {
-            aliPlayer.pause();
+            mMediaPlayer.pause();
             mCurrentState = STATE_BUFFERING_PAUSED;
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("STATE_BUFFERING_PAUSED");
@@ -156,8 +173,8 @@ public class AliVideoPlayer extends FrameLayout
 
     @Override
     public void seekTo(long pos) {
-        if (aliPlayer != null) {
-            aliPlayer.seekTo(pos);
+        if (mMediaPlayer != null) {
+            mMediaPlayer.seekTo(pos);
         }
     }
 
@@ -246,12 +263,12 @@ public class AliVideoPlayer extends FrameLayout
 
     @Override
     public long getDuration() {
-        return aliPlayer != null ? aliPlayer.getDuration() : 0;
+        return mMediaPlayer != null ? mMediaPlayer.getDuration() : 0;
     }
 
     @Override
     public long getCurrentPosition() {
-        return currentPosition;
+        return mMediaPlayer != null ? mMediaPlayer.getCurrentPosition() : 0;
     }
 
     @Override
@@ -261,14 +278,17 @@ public class AliVideoPlayer extends FrameLayout
 
     @Override
     public float getSpeed(float speed) {
-        return aliPlayer.getSpeed();
+        if (mMediaPlayer instanceof IjkMediaPlayer) {
+            return ((IjkMediaPlayer) mMediaPlayer).getSpeed(speed);
+        }
+        return 0;
     }
 
     @Override
     public long getTcpSpeed() {
-//        if (mMediaPlayer instanceof IjkMediaPlayer) {
-//            return ((IjkMediaPlayer) mMediaPlayer).getTcpSpeed();
-//        }
+        if (mMediaPlayer instanceof IjkMediaPlayer) {
+            return ((IjkMediaPlayer) mMediaPlayer).getTcpSpeed();
+        }
         return 0;
     }
 
@@ -280,136 +300,128 @@ public class AliVideoPlayer extends FrameLayout
     }
 
     private void initMediaPlayer() {
-        if (aliPlayer == null) {
-            aliPlayer = AliPlayerFactory.createAliPlayer(mContext);
-            CacheConfig cacheConfig = new CacheConfig();
-            //开启缓存功能
-            cacheConfig.mEnable = true;
-            //能够缓存的单个文件最大时长。超过此长度则不缓存
-            cacheConfig.mMaxDurationS = 100;
-            //缓存目录的位置
-            cacheConfig.mDir = mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-            //缓存目录的最大大小。超过此大小，将会删除最旧的缓存文件
-            cacheConfig.mMaxSizeMB = 200;
-            //设置缓存配置给到播放器
-            aliPlayer.setCacheConfig(cacheConfig);
-
-            PlayerConfig config = aliPlayer.getConfig();
-            // 最大缓冲区时长。单位ms。播放器每次最多加载这么长时间的缓冲数据。
-            config.mMaxBufferDuration = 50000;
-            //高缓冲时长。单位ms。当网络不好导致加载数据时，如果加载的缓冲时长到达这个值，结束加载状态。
-            config.mHighBufferDuration = 3000;
-            // 起播缓冲区时长。单位ms。这个时间设置越短，起播越快。也可能会导致播放之后很快就会进入加载状态。
-            config.mStartBufferDuration = 500;
-            aliPlayer.setConfig(config);
+        if (mMediaPlayer == null) {
+            switch (mPlayerType) {
+                case TYPE_NATIVE:
+                    mMediaPlayer = new AndroidMediaPlayer();
+                    break;
+                case TYPE_IJK:
+                default:
+                    mMediaPlayer = new IjkMediaPlayer();
+//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "analyzemaxduration", 100L);
+//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "probesize", 10240L);
+//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "flush_packets", 1L);
+//                    ((IjkMediaPlayer)mMediaPlayer).setOption(4, "packet-buffering", 0L);
+//                    ((IjkMediaPlayer)mMediaPlayer).setOption(4, "framedrop", 1L);
+                    break;
+            }
+            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         }
     }
 
-    private void initSurfaceView() {
-        if (surfaceView == null) {
-            surfaceView = new NiceSurfaceView(mContext);
-            surfaceView.getHolder().addCallback(this);
+    private void initTextureView() {
+        if (mTextureView == null) {
+            mTextureView = new NiceTextureView(mContext);
+            mTextureView.setSurfaceTextureListener(this);
         }
     }
 
-    private void addSurfaceView() {
-        mContainer.removeView(surfaceView);
+    private void addTextureView() {
+        mContainer.removeView(mTextureView);
         LayoutParams params = new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Gravity.CENTER);
-        //添加完surfaceView后，会回调surfaceCreated
-        mContainer.addView(surfaceView, 0, params);
+        mContainer.addView(mTextureView, 0, params);
     }
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        if (surfaceHolder == null) {
-            surfaceHolder = holder;
+    public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+        if (mSurfaceTexture == null) {
+            mSurfaceTexture = surfaceTexture;
             openMediaPlayer();
         } else {
-            //todo(rjq) 切后台暂停后，回到前台不主动播放，会黑屏。原因是activity onPause后，SurfaceView会被销毁，回调surfaceDestroyed()方法;
-            // 使用TextureView没有该问题
-            //下面代码可以解决切后台暂停后，回到前台主动播放黑屏问题，但是不能解决上述问题
-            aliPlayer.setDisplay(holder);
+            mTextureView.setSurfaceTexture(mSurfaceTexture);
         }
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        LogUtil.d("surfaceDestroyed");
-        if (aliPlayer != null) {
-            aliPlayer.setDisplay(null);
-        }
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        //解决切后台暂停后，回到前台不主动播放，会黑屏
-        //用来刷新视频画面的。如果view的大小变化了，调用此方法将会更新画面大小，保证视频画面与View的变化一致。
-        aliPlayer.redraw();
     }
 
     private void openMediaPlayer() {
         // 屏幕常亮
         mContainer.setKeepScreenOn(true);
         //设置是否循环播放
-        aliPlayer.setLoop(isLoop);
+        mMediaPlayer.setLooping(isLoop);
         // 设置监听
-        aliPlayer.setOnPreparedListener(mOnPreparedListener);
-        aliPlayer.setOnVideoSizeChangedListener(mOnVideoSizeChangedListener);
-        aliPlayer.setOnCompletionListener(mOnCompletionListener);
-        aliPlayer.setOnErrorListener(mOnErrorListener);
-        aliPlayer.setOnRenderingStartListener(mOnRenderingStartListener);
-        aliPlayer.setOnLoadingStatusListener(mOnLoadingStatusListener);
-        aliPlayer.setOnInfoListener(mOnInfoListener);
-        aliPlayer.setOnSeekCompleteListener(mOnSeekCompleteListener);
+        mMediaPlayer.setOnPreparedListener(mOnPreparedListener);
+        mMediaPlayer.setOnVideoSizeChangedListener(mOnVideoSizeChangedListener);
+        mMediaPlayer.setOnCompletionListener(mOnCompletionListener);
+        mMediaPlayer.setOnErrorListener(mOnErrorListener);
+        mMediaPlayer.setOnInfoListener(mOnInfoListener);
+        mMediaPlayer.setOnBufferingUpdateListener(mOnBufferingUpdateListener);
         // 设置dataSource
-        UrlSource urlSource = new UrlSource();
-        urlSource.setUri(mUrl);
-        aliPlayer.setDataSource(urlSource);
-        aliPlayer.setDisplay(surfaceHolder);
-        aliPlayer.prepare();
-        mCurrentState = STATE_PREPARING;
-        mController.onPlayStateChanged(mCurrentState);
-        LogUtil.d("STATE_PREPARING");
+        try {
+            mMediaPlayer.setDataSource(mContext.getApplicationContext(), Uri.parse(mUrl), mHeaders);
+            if (mSurface == null) {
+                mSurface = new Surface(mSurfaceTexture);
+            }
+            mMediaPlayer.setSurface(mSurface);
+            mMediaPlayer.prepareAsync();
+            mCurrentState = STATE_PREPARING;
+            mController.onPlayStateChanged(mCurrentState);
+            LogUtil.d("STATE_PREPARING");
+        } catch (IOException e) {
+            e.printStackTrace();
+            LogUtil.e("打开播放器发生错误", e);
+        }
     }
 
-    private IPlayer.OnPreparedListener mOnPreparedListener
-            = new IPlayer.OnPreparedListener() {
+    @Override
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+    }
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        return mSurfaceTexture == null;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+    }
+
+    private IMediaPlayer.OnPreparedListener mOnPreparedListener
+            = new IMediaPlayer.OnPreparedListener() {
         @Override
-        public void onPrepared() {//自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
+        public void onPrepared(IMediaPlayer mp) {
             mCurrentState = STATE_PREPARED;
             //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("onPrepared ——> STATE_PREPARED");
-            aliPlayer.start();
+            mp.start();
             //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
             if (skipToPosition != 0) {
                 // 跳到指定位置播放
-                aliPlayer.seekTo(skipToPosition);
+                mp.seekTo(skipToPosition);
                 skipToPosition = 0;
             } else if (continueFromLastPosition) {
                 // 从上次的保存位置播放
                 long savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl);
-                aliPlayer.seekTo(savedPlayPosition);
+                mp.seekTo(savedPlayPosition);
             }
         }
     };
 
-    private IPlayer.OnVideoSizeChangedListener mOnVideoSizeChangedListener
-            = new IPlayer.OnVideoSizeChangedListener() {
+    private IMediaPlayer.OnVideoSizeChangedListener mOnVideoSizeChangedListener
+            = new IMediaPlayer.OnVideoSizeChangedListener() {
         @Override
-        public void onVideoSizeChanged(int width, int height) {
-            surfaceView.adaptVideoSize(width, height);
+        public void onVideoSizeChanged(IMediaPlayer mp, int width, int height, int sar_num, int sar_den) {
+            mTextureView.adaptVideoSize(width, height);
             LogUtil.d("onVideoSizeChanged ——> width：" + width + "， height：" + height);
         }
     };
 
-    private IPlayer.OnCompletionListener mOnCompletionListener
-            = new IPlayer.OnCompletionListener() {
+    private IMediaPlayer.OnCompletionListener mOnCompletionListener
+            = new IMediaPlayer.OnCompletionListener() {
         @Override
-        public void onCompletion() {  //设置了循环播放后，就不会再执行这个回调了
+        public void onCompletion(IMediaPlayer mp) {  //设置了循环播放后，就不会再执行这个回调了
             mCurrentState = STATE_COMPLETED;
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("onCompletion ——> STATE_COMPLETED");
@@ -420,90 +432,71 @@ public class AliVideoPlayer extends FrameLayout
         }
     };
 
-    private IPlayer.OnErrorListener mOnErrorListener
-            = new IPlayer.OnErrorListener() {
+    private IMediaPlayer.OnErrorListener mOnErrorListener
+            = new IMediaPlayer.OnErrorListener() {
         @Override
-        public void onError(ErrorInfo errorInfo) {
-            //出错事件
-            mCurrentState = STATE_ERROR;
-            mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("onError ——> STATE_ERROR");
-        }
-    };
-
-    private IPlayer.OnRenderingStartListener mOnRenderingStartListener
-            = new IPlayer.OnRenderingStartListener() {
-        @Override
-        public void onRenderingStart() {
-            //首帧渲染显示事件
-            mCurrentState = STATE_PLAYING;
-            mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("onRenderingStart");
-        }
-    };
-
-    private IPlayer.OnLoadingStatusListener mOnLoadingStatusListener
-            = new IPlayer.OnLoadingStatusListener() {
-        @Override
-        public void onLoadingBegin() {
-            //缓冲开始
-            if (mCurrentState == STATE_PAUSED || mCurrentState == STATE_BUFFERING_PAUSED) {
-                mCurrentState = STATE_BUFFERING_PAUSED;
-                LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED");
-            } else {
-                mCurrentState = STATE_BUFFERING_PLAYING;
-                LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING");
+        public boolean onError(IMediaPlayer mp, int what, int extra) {
+            // 直播流播放时去调用mediaPlayer.getDuration会导致-38和-2147483648错误，忽略该错误
+            if (what != -38 && what != -2147483648 && extra != -38 && extra != -2147483648) {
+                mCurrentState = STATE_ERROR;
+                mController.onPlayStateChanged(mCurrentState);
+                LogUtil.d("onError ——> STATE_ERROR ———— what：" + what + ", extra: " + extra);
             }
-            mController.onPlayStateChanged(mCurrentState);
+            return true;
         }
+    };
 
+    private IMediaPlayer.OnInfoListener mOnInfoListener
+            = new IMediaPlayer.OnInfoListener() {
         @Override
-        public void onLoadingProgress(int percent, float v) {
-            //缓冲进度
-            mBufferPercentage = percent;
-        }
-
-        @Override
-        public void onLoadingEnd() {
-            //缓冲结束
-            if (mCurrentState == STATE_BUFFERING_PLAYING) {
+        public boolean onInfo(IMediaPlayer mp, int what, int extra) {
+            if (what == IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                // 播放器开始渲染
                 mCurrentState = STATE_PLAYING;
                 mController.onPlayStateChanged(mCurrentState);
-                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING");
-            }
-            if (mCurrentState == STATE_BUFFERING_PAUSED) {
-                mCurrentState = STATE_PAUSED;
+                LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING");
+            } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
+                // MediaPlayer暂时不播放，以缓冲更多的数据
+                if (mCurrentState == STATE_PAUSED || mCurrentState == STATE_BUFFERING_PAUSED) {
+                    mCurrentState = STATE_BUFFERING_PAUSED;
+                    LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED");
+                } else {
+                    mCurrentState = STATE_BUFFERING_PLAYING;
+                    LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING");
+                }
                 mController.onPlayStateChanged(mCurrentState);
-                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED");
+            } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_END) {
+                // 填充缓冲区后，MediaPlayer恢复播放/暂停
+                if (mCurrentState == STATE_BUFFERING_PLAYING) {
+                    mCurrentState = STATE_PLAYING;
+                    mController.onPlayStateChanged(mCurrentState);
+                    LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING");
+                }
+                if (mCurrentState == STATE_BUFFERING_PAUSED) {
+                    mCurrentState = STATE_PAUSED;
+                    mController.onPlayStateChanged(mCurrentState);
+                    LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED");
+                }
+            } else if (what == IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED) {
+                // 视频旋转了extra度，需要恢复
+                if (mTextureView != null) {
+                    mTextureView.setRotation(extra);
+                    LogUtil.d("视频旋转角度：" + extra);
+                }
+            } else if (what == IMediaPlayer.MEDIA_INFO_NOT_SEEKABLE) {
+                LogUtil.d("视频不能seekTo，为直播视频");
+            } else {
+                LogUtil.d("onInfo ——> what：" + what);
             }
+            return true;
         }
     };
 
-    private IPlayer.OnInfoListener mOnInfoListener
-            = new IPlayer.OnInfoListener() {
+    private IMediaPlayer.OnBufferingUpdateListener mOnBufferingUpdateListener
+            = new IMediaPlayer.OnBufferingUpdateListener() {
         @Override
-        public void onInfo(InfoBean infoBean) {
-            if (infoBean.getCode().getValue() == InfoCode.AutoPlayStart.getValue()) {
-                //自动播放开始事件;注意：自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
-                mCurrentState = STATE_PREPARED;
-                mController.onPlayStateChanged(mCurrentState);
-                LogUtil.d("onInfo ——> AutoPlayStart");
-            } else if (infoBean.getCode().getValue() == InfoCode.LoopingStart.getValue()) {
-                //循环播放开始事件,不会回调onPrepared，onRenderingStart，onCompletion
-                LogUtil.d("onInfo ——> LoopingStart");
-            } else if (infoBean.getCode() == InfoCode.CurrentPosition) {
-                //更新currentPosition
-                currentPosition = infoBean.getExtraValue();
-            }
-        }
-    };
-
-    private IPlayer.OnSeekCompleteListener mOnSeekCompleteListener
-            = new IPlayer.OnSeekCompleteListener() {
-        @Override
-        public void onSeekComplete() {
-            LogUtil.d("onSeekComplete" + getCurrentPosition());
-            //这里取到的CurrentPosition可能也不是拖动后的最新的,onInfo获取到的seekTo后的position有延迟
+        public void onBufferingUpdate(IMediaPlayer mp, int percent) {
+            mBufferPercentage = percent;
         }
     };
 
@@ -521,7 +514,7 @@ public class AliVideoPlayer extends FrameLayout
         NiceUtil.scanForActivity(mContext)
                 .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-        ViewGroup contentView = NiceUtil.scanForActivity(mContext)
+        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
         if (mCurrentMode == MODE_TINY_WINDOW) {
             contentView.removeView(mContainer);
@@ -552,7 +545,7 @@ public class AliVideoPlayer extends FrameLayout
             NiceUtil.scanForActivity(mContext)
                     .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-            ViewGroup contentView = NiceUtil.scanForActivity(mContext)
+            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(
@@ -574,9 +567,9 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public void enterTinyWindow() {
         if (mCurrentMode == MODE_TINY_WINDOW) return;
-        removeView(mContainer);
+        this.removeView(mContainer);
 
-        ViewGroup contentView =  NiceUtil.scanForActivity(mContext)
+        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
         // 小窗口的宽度为屏幕宽度的60%，长宽比默认为16:9，右边距、下边距为8dp。
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
@@ -585,6 +578,7 @@ public class AliVideoPlayer extends FrameLayout
         params.gravity = Gravity.BOTTOM | Gravity.END;
         params.rightMargin = NiceUtil.dp2px(mContext, 8f);
         params.bottomMargin = NiceUtil.dp2px(mContext, 8f);
+
         contentView.addView(mContainer, params);
 
         mCurrentMode = MODE_TINY_WINDOW;
@@ -598,7 +592,7 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public boolean exitTinyWindow() {
         if (mCurrentMode == MODE_TINY_WINDOW) {
-            ViewGroup contentView = NiceUtil.scanForActivity(mContext)
+            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(
@@ -620,12 +614,19 @@ public class AliVideoPlayer extends FrameLayout
             mAudioManager.abandonAudioFocus(null);
             mAudioManager = null;
         }
-        if (aliPlayer != null) {
-            aliPlayer.release();
-            aliPlayer = null;
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
         }
-        surfaceHolder = null;
-        mContainer.removeView(surfaceView);
+        mContainer.removeView(mTextureView);
+        if (mSurface != null) {
+            mSurface.release();
+            mSurface = null;
+        }
+        if (mSurfaceTexture != null) {
+            mSurfaceTexture.release();
+            mSurfaceTexture = null;
+        }
         mCurrentState = STATE_IDLE;
     }
 
