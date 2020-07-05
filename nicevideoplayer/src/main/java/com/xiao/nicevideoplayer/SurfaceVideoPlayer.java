@@ -299,11 +299,6 @@ public class SurfaceVideoPlayer extends FrameLayout
                 case TYPE_IJK:
                 default:
                     mMediaPlayer = new IjkMediaPlayer();
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "analyzemaxduration", 100L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "probesize", 10240L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "flush_packets", 1L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(4, "packet-buffering", 0L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(4, "framedrop", 1L);
                     break;
             }
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -333,20 +328,21 @@ public class SurfaceVideoPlayer extends FrameLayout
             surfaceHolder = holder;
             openMediaPlayer();
         } else {
-            //todo(rjq) 切后台暂停后，回到前台不主动播放，会黑屏。原因是activity onPause后，SurfaceView会被销毁，会调surfaceDestroyed()方法；使用TextureView没有该问题
+            //todo(rjq) 切后台暂停后，回到前台不主动播放，会黑屏。原因是activity onPause后，SurfaceView会被销毁，回调surfaceDestroyed()方法;
+            // 使用TextureView没有该问题;使用AlPlayer也不存在该问题
             //下面代码可以解决切后台暂停后，回到前台主动播放黑屏问题，但是不能解决上述问题
             mMediaPlayer.setDisplay(surfaceHolder);
         }
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        LogUtil.d("surfaceDestroyed");
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        LogUtil.d("surfaceDestroyed");
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
     }
 
     private void openMediaPlayer() {
@@ -381,6 +377,7 @@ public class SurfaceVideoPlayer extends FrameLayout
         public void onPrepared(IMediaPlayer mp) {
             mCurrentState = STATE_PREPARED;
             //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
+            //当开始循环播放时，不会回调该方法
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("onPrepared ——> STATE_PREPARED");
             mp.start();
@@ -439,7 +436,7 @@ public class SurfaceVideoPlayer extends FrameLayout
         @Override
         public boolean onInfo(IMediaPlayer mp, int what, int extra) {
             if (what == IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-                // 播放器开始渲染
+                // 播放器开始渲染，当开始循环播放时，不会回调该方法
                 mCurrentState = STATE_PLAYING;
                 mController.onPlayStateChanged(mCurrentState);
                 LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING");
@@ -566,7 +563,6 @@ public class SurfaceVideoPlayer extends FrameLayout
         params.gravity = Gravity.BOTTOM | Gravity.END;
         params.rightMargin = NiceUtil.dp2px(mContext, 8f);
         params.bottomMargin = NiceUtil.dp2px(mContext, 8f);
-
         contentView.addView(mContainer, params);
 
         mCurrentMode = MODE_TINY_WINDOW;

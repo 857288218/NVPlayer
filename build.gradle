@@ -4,6 +4,8 @@ buildscript {
     repositories {
         jcenter()
         google()
+        mavenCentral()
+        maven {url 'https://maven.aliyun.com/repository/releases'}
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.0'
@@ -19,7 +21,8 @@ allprojects {
     repositories {
         jcenter()
         google()
-
+        mavenCentral()
+        maven {url 'https://maven.aliyun.com/repository/releases'}
         flatDir {
             dirs 'libs', '../nicevideoplayer/libs'
         }
