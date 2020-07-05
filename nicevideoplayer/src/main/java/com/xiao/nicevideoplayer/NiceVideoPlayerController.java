@@ -126,7 +126,7 @@ public abstract class NiceVideoPlayerController
                 }
             };
         }
-        mUpdateProgressTimer.schedule(mUpdateProgressTimerTask, 0, 1000);
+        mUpdateProgressTimer.schedule(mUpdateProgressTimerTask, 0, 500);
     }
 
     /**

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.media.AudioManager;
+import android.os.Environment;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
@@ -16,6 +17,7 @@ import com.aliyun.player.IPlayer;
 import com.aliyun.player.bean.ErrorInfo;
 import com.aliyun.player.bean.InfoBean;
 import com.aliyun.player.bean.InfoCode;
+import com.aliyun.player.nativeclass.CacheConfig;
 import com.aliyun.player.nativeclass.PlayerConfig;
 import com.aliyun.player.source.UrlSource;
 
@@ -280,22 +282,19 @@ public class AliVideoPlayer extends FrameLayout
     private void initMediaPlayer() {
         if (aliPlayer == null) {
             aliPlayer = AliPlayerFactory.createAliPlayer(mContext);
-//            CacheConfig cacheConfig = new CacheConfig();
-//            //开启缓存功能
-//            cacheConfig.mEnable = true;
-//            //能够缓存的单个文件最大时长。超过此长度则不缓存
-//            cacheConfig.mMaxDurationS =100;
-//            //缓存目录的位置
-//            cacheConfig.mDir = mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-//            //缓存目录的最大大小。超过此大小，将会删除最旧的缓存文件
-//            cacheConfig.mMaxSizeMB = 200;
-//            //设置缓存配置给到播放器
-//            aliPlayer.setCacheConfig(cacheConfig);
-//            aliPlayer.(AudioManager.STREAM_MUSIC);
+            CacheConfig cacheConfig = new CacheConfig();
+            //开启缓存功能
+            cacheConfig.mEnable = true;
+            //能够缓存的单个文件最大时长。超过此长度则不缓存
+            cacheConfig.mMaxDurationS = 100;
+            //缓存目录的位置
+            cacheConfig.mDir = mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+            //缓存目录的最大大小。超过此大小，将会删除最旧的缓存文件
+            cacheConfig.mMaxSizeMB = 200;
+            //设置缓存配置给到播放器
+            aliPlayer.setCacheConfig(cacheConfig);
 
             PlayerConfig config = aliPlayer.getConfig();
-            //最大延迟。注意：直播有效。当延时比较大时，播放器sdk内部会追帧等，保证播放器的延时在这个范围内。
-//            config.mMaxDelayTime = 5000;
             // 最大缓冲区时长。单位ms。播放器每次最多加载这么长时间的缓冲数据。
             config.mMaxBufferDuration = 50000;
             //高缓冲时长。单位ms。当网络不好导致加载数据时，如果加载的缓冲时长到达这个值，结束加载状态。
@@ -346,6 +345,8 @@ public class AliVideoPlayer extends FrameLayout
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        //解决切后台暂停后，回到前台不主动播放，会黑屏
+        //用来刷新视频画面的。如果view的大小变化了，调用此方法将会更新画面大小，保证视频画面与View的变化一致。
         aliPlayer.redraw();
     }
 
@@ -501,10 +502,8 @@ public class AliVideoPlayer extends FrameLayout
             = new IPlayer.OnSeekCompleteListener() {
         @Override
         public void onSeekComplete() {
-            LogUtil.d("onSeekComplete");
-            //拖动seekbar时取消更新进度条timer,拖动结束后再去启动更新进度条的timer，这时候onInfo取到的currentPosition就是正确的了
-            //解决拖动后进度条跳的问题：因为currentPosition是在onInfo回调里取的，拖动后进度条ui会更新到拖动位置，然后在timer中更新进度条时取的currentPosition可能还是拖动之前的
-            mController.startUpdateProgressTimer();
+            LogUtil.d("onSeekComplete" + getCurrentPosition());
+            //这里取到的CurrentPosition可能也不是拖动后的最新的,onInfo获取到的seekTo后的position有延迟
         }
     };
 
@@ -522,7 +521,7 @@ public class AliVideoPlayer extends FrameLayout
         NiceUtil.scanForActivity(mContext)
                 .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+        ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
         if (mCurrentMode == MODE_TINY_WINDOW) {
             contentView.removeView(mContainer);
@@ -553,7 +552,7 @@ public class AliVideoPlayer extends FrameLayout
             NiceUtil.scanForActivity(mContext)
                     .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+            ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(
@@ -577,7 +576,7 @@ public class AliVideoPlayer extends FrameLayout
         if (mCurrentMode == MODE_TINY_WINDOW) return;
         removeView(mContainer);
 
-        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+        ViewGroup contentView =  NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
         // 小窗口的宽度为屏幕宽度的60%，长宽比默认为16:9，右边距、下边距为8dp。
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
@@ -599,7 +598,7 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public boolean exitTinyWindow() {
         if (mCurrentMode == MODE_TINY_WINDOW) {
-            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+            ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(

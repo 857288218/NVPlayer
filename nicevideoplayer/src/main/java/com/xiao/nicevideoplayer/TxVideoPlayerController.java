@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.DrawableRes;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -433,7 +435,7 @@ public class TxVideoPlayerController
     private void startDismissTopBottomTimer() {
         cancelDismissTopBottomTimer();
         if (mDismissTopBottomCountDownTimer == null) {
-            mDismissTopBottomCountDownTimer = new CountDownTimer(8000, 8000) {
+            mDismissTopBottomCountDownTimer = new CountDownTimer(5000, 5000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
 
@@ -459,15 +461,17 @@ public class TxVideoPlayerController
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+        if (fromUser) {
+            //人为滑动seekbar更新当前滑动的进度时间
+            long position = (long) (mNiceVideoPlayer.getDuration() * progress / 100f);
+            mPosition.setText(NiceUtil.formatTime(position));
+        }
     }
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-        //AliPlayer拖动seekbar后先取消进度条更新timer,再onSeekComplete中再启动timer,这样拿到的currentPosition就是拖动后的，解决进度条跳的问题
-        if (mNiceVideoPlayer instanceof AliVideoPlayer) {
-            cancelUpdateProgressTimer();
-        }
+        //拖动seekbar时先取消进度条更新timer，防止进度条跳的问题
+        cancelUpdateProgressTimer();
     }
 
     @Override
@@ -475,11 +479,23 @@ public class TxVideoPlayerController
         if (mNiceVideoPlayer.isBufferingPaused() || mNiceVideoPlayer.isPaused()) {
             mNiceVideoPlayer.restart();
         }
-        // 为什么往前拖动进度条后，进度条还会往后退几秒：seek只支持关键帧，出现这个情况就是原始的视频文件中关键帧比较少，
+        // 为什么往前拖动进度条后，进度条还会往后退几秒：seekTo只支持关键帧，出现这个情况就是原始的视频文件中关键帧比较少，
         // 播放器会在拖动的位置找最近的关键帧，然后在updateProgress(1秒更一次)时候根据CurrentPosition重新计算正确的progress，所以mSeek可能出现退几秒
         long position = (long) (mNiceVideoPlayer.getDuration() * seekBar.getProgress() / 100f);
         mNiceVideoPlayer.seekTo(position);
         startDismissTopBottomTimer();
+
+        //先这样解决拖动进度条AliPlayer seekTo后在onInfo回调中取到的currentPosition不是最新的，有延时。目的是避免seekbar拖动后大幅度跳动
+        if (mNiceVideoPlayer instanceof AliVideoPlayer) {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startUpdateProgressTimer();
+                }
+            }, 1000);
+        } else {
+            startUpdateProgressTimer();
+        }
     }
 
     @Override

@@ -329,7 +329,7 @@ public class SurfaceVideoPlayer extends FrameLayout
             openMediaPlayer();
         } else {
             //todo(rjq) 切后台暂停后，回到前台不主动播放，会黑屏。原因是activity onPause后，SurfaceView会被销毁，回调surfaceDestroyed()方法;
-            // 使用TextureView没有该问题;使用AlPlayer也不存在该问题
+            // 使用TextureView没有该问题;AliPlayer是在surfaceChanged中aliPlayer.redraw();解决的
             //下面代码可以解决切后台暂停后，回到前台主动播放黑屏问题，但是不能解决上述问题
             mMediaPlayer.setDisplay(surfaceHolder);
         }
@@ -342,7 +342,7 @@ public class SurfaceVideoPlayer extends FrameLayout
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+        LogUtil.d("surfaceChanged");
     }
 
     private void openMediaPlayer() {
@@ -499,7 +499,7 @@ public class SurfaceVideoPlayer extends FrameLayout
         NiceUtil.scanForActivity(mContext)
                 .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+        ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
         if (mCurrentMode == MODE_TINY_WINDOW) {
             contentView.removeView(mContainer);
@@ -530,7 +530,7 @@ public class SurfaceVideoPlayer extends FrameLayout
             NiceUtil.scanForActivity(mContext)
                     .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+            ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(
@@ -554,7 +554,7 @@ public class SurfaceVideoPlayer extends FrameLayout
         if (mCurrentMode == MODE_TINY_WINDOW) return;
         removeView(mContainer);
 
-        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+        ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
         // 小窗口的宽度为屏幕宽度的60%，长宽比默认为16:9，右边距、下边距为8dp。
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
@@ -576,7 +576,7 @@ public class SurfaceVideoPlayer extends FrameLayout
     @Override
     public boolean exitTinyWindow() {
         if (mCurrentMode == MODE_TINY_WINDOW) {
-            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+            ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(
