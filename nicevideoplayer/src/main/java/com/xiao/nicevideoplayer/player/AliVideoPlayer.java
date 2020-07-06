@@ -656,7 +656,7 @@ public class AliVideoPlayer extends FrameLayout
         if (mController != null) {
             mController.reset();
         }
-
+        //todo(rjq) 释放后黑一下
         // 释放播放器
         releasePlayer();
 
