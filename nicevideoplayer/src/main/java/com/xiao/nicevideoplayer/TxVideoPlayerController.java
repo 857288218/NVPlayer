@@ -225,7 +225,6 @@ public class TxVideoPlayerController
             case INiceVideoPlayer.STATE_PLAYING:
                 mImage.setVisibility(View.GONE);  //当第一帧作为封面时，首帧渲染显示再隐藏封面图
                 mLoading.setVisibility(View.GONE);
-//                LogUtil.d("playing");
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 startDismissTopBottomTimer();
                 break;
@@ -239,7 +238,6 @@ public class TxVideoPlayerController
                 mLoading.setVisibility(View.VISIBLE);
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 mLoadText.setText("正在缓冲...");
-//                LogUtil.d("buffering");
                 startDismissTopBottomTimer();
                 break;
             case INiceVideoPlayer.STATE_BUFFERING_PAUSED:

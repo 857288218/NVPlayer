@@ -456,7 +456,7 @@ public class AliVideoPlayer extends FrameLayout
                 mCurrentState = STATE_BUFFERING_PAUSED;
                 LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED");
             } else {
-                mCurrentMode = STATE_BUFFERING_PLAYING;
+                mCurrentState = STATE_BUFFERING_PLAYING;
                 LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING");
             }
             mController.onPlayStateChanged(mCurrentState);
@@ -652,13 +652,14 @@ public class AliVideoPlayer extends FrameLayout
         }
         mCurrentMode = MODE_NORMAL;
 
-        // 释放播放器
-        releasePlayer();
-
         // 恢复控制器
         if (mController != null) {
             mController.reset();
         }
+
+        // 释放播放器
+        releasePlayer();
+
         Runtime.getRuntime().gc();
     }
 }
