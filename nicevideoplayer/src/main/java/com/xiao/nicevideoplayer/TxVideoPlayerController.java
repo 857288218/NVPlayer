@@ -255,7 +255,7 @@ public class TxVideoPlayerController
             case INiceVideoPlayer.STATE_COMPLETED:
                 cancelUpdateProgressTimer();
                 setTopBottomVisible(false);
-                mImage.setVisibility(View.VISIBLE);
+//                mImage.setVisibility(View.VISIBLE);  //播放完成就停在最后一帧
                 mCompleted.setVisibility(View.VISIBLE);
                 break;
         }
