@@ -20,11 +20,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void videoList(View view) {
-        startActivity(new Intent(this, RecyclerViewActivity.class));
+        startActivity(new Intent(this, IJKSurfaceListActivity.class));
     }
 
     public void videoList2(View view) {
-//        startActivity(new Intent(this, AliPlayerListActivity.class));
+        startActivity(new Intent(this, IJKTextureListActivity.class));
     }
 
     public void videoList3(View view) {
@@ -33,15 +33,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void changeClarity(View view) {
         startActivity(new Intent(this, ChangeClarityActivity.class));
-    }
-
-    public void useInFragment(View view) {
-        startActivity(new Intent(this, UseInFragActivity.class));
-    }
-
-    public void processHomeKeyInActivity(View view) {
-        // 在Activity中使用NiceVideoPlayer，如果需要处理播放时按下Home键的逻辑.
-        startActivity(new Intent(this, ProcessHome1Activity.class));
     }
 
     public void processHomeKeyInFragment(View view) {

@@ -1,19 +1,17 @@
 package com.xiao.nicevieoplayer.example;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.xiao.nicevideoplayer.AliVideoPlayer;
-import com.xiao.nicevideoplayer.SurfaceVideoPlayer;
-import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevideoplayer.ScreenRotateUtils;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
+import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevieoplayer.R;
+import com.xiao.nicevieoplayer.example.base.CompatHomeKeyActivity;
 
-public class TinyWindowPlayActivity extends AppCompatActivity implements ScreenRotateUtils.OrientationChangeListener {
+public class TinyWindowPlayActivity extends CompatHomeKeyActivity implements ScreenRotateUtils.OrientationChangeListener {
 
     private AliVideoPlayer mNiceVideoPlayer;
 
@@ -27,7 +25,6 @@ public class TinyWindowPlayActivity extends AppCompatActivity implements ScreenR
     private void init() {
         mNiceVideoPlayer = findViewById(R.id.nice_video_player);
         String videoUrl = "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-17_17-33-30.mp4";
-//        videoUrl = Environment.getExternalStorageDirectory().getPath().concat("/办公室小野.mp4");
         mNiceVideoPlayer.setUp(videoUrl, null);
         mNiceVideoPlayer.setLooping(true);
 
@@ -48,18 +45,6 @@ public class TinyWindowPlayActivity extends AppCompatActivity implements ScreenR
         } else {
             mNiceVideoPlayer.enterTinyWindow();
         }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (NiceVideoPlayerManager.instance().onBackPressd()) return;
-        super.onBackPressed();
     }
 
     @Override

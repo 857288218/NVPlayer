@@ -1,9 +1,10 @@
-package com.xiao.nicevideoplayer;
+package com.xiao.nicevideoplayer.player;
 
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.media.AudioManager;
+import android.os.Environment;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
@@ -16,8 +17,14 @@ import com.aliyun.player.IPlayer;
 import com.aliyun.player.bean.ErrorInfo;
 import com.aliyun.player.bean.InfoBean;
 import com.aliyun.player.bean.InfoCode;
+import com.aliyun.player.nativeclass.CacheConfig;
 import com.aliyun.player.nativeclass.PlayerConfig;
 import com.aliyun.player.source.UrlSource;
+import com.xiao.nicevideoplayer.LogUtil;
+import com.xiao.nicevideoplayer.NiceSurfaceView;
+import com.xiao.nicevideoplayer.NiceUtil;
+import com.xiao.nicevideoplayer.NiceVideoPlayerController;
+import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 
 import java.util.Map;
 
@@ -119,15 +126,15 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public void restart() {
         if (mCurrentState == STATE_PAUSED) {
+            LogUtil.d("STATE_PLAYING");
             aliPlayer.start();
             mCurrentState = STATE_PLAYING;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("STATE_PLAYING");
         } else if (mCurrentState == STATE_BUFFERING_PAUSED) {
+            LogUtil.d("STATE_BUFFERING_PLAYING");
             aliPlayer.start();
             mCurrentState = STATE_BUFFERING_PLAYING;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("STATE_BUFFERING_PLAYING");
         } else if (mCurrentState == STATE_COMPLETED || mCurrentState == STATE_ERROR) {
             aliPlayer.reset();
             openMediaPlayer();
@@ -139,16 +146,16 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public void pause() {
         if (mCurrentState == STATE_PLAYING) {
+            LogUtil.d("STATE_PAUSED");
             aliPlayer.pause();
             mCurrentState = STATE_PAUSED;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("STATE_PAUSED");
         }
         if (mCurrentState == STATE_BUFFERING_PLAYING) {
+            LogUtil.d("STATE_BUFFERING_PAUSED");
             aliPlayer.pause();
             mCurrentState = STATE_BUFFERING_PAUSED;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("STATE_BUFFERING_PAUSED");
         }
     }
 
@@ -280,22 +287,19 @@ public class AliVideoPlayer extends FrameLayout
     private void initMediaPlayer() {
         if (aliPlayer == null) {
             aliPlayer = AliPlayerFactory.createAliPlayer(mContext);
-//            CacheConfig cacheConfig = new CacheConfig();
-//            //开启缓存功能
-//            cacheConfig.mEnable = true;
-//            //能够缓存的单个文件最大时长。超过此长度则不缓存
-//            cacheConfig.mMaxDurationS =100;
-//            //缓存目录的位置
-//            cacheConfig.mDir = mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-//            //缓存目录的最大大小。超过此大小，将会删除最旧的缓存文件
-//            cacheConfig.mMaxSizeMB = 200;
-//            //设置缓存配置给到播放器
-//            aliPlayer.setCacheConfig(cacheConfig);
-//            aliPlayer.(AudioManager.STREAM_MUSIC);
+            CacheConfig cacheConfig = new CacheConfig();
+            //开启缓存功能
+            cacheConfig.mEnable = true;
+            //能够缓存的单个文件最大时长。超过此长度则不缓存
+            cacheConfig.mMaxDurationS = 100;
+            //缓存目录的位置
+            cacheConfig.mDir = mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+            //缓存目录的最大大小。超过此大小，将会删除最旧的缓存文件
+            cacheConfig.mMaxSizeMB = 200;
+            //设置缓存配置给到播放器
+            aliPlayer.setCacheConfig(cacheConfig);
 
             PlayerConfig config = aliPlayer.getConfig();
-            //最大延迟。注意：直播有效。当延时比较大时，播放器sdk内部会追帧等，保证播放器的延时在这个范围内。
-//            config.mMaxDelayTime = 5000;
             // 最大缓冲区时长。单位ms。播放器每次最多加载这么长时间的缓冲数据。
             config.mMaxBufferDuration = 50000;
             //高缓冲时长。单位ms。当网络不好导致加载数据时，如果加载的缓冲时长到达这个值，结束加载状态。
@@ -329,11 +333,11 @@ public class AliVideoPlayer extends FrameLayout
             surfaceHolder = holder;
             openMediaPlayer();
         } else {
-            //todo(rjq) 切后台暂停后，回到前台不主动播放，会黑屏。原因是activity onPause后，SurfaceView会被销毁，回调surfaceDestroyed()方法;
-            // 使用TextureView没有该问题
-            //下面代码可以解决切后台暂停后，回到前台主动播放黑屏问题，但是不能解决上述问题
+            // activity onPause后，SurfaceView会被销毁，回调surfaceDestroyed()方法,
+            // 回到前台会回调surfaceCreated，需要重新添加holder,否则没有画面
             aliPlayer.setDisplay(holder);
         }
+        LogUtil.d("surfaceCreated");
     }
 
     @Override
@@ -346,6 +350,9 @@ public class AliVideoPlayer extends FrameLayout
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        //解决切后台暂停后，回到前台不主动播放，会黑屏
+        //用来刷新视频画面的。如果view的大小变化了，调用此方法将会更新画面大小，保证视频画面与View的变化一致。
+        LogUtil.d("surfaceChanged");
         aliPlayer.redraw();
     }
 
@@ -379,7 +386,6 @@ public class AliVideoPlayer extends FrameLayout
         @Override
         public void onPrepared() {//自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
             mCurrentState = STATE_PREPARED;
-            //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
             mController.onPlayStateChanged(mCurrentState);
             LogUtil.d("onPrepared ——> STATE_PREPARED");
             aliPlayer.start();
@@ -409,9 +415,9 @@ public class AliVideoPlayer extends FrameLayout
             = new IPlayer.OnCompletionListener() {
         @Override
         public void onCompletion() {  //设置了循环播放后，就不会再执行这个回调了
+            LogUtil.d("onCompletion ——> STATE_COMPLETED");
             mCurrentState = STATE_COMPLETED;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("onCompletion ——> STATE_COMPLETED");
             // 清除屏幕常亮
             mContainer.setKeepScreenOn(false);
             // 重置当前播放进度
@@ -435,9 +441,9 @@ public class AliVideoPlayer extends FrameLayout
         @Override
         public void onRenderingStart() {
             //首帧渲染显示事件
+            LogUtil.d("onRenderingStart");
             mCurrentState = STATE_PLAYING;
             mController.onPlayStateChanged(mCurrentState);
-            LogUtil.d("onRenderingStart");
         }
     };
 
@@ -445,7 +451,7 @@ public class AliVideoPlayer extends FrameLayout
             = new IPlayer.OnLoadingStatusListener() {
         @Override
         public void onLoadingBegin() {
-            //缓冲开始
+            //缓冲开始, 可能还没播放画面就开始缓冲
             if (mCurrentState == STATE_PAUSED || mCurrentState == STATE_BUFFERING_PAUSED) {
                 mCurrentState = STATE_BUFFERING_PAUSED;
                 LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED");
@@ -466,14 +472,14 @@ public class AliVideoPlayer extends FrameLayout
         public void onLoadingEnd() {
             //缓冲结束
             if (mCurrentState == STATE_BUFFERING_PLAYING) {
+                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING");
                 mCurrentState = STATE_PLAYING;
                 mController.onPlayStateChanged(mCurrentState);
-                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING");
             }
             if (mCurrentState == STATE_BUFFERING_PAUSED) {
+                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED");
                 mCurrentState = STATE_PAUSED;
                 mController.onPlayStateChanged(mCurrentState);
-                LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED");
             }
         }
     };
@@ -483,10 +489,11 @@ public class AliVideoPlayer extends FrameLayout
         @Override
         public void onInfo(InfoBean infoBean) {
             if (infoBean.getCode().getValue() == InfoCode.AutoPlayStart.getValue()) {
-                //自动播放开始事件;注意：自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
+                // 自动播放开始事件;注意：自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
+                // 还没确认是否会回调onRenderingStart，如果不回调这里需要执行一下onPlayStateChanged（STATE_PLAYING）
+                LogUtil.d("onInfo ——> AutoPlayStart");
                 mCurrentState = STATE_PREPARED;
                 mController.onPlayStateChanged(mCurrentState);
-                LogUtil.d("onInfo ——> AutoPlayStart");
             } else if (infoBean.getCode().getValue() == InfoCode.LoopingStart.getValue()) {
                 //循环播放开始事件,不会回调onPrepared，onRenderingStart，onCompletion
                 LogUtil.d("onInfo ——> LoopingStart");
@@ -501,10 +508,8 @@ public class AliVideoPlayer extends FrameLayout
             = new IPlayer.OnSeekCompleteListener() {
         @Override
         public void onSeekComplete() {
-            LogUtil.d("onSeekComplete");
-            //拖动seekbar时取消更新进度条timer,拖动结束后再去启动更新进度条的timer，这时候onInfo取到的currentPosition就是正确的了
-            //解决拖动后进度条跳的问题：因为currentPosition是在onInfo回调里取的，拖动后进度条ui会更新到拖动位置，然后在timer中更新进度条时取的currentPosition可能还是拖动之前的
-            mController.startUpdateProgressTimer();
+            LogUtil.d("onSeekComplete" + getCurrentPosition());
+            //这里取到的CurrentPosition可能也不是拖动后的最新的,onInfo获取到的seekTo后的position有延迟
         }
     };
 
@@ -522,7 +527,7 @@ public class AliVideoPlayer extends FrameLayout
         NiceUtil.scanForActivity(mContext)
                 .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+        ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
         if (mCurrentMode == MODE_TINY_WINDOW) {
             contentView.removeView(mContainer);
@@ -553,7 +558,7 @@ public class AliVideoPlayer extends FrameLayout
             NiceUtil.scanForActivity(mContext)
                     .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+            ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(
@@ -577,7 +582,7 @@ public class AliVideoPlayer extends FrameLayout
         if (mCurrentMode == MODE_TINY_WINDOW) return;
         removeView(mContainer);
 
-        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+        ViewGroup contentView =  NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
         // 小窗口的宽度为屏幕宽度的60%，长宽比默认为16:9，右边距、下边距为8dp。
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
@@ -599,7 +604,7 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public boolean exitTinyWindow() {
         if (mCurrentMode == MODE_TINY_WINDOW) {
-            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+            ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(
@@ -647,13 +652,14 @@ public class AliVideoPlayer extends FrameLayout
         }
         mCurrentMode = MODE_NORMAL;
 
-        // 释放播放器
-        releasePlayer();
-
         // 恢复控制器
         if (mController != null) {
             mController.reset();
         }
+        //todo(rjq) 释放后黑一下
+        // 释放播放器
+        releasePlayer();
+
         Runtime.getRuntime().gc();
     }
 }

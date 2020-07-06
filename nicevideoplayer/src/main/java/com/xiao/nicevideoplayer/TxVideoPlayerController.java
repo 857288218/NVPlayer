@@ -6,7 +6,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.DrawableRes;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -15,6 +18,9 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.xiao.nicevideoplayer.player.AliVideoPlayer;
+import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -198,12 +204,12 @@ public class TxVideoPlayerController
     }
 
     @Override
-    protected void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState) {
         switch (playState) {
             case INiceVideoPlayer.STATE_IDLE:
                 break;
             case INiceVideoPlayer.STATE_PREPARING:
-                mImage.setVisibility(View.GONE);
+//                mImage.setVisibility(View.GONE);  //当第一帧作为封面时，首帧渲染显示再隐藏封面图
                 mLoading.setVisibility(View.VISIBLE);
                 mLoadText.setText("正在准备...");
                 mError.setVisibility(View.GONE);
@@ -217,11 +223,13 @@ public class TxVideoPlayerController
                 startUpdateProgressTimer();
                 break;
             case INiceVideoPlayer.STATE_PLAYING:
+                mImage.setVisibility(View.GONE);  //当第一帧作为封面时，首帧渲染显示再隐藏封面图
                 mLoading.setVisibility(View.GONE);
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 startDismissTopBottomTimer();
                 break;
             case INiceVideoPlayer.STATE_PAUSED:
+                mImage.setVisibility(View.GONE);    //当第一帧作为封面时，首帧渲染显示再隐藏封面图
                 mLoading.setVisibility(View.GONE);
                 mRestartPause.setImageResource(R.drawable.ic_player_start);
                 cancelDismissTopBottomTimer();
@@ -254,7 +262,7 @@ public class TxVideoPlayerController
     }
 
     @Override
-    protected void onPlayModeChanged(int playMode) {
+    public void onPlayModeChanged(int playMode) {
         switch (playMode) {
             case INiceVideoPlayer.MODE_NORMAL:
                 mBack.setVisibility(View.GONE);
@@ -322,7 +330,7 @@ public class TxVideoPlayerController
     };
 
     @Override
-    protected void reset() {
+    public void reset() {
         topBottomVisible = false;
         cancelUpdateProgressTimer();
         cancelDismissTopBottomTimer();
@@ -433,7 +441,7 @@ public class TxVideoPlayerController
     private void startDismissTopBottomTimer() {
         cancelDismissTopBottomTimer();
         if (mDismissTopBottomCountDownTimer == null) {
-            mDismissTopBottomCountDownTimer = new CountDownTimer(8000, 8000) {
+            mDismissTopBottomCountDownTimer = new CountDownTimer(5000, 5000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
 
@@ -459,15 +467,17 @@ public class TxVideoPlayerController
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+        if (fromUser) {
+            //人为滑动seekbar更新当前滑动的进度时间
+            long position = (long) (mNiceVideoPlayer.getDuration() * progress / 100f);
+            mPosition.setText(NiceUtil.formatTime(position));
+        }
     }
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-        //AliPlayer拖动seekbar后先取消进度条更新timer,再onSeekComplete中再启动timer,这样拿到的currentPosition就是拖动后的，解决进度条跳的问题
-        if (mNiceVideoPlayer instanceof AliVideoPlayer) {
-            cancelUpdateProgressTimer();
-        }
+        //拖动seekbar时先取消进度条更新timer，防止进度条跳的问题
+        cancelUpdateProgressTimer();
     }
 
     @Override
@@ -475,15 +485,27 @@ public class TxVideoPlayerController
         if (mNiceVideoPlayer.isBufferingPaused() || mNiceVideoPlayer.isPaused()) {
             mNiceVideoPlayer.restart();
         }
-        // 为什么往前拖动进度条后，进度条还会往后退几秒：seek只支持关键帧，出现这个情况就是原始的视频文件中关键帧比较少，
+        // 为什么往前拖动进度条后，进度条还会往后退几秒：seekTo只支持关键帧，出现这个情况就是原始的视频文件中关键帧比较少，
         // 播放器会在拖动的位置找最近的关键帧，然后在updateProgress(1秒更一次)时候根据CurrentPosition重新计算正确的progress，所以mSeek可能出现退几秒
         long position = (long) (mNiceVideoPlayer.getDuration() * seekBar.getProgress() / 100f);
         mNiceVideoPlayer.seekTo(position);
         startDismissTopBottomTimer();
+
+        //先这样解决拖动进度条AliPlayer seekTo后在onInfo回调中取到的currentPosition不是最新的，有延时。目的是避免seekbar拖动后大幅度跳动
+        if (mNiceVideoPlayer instanceof AliVideoPlayer) {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startUpdateProgressTimer();
+                }
+            }, 1000);
+        } else {
+            startUpdateProgressTimer();
+        }
     }
 
     @Override
-    protected void updateProgress() {
+    public void updateProgress() {
         long position = mNiceVideoPlayer.getCurrentPosition();
         long duration = mNiceVideoPlayer.getDuration();
         int bufferPercentage = mNiceVideoPlayer.getBufferPercentage();
@@ -497,7 +519,7 @@ public class TxVideoPlayerController
     }
 
     @Override
-    protected void showChangePosition(long duration, int newPositionProgress) {
+    public void showChangePosition(long duration, int newPositionProgress) {
         mChangePositon.setVisibility(View.VISIBLE);
         long newPosition = (long) (duration * newPositionProgress / 100f);
         mChangePositionCurrent.setText(NiceUtil.formatTime(newPosition));
@@ -507,29 +529,29 @@ public class TxVideoPlayerController
     }
 
     @Override
-    protected void hideChangePosition() {
+    public void hideChangePosition() {
         mChangePositon.setVisibility(View.GONE);
     }
 
     @Override
-    protected void showChangeVolume(int newVolumeProgress) {
+    public void showChangeVolume(int newVolumeProgress) {
         mChangeVolume.setVisibility(View.VISIBLE);
         mChangeVolumeProgress.setProgress(newVolumeProgress);
     }
 
     @Override
-    protected void hideChangeVolume() {
+    public void hideChangeVolume() {
         mChangeVolume.setVisibility(View.GONE);
     }
 
     @Override
-    protected void showChangeBrightness(int newBrightnessProgress) {
+    public void showChangeBrightness(int newBrightnessProgress) {
         mChangeBrightness.setVisibility(View.VISIBLE);
         mChangeBrightnessProgress.setProgress(newBrightnessProgress);
     }
 
     @Override
-    protected void hideChangeBrightness() {
+    public void hideChangeBrightness() {
         mChangeBrightness.setVisibility(View.GONE);
     }
 }

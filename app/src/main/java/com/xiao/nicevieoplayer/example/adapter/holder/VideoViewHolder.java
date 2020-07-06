@@ -5,23 +5,19 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
-import com.xiao.nicevideoplayer.SurfaceVideoPlayer;
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.bean.Video;
 
-/**
- * Created by XiaoJianjun on 2017/5/21.
- */
-
 public class VideoViewHolder extends RecyclerView.ViewHolder {
 
     public TxVideoPlayerController mController;
-    public SurfaceVideoPlayer mVideoPlayer;
+    public IJKSurfaceVideoPlayer mVideoPlayer;
 
     public VideoViewHolder(View itemView) {
         super(itemView);
-        mVideoPlayer = (SurfaceVideoPlayer) itemView.findViewById(R.id.nice_video_player);
+        mVideoPlayer = (IJKSurfaceVideoPlayer) itemView.findViewById(R.id.nice_video_player);
         // 将列表中的每个视频设置为默认16:9的比例
         ViewGroup.LayoutParams params = mVideoPlayer.getLayoutParams();
         params.width = itemView.getResources().getDisplayMetrics().widthPixels; // 宽度为屏幕宽度

@@ -8,6 +8,9 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
+import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -18,7 +21,7 @@ public abstract class NiceVideoPlayerController
         extends FrameLayout implements View.OnTouchListener {
 
     private Context mContext;
-    protected INiceVideoPlayer mNiceVideoPlayer;
+    public INiceVideoPlayer mNiceVideoPlayer;
 
     private Timer mUpdateProgressTimer;
     private TimerTask mUpdateProgressTimerTask;
@@ -75,40 +78,40 @@ public abstract class NiceVideoPlayerController
      *
      * @param playState 播放状态：
      *                  <ul>
-     *                  <li>{@link SurfaceVideoPlayer#STATE_IDLE}</li>
-     *                  <li>{@link SurfaceVideoPlayer#STATE_PREPARING}</li>
-     *                  <li>{@link SurfaceVideoPlayer#STATE_PREPARED}</li>
-     *                  <li>{@link SurfaceVideoPlayer#STATE_PLAYING}</li>
-     *                  <li>{@link SurfaceVideoPlayer#STATE_PAUSED}</li>
-     *                  <li>{@link SurfaceVideoPlayer#STATE_BUFFERING_PLAYING}</li>
-     *                  <li>{@link SurfaceVideoPlayer#STATE_BUFFERING_PAUSED}</li>
-     *                  <li>{@link SurfaceVideoPlayer#STATE_ERROR}</li>
-     *                  <li>{@link SurfaceVideoPlayer#STATE_COMPLETED}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_IDLE}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_PREPARING}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_PREPARED}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_PLAYING}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_PAUSED}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_BUFFERING_PLAYING}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_BUFFERING_PAUSED}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_ERROR}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_COMPLETED}</li>
      *                  </ul>
      */
-    protected abstract void onPlayStateChanged(int playState);
+    public abstract void onPlayStateChanged(int playState);
 
     /**
      * 当播放器的播放模式发生变化，在此方法中更新不同模式下的控制器界面。
      *
      * @param playMode 播放器的模式：
      *                 <ul>
-     *                 <li>{@link SurfaceVideoPlayer#MODE_NORMAL}</li>
-     *                 <li>{@link SurfaceVideoPlayer#MODE_FULL_SCREEN}</li>
-     *                 <li>{@link SurfaceVideoPlayer#MODE_TINY_WINDOW}</li>
+     *                 <li>{@link IJKSurfaceVideoPlayer#MODE_NORMAL}</li>
+     *                 <li>{@link IJKSurfaceVideoPlayer#MODE_FULL_SCREEN}</li>
+     *                 <li>{@link IJKSurfaceVideoPlayer#MODE_TINY_WINDOW}</li>
      *                 </ul>
      */
-    protected abstract void onPlayModeChanged(int playMode);
+    public abstract void onPlayModeChanged(int playMode);
 
     /**
      * 重置控制器，将控制器UI恢复到初始状态。
      */
-    protected abstract void reset();
+    public abstract void reset();
 
     /**
      * 开启更新进度的计时器。
      */
-    protected void startUpdateProgressTimer() {
+    public void startUpdateProgressTimer() {
         cancelUpdateProgressTimer();
         if (mUpdateProgressTimer == null) {
             mUpdateProgressTimer = new Timer();
@@ -126,13 +129,13 @@ public abstract class NiceVideoPlayerController
                 }
             };
         }
-        mUpdateProgressTimer.schedule(mUpdateProgressTimerTask, 0, 1000);
+        mUpdateProgressTimer.schedule(mUpdateProgressTimerTask, 0, 500);
     }
 
     /**
      * 取消更新进度的计时器。
      */
-    protected void cancelUpdateProgressTimer() {
+    public void cancelUpdateProgressTimer() {
         if (mUpdateProgressTimer != null) {
             mUpdateProgressTimer.cancel();
             mUpdateProgressTimer = null;
@@ -146,7 +149,7 @@ public abstract class NiceVideoPlayerController
     /**
      * 更新进度，包括进度条进度，展示的当前播放位置时长，总时长等。
      */
-    protected abstract void updateProgress();
+    public abstract void updateProgress();
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -258,13 +261,13 @@ public abstract class NiceVideoPlayerController
      * @param duration            视频总时长ms
      * @param newPositionProgress 新的位置进度，取值0到100。
      */
-    protected abstract void showChangePosition(long duration, int newPositionProgress);
+    public abstract void showChangePosition(long duration, int newPositionProgress);
 
     /**
      * 手势左右滑动改变播放位置后，手势up或者cancel时，隐藏控制器中间的播放位置变化视图，
      * 在手势ACTION_UP或ACTION_CANCEL时调用。
      */
-    protected abstract void hideChangePosition();
+    public abstract void hideChangePosition();
 
     /**
      * 手势在右侧上下滑动改变音量时，显示控制器中间的音量变化视图，
@@ -272,13 +275,13 @@ public abstract class NiceVideoPlayerController
      *
      * @param newVolumeProgress 新的音量进度，取值1到100。
      */
-    protected abstract void showChangeVolume(int newVolumeProgress);
+    public abstract void showChangeVolume(int newVolumeProgress);
 
     /**
      * 手势在左侧上下滑动改变音量后，手势up或者cancel时，隐藏控制器中间的音量变化视图，
      * 在手势ACTION_UP或ACTION_CANCEL时调用。
      */
-    protected abstract void hideChangeVolume();
+    public abstract void hideChangeVolume();
 
     /**
      * 手势在左侧上下滑动改变亮度时，显示控制器中间的亮度变化视图，
@@ -286,11 +289,11 @@ public abstract class NiceVideoPlayerController
      *
      * @param newBrightnessProgress 新的亮度进度，取值1到100。
      */
-    protected abstract void showChangeBrightness(int newBrightnessProgress);
+    public abstract void showChangeBrightness(int newBrightnessProgress);
 
     /**
      * 手势在左侧上下滑动改变亮度后，手势up或者cancel时，隐藏控制器中间的亮度变化视图，
      * 在手势ACTION_UP或ACTION_CANCEL时调用。
      */
-    protected abstract void hideChangeBrightness();
+    public abstract void hideChangeBrightness();
 }
