@@ -30,7 +30,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
         VideoViewHolder holder = new VideoViewHolder(itemView);
         TxVideoPlayerController controller = new TxVideoPlayerController(mContext);
         holder.setController(controller);
-        holder.mVideoPlayer.setLooping(true);
+//        holder.mVideoPlayer.setLooping(true);
         return holder;
     }
 
