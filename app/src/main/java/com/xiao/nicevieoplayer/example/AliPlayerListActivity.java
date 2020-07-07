@@ -41,12 +41,10 @@ public class AliPlayerListActivity extends CompatHomeKeyActivity implements Scre
 
             @Override
             public void onChildViewDetachedFromWindow(View view) {
-                //todo 屏幕中最后一个可见item在进入全屏后会执行该回调，导致释放播放器了，待解决
+                //屏幕中最后一个可见item在进入全屏后会执行该回调，导致释放播放器了
+                //解决：设置一个一个标志变量进入全屏时禁止release，退出全屏可以release
                 AliVideoPlayer niceVideoPlayer = view.findViewById(R.id.nice_video_player);
-                int lastPos = ((LinearLayoutManager)mRecyclerView.getLayoutManager()).findLastVisibleItemPosition();
-                View viewItem = ((LinearLayoutManager)mRecyclerView.getLayoutManager()).findViewByPosition(lastPos);
-                if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()
-                        && viewItem.findViewById(R.id.nice_video_player) != niceVideoPlayer) {
+                if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) {
                     NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
                 }
             }

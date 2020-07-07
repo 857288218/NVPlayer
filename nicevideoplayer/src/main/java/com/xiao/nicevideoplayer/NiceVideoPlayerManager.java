@@ -3,12 +3,14 @@ package com.xiao.nicevideoplayer;
 import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
 
 /**
- * Created by XiaoJianjun on 2017/5/5.
  * 视频播放器管理器.
  */
 public class NiceVideoPlayerManager {
 
     private INiceVideoPlayer mVideoPlayer;
+
+    //是否允许释放播放器,解决屏幕中最后一个可见item在进入全屏后会执行onChildViewDetachedFromWindow，导致释放播放器会立刻退出全屏
+    private boolean allowRelease = true;
 
     private NiceVideoPlayerManager() {
     }
@@ -20,6 +22,10 @@ public class NiceVideoPlayerManager {
             sInstance = new NiceVideoPlayerManager();
         }
         return sInstance;
+    }
+
+    public void setAllowRelease(boolean allowRelease) {
+        this.allowRelease = allowRelease;
     }
 
     public INiceVideoPlayer getCurrentNiceVideoPlayer() {
@@ -46,7 +52,7 @@ public class NiceVideoPlayerManager {
     }
 
     public void releaseNiceVideoPlayer() {
-        if (mVideoPlayer != null) {
+        if (mVideoPlayer != null && allowRelease) {
             mVideoPlayer.release();
             mVideoPlayer = null;
         }

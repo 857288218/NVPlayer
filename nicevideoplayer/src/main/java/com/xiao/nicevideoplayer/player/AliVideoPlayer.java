@@ -56,6 +56,7 @@ public class AliVideoPlayer extends FrameLayout
     private long skipToPosition;
     private boolean isLoop;
     private long currentPosition;
+    private boolean allowRelease = true;   //是否允许释放播放器
 
     public AliVideoPlayer(Context context) {
         this(context, null);
@@ -528,7 +529,7 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public void enterFullScreen() {
         if (mCurrentMode == MODE_FULL_SCREEN) return;
-
+        NiceVideoPlayerManager.instance().setAllowRelease(false);
         // 隐藏ActionBar、状态栏，并横屏
         NiceUtil.hideActionBar(mContext);
         NiceUtil.scanForActivity(mContext)
@@ -561,6 +562,7 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public boolean exitFullScreen() {
         if (mCurrentMode == MODE_FULL_SCREEN) {
+            NiceVideoPlayerManager.instance().setAllowRelease(true);
             NiceUtil.showActionBar(mContext);
             NiceUtil.scanForActivity(mContext)
                     .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
