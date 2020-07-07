@@ -9,7 +9,6 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.DrawableRes;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -164,7 +163,7 @@ public class TxVideoPlayerController
     }
 
     @Override
-    public void setLenght(long length) {
+    public void setLength(long length) {
         mLength.setText(NiceUtil.formatTime(length));
     }
 
@@ -255,7 +254,7 @@ public class TxVideoPlayerController
             case INiceVideoPlayer.STATE_COMPLETED:
                 cancelUpdateProgressTimer();
                 setTopBottomVisible(false);
-                mImage.setVisibility(View.VISIBLE);
+//                mImage.setVisibility(View.VISIBLE);  //播放完成就停在最后一帧
                 mCompleted.setVisibility(View.VISIBLE);
                 break;
         }

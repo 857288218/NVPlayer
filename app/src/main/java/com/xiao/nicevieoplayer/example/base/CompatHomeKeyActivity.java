@@ -68,4 +68,9 @@ public class CompatHomeKeyActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
+    }
 }

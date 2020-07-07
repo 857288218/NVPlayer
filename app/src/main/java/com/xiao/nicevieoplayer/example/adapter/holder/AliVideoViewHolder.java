@@ -18,11 +18,6 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
     public AliVideoViewHolder(View itemView) {
         super(itemView);
         mVideoPlayer = itemView.findViewById(R.id.nice_video_player);
-        // 将列表中的每个视频设置为默认16:9的比例
-        ViewGroup.LayoutParams params = mVideoPlayer.getLayoutParams();
-        params.width = itemView.getResources().getDisplayMetrics().widthPixels; // 宽度为屏幕宽度
-//        params.height = (int) (params.width * 9f / 16f);    // 高度为宽度的9/16
-        mVideoPlayer.setLayoutParams(params);
     }
 
     public void setController(TxVideoPlayerController controller) {
@@ -34,7 +29,7 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
         // 这里不用在onBindViewHolder中新建NiceVideoPlayerController进行设置(在onCreateViewHolder中设置就行)
         // 因为在item不可见时，Controller就reset了
         mController.setTitle(video.getTitle());
-        mController.setLenght(video.getLength());
+        mController.setLength(video.getLength());
 
 //        Glide.with(itemView.getContext())
 //                .load(video.getImageUrl())
@@ -44,11 +39,11 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
         Glide.with(itemView.getContext())
                 .setDefaultRequestOptions(
                         new RequestOptions()
-                                .frame(1000000)
+                                .frame(0000000)
                                 .fitCenter()
                 )
                 .load(video.getVideoUrl())
-                .placeholder(R.drawable.img_default)
+//                .placeholder(R.drawable.img_default)
                 .into(mController.imageView());
         mVideoPlayer.setUp(video.getVideoUrl(), null);
     }

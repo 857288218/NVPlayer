@@ -5,6 +5,8 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
@@ -637,13 +639,14 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         }
         mCurrentMode = MODE_NORMAL;
 
-        // 释放播放器
-        releasePlayer();
-
         // 恢复控制器
         if (mController != null) {
             mController.reset();
         }
+
+        // 释放播放器
+        releasePlayer();
+
         Runtime.getRuntime().gc();
     }
 }

@@ -3,11 +3,17 @@ package com.xiao.nicevideoplayer.player;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.media.AudioManager;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
@@ -25,6 +31,7 @@ import com.xiao.nicevideoplayer.NiceSurfaceView;
 import com.xiao.nicevideoplayer.NiceUtil;
 import com.xiao.nicevideoplayer.NiceVideoPlayerController;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
+import com.xiao.nicevideoplayer.R;
 
 import java.util.Map;
 
@@ -49,6 +56,7 @@ public class AliVideoPlayer extends FrameLayout
     private long skipToPosition;
     private boolean isLoop;
     private long currentPosition;
+    private boolean allowRelease = true;   //是否允许释放播放器
 
     public AliVideoPlayer(Context context) {
         this(context, null);
@@ -521,7 +529,7 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public void enterFullScreen() {
         if (mCurrentMode == MODE_FULL_SCREEN) return;
-
+        NiceVideoPlayerManager.instance().setAllowRelease(false);
         // 隐藏ActionBar、状态栏，并横屏
         NiceUtil.hideActionBar(mContext);
         NiceUtil.scanForActivity(mContext)
@@ -554,6 +562,7 @@ public class AliVideoPlayer extends FrameLayout
     @Override
     public boolean exitFullScreen() {
         if (mCurrentMode == MODE_FULL_SCREEN) {
+            NiceVideoPlayerManager.instance().setAllowRelease(true);
             NiceUtil.showActionBar(mContext);
             NiceUtil.scanForActivity(mContext)
                     .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -631,7 +640,14 @@ public class AliVideoPlayer extends FrameLayout
             aliPlayer = null;
         }
         surfaceHolder = null;
-        mContainer.removeView(surfaceView);
+
+        // 解决释放播放器黑一下,使用TextureView没有该问题
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                mContainer.removeView(surfaceView);
+            }
+        });
         mCurrentState = STATE_IDLE;
     }
 
@@ -656,7 +672,7 @@ public class AliVideoPlayer extends FrameLayout
         if (mController != null) {
             mController.reset();
         }
-        //todo(rjq) 释放后黑一下
+
         // 释放播放器
         releasePlayer();
 

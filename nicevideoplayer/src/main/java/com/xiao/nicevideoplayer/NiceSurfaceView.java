@@ -5,7 +5,6 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 
 /**
- * Created by XiaoJianjun on 2017/6/21.
  * 重写TextureView，适配视频的宽高和旋转.
  * （参考自节操播放器 https://github.com/lipangit/JieCaoVideoPlayer）
  */

@@ -337,6 +337,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+        LogUtil.d("onSurfaceTextureAvailable");
         if (mSurfaceTexture == null) {
             mSurfaceTexture = surfaceTexture;
             openMediaPlayer();
@@ -376,15 +377,18 @@ public class IJKTextureVideoPlayer extends FrameLayout
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+        LogUtil.d("onSurfaceTextureSizeChanged");
     }
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        LogUtil.d("onSurfaceTextureDestroyed");
         return mSurfaceTexture == null;
     }
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+        LogUtil.d("onSurfaceTextureUpdated");
     }
 
     private IMediaPlayer.OnPreparedListener mOnPreparedListener
