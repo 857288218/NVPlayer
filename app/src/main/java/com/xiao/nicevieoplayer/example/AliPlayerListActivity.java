@@ -11,7 +11,7 @@ import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.adapter.AliVideoAdapter;
 import com.xiao.nicevieoplayer.example.base.CompatHomeKeyActivity;
 import com.xiao.nicevieoplayer.example.util.DataUtil;
-
+//todo 第一次打开列表滑动卡顿
 public class AliPlayerListActivity extends CompatHomeKeyActivity {
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLayoutManager;
