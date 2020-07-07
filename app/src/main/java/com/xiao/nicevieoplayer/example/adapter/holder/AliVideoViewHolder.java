@@ -18,11 +18,6 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
     public AliVideoViewHolder(View itemView) {
         super(itemView);
         mVideoPlayer = itemView.findViewById(R.id.nice_video_player);
-        // 将列表中的每个视频设置为默认16:9的比例
-        ViewGroup.LayoutParams params = mVideoPlayer.getLayoutParams();
-        params.width = itemView.getResources().getDisplayMetrics().widthPixels; // 宽度为屏幕宽度
-//        params.height = (int) (params.width * 9f / 16f);    // 高度为宽度的9/16
-        mVideoPlayer.setLayoutParams(params);
     }
 
     public void setController(TxVideoPlayerController controller) {
