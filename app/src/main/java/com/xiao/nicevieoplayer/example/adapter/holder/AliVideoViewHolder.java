@@ -44,11 +44,11 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
         Glide.with(itemView.getContext())
                 .setDefaultRequestOptions(
                         new RequestOptions()
-                                .frame(1000000)
+                                .frame(0000000)
                                 .fitCenter()
                 )
                 .load(video.getVideoUrl())
-                .placeholder(R.drawable.img_default)
+//                .placeholder(R.drawable.img_default)
                 .into(mController.imageView());
         mVideoPlayer.setUp(video.getVideoUrl(), null);
     }

@@ -8,6 +8,7 @@ import com.xiao.nicevideoplayer.Clarity;
 import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
+import com.xiao.nicevideoplayer.player.IJKTextureVideoPlayer;
 import com.xiao.nicevieoplayer.R;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import java.util.List;
 
 public class ChangeClarityActivity extends AppCompatActivity {
 
-    private IJKSurfaceVideoPlayer mNiceVideoPlayer;
+    private IJKTextureVideoPlayer mNiceVideoPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +26,7 @@ public class ChangeClarityActivity extends AppCompatActivity {
     }
 
     private void init() {
-        mNiceVideoPlayer = (IJKSurfaceVideoPlayer) findViewById(R.id.nice_video_player);
+        mNiceVideoPlayer = (IJKTextureVideoPlayer) findViewById(R.id.nice_video_player);
         mNiceVideoPlayer.setPlayerType(IJKSurfaceVideoPlayer.TYPE_IJK); // IjkPlayer or MediaPlayer
         TxVideoPlayerController controller = new TxVideoPlayerController(this);
         controller.setTitle("Beautiful China...");

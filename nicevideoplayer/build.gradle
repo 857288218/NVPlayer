@@ -46,6 +46,4 @@ dependencies {
     //阿里云播放器的两个依赖
     implementation (name:'AliyunPlayer-4.7.4-full',ext:'aar')
     implementation 'com.alivc.conan:AlivcConan:0.9.5'
-
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.3'
 }
