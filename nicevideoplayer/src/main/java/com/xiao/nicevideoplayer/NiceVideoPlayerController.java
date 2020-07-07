@@ -71,7 +71,7 @@ public abstract class NiceVideoPlayerController
     /**
      * 设置总时长.
      */
-    public abstract void setLenght(long length);
+    public abstract void setLength(long length);
 
     /**
      * 当播放器的播放状态发生变化，在此方法中更新不同的播放状态的UI

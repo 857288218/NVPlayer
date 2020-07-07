@@ -33,7 +33,7 @@ public class IJKTextureHolder extends RecyclerView.ViewHolder {
         // 这里不用在onBindViewHolder中新建NiceVideoPlayerController进行设置(在onCreateViewHolder中设置就行)
         // 因为在item不可见时，Controller就reset了
         mController.setTitle(video.getTitle());
-        mController.setLenght(video.getLength());
+        mController.setLength(video.getLength());
         Glide.with(itemView.getContext())
                 .load(video.getImageUrl())
 //                .placeholder(R.drawable.img_default)
