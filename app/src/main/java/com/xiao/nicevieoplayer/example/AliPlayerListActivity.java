@@ -16,8 +16,6 @@ import com.xiao.nicevieoplayer.example.util.DataUtil;
 public class AliPlayerListActivity extends CompatHomeKeyActivity implements ScreenRotateUtils.OrientationChangeListener {
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLayoutManager;
-    private int _firstItemPosition = -1, _lastItemPosition;
-    private View fistView, lastView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
