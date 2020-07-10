@@ -413,7 +413,13 @@ public class AliVideoPlayer extends FrameLayout
             = new IPlayer.OnVideoSizeChangedListener() {
         @Override
         public void onVideoSizeChanged(int width, int height) {
-            surfaceView.adaptVideoSize(width, height);
+//            surfaceView.adaptVideoSize(width, height);
+            //视频始终充满view不变型
+//            if (width > NiceUtil.getScreenWidth(mContext) || height > NiceUtil.getScreenHeight(mContext)) {
+//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FIT);
+//            } else {
+//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FILL);
+//            }
             LogUtil.d("onVideoSizeChanged ——> width：" + width + "， height：" + height);
         }
     };
@@ -681,6 +687,6 @@ public class AliVideoPlayer extends FrameLayout
         // 释放播放器
         releasePlayer();
 
-        Runtime.getRuntime().gc();
+//        Runtime.getRuntime().gc();
     }
 }
