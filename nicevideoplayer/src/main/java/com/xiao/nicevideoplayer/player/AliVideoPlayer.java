@@ -56,7 +56,6 @@ public class AliVideoPlayer extends FrameLayout
     private long skipToPosition;
     private boolean isLoop;
     private long currentPosition;
-    private boolean allowRelease = true;   //是否允许释放播放器
 
     public AliVideoPlayer(Context context) {
         this(context, null);
@@ -414,7 +413,13 @@ public class AliVideoPlayer extends FrameLayout
             = new IPlayer.OnVideoSizeChangedListener() {
         @Override
         public void onVideoSizeChanged(int width, int height) {
-            surfaceView.adaptVideoSize(width, height);
+//            surfaceView.adaptVideoSize(width, height);
+            //视频始终充满view不变型
+//            if (width > NiceUtil.getScreenWidth(mContext) || height > NiceUtil.getScreenHeight(mContext)) {
+//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FIT);
+//            } else {
+//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FILL);
+//            }
             LogUtil.d("onVideoSizeChanged ——> width：" + width + "， height：" + height);
         }
     };
@@ -636,8 +641,14 @@ public class AliVideoPlayer extends FrameLayout
             mAudioManager = null;
         }
         if (aliPlayer != null) {
-            aliPlayer.release();
-            aliPlayer = null;
+            //缓解当列表滑动到正在播放的item不可见时，释放会造成列表卡一下的问题
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    aliPlayer.release();
+                    aliPlayer = null;
+                }
+            }).start();
         }
         surfaceHolder = null;
 
@@ -676,6 +687,6 @@ public class AliVideoPlayer extends FrameLayout
         // 释放播放器
         releasePlayer();
 
-        Runtime.getRuntime().gc();
+//        Runtime.getRuntime().gc();
     }
 }

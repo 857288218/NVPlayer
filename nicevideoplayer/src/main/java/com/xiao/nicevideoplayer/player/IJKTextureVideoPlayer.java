@@ -512,7 +512,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
     @Override
     public void enterFullScreen() {
         if (mCurrentMode == MODE_FULL_SCREEN) return;
-
+        NiceVideoPlayerManager.instance().setAllowRelease(false);
         // 隐藏ActionBar、状态栏，并横屏
         NiceUtil.hideActionBar(mContext);
         NiceUtil.scanForActivity(mContext)
@@ -545,6 +545,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
     @Override
     public boolean exitFullScreen() {
         if (mCurrentMode == MODE_FULL_SCREEN) {
+            NiceVideoPlayerManager.instance().setAllowRelease(true);
             NiceUtil.showActionBar(mContext);
             NiceUtil.scanForActivity(mContext)
                     .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -619,8 +620,13 @@ public class IJKTextureVideoPlayer extends FrameLayout
             mAudioManager = null;
         }
         if (mMediaPlayer != null) {
-            mMediaPlayer.release();
-            mMediaPlayer = null;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    mMediaPlayer.release();
+                    mMediaPlayer = null;
+                }
+            }).start();
         }
         mContainer.removeView(mTextureView);
         if (mSurface != null) {
