@@ -330,6 +330,8 @@ public class TxVideoPlayerController
 
     @Override
     public void reset() {
+        cancelUpdateProgressTimer();
+        cancelDismissTopBottomTimer();
         topBottomVisible = false;
         cancelUpdateProgressTimer();
         cancelDismissTopBottomTimer();
