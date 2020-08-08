@@ -36,6 +36,7 @@ public abstract class NiceVideoPlayerController
     private float mGestureDownBrightness;
     private int mGestureDownVolume;
     private long mNewPosition;
+    protected boolean canUpdateProgress = true;    // Aliplayer使用,是否允许更新进入ui,手动拖动进度条时为false
 
     public NiceVideoPlayerController(Context context) {
         super(context);
@@ -187,6 +188,7 @@ public abstract class NiceVideoPlayerController
                     // 只有在播放、暂停、缓冲的时候能够拖动改变位置、亮度和声音
                     if (absDeltaX >= THRESHOLD) {
                         cancelUpdateProgressTimer();
+                        canUpdateProgress = false;
                         mNeedChangePosition = true;
                         mGestureDownPosition = mNiceVideoPlayer.getCurrentPosition();
                     } else if (absDeltaY >= THRESHOLD) {
@@ -239,6 +241,7 @@ public abstract class NiceVideoPlayerController
                     mNiceVideoPlayer.seekTo(mNewPosition);
                     hideChangePosition();
                     startUpdateProgressTimer();
+                    canUpdateProgress = true;
                     return true;
                 }
                 if (mNeedChangeBrightness) {

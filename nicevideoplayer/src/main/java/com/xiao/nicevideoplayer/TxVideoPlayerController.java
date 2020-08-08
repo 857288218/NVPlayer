@@ -6,8 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.DrawableRes;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -86,8 +84,6 @@ public class TxVideoPlayerController
     private ChangeClarityDialog mClarityDialog;
 
     private boolean hasRegisterBatteryReceiver; // 是否已经注册了电池广播
-
-    private boolean isTrackingTouch = false;    // Aliplayer使用
 
     public TxVideoPlayerController(Context context) {
         super(context);
@@ -482,7 +478,7 @@ public class TxVideoPlayerController
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
         //拖动seekbar时先取消进度条更新timer，防止进度条跳的问题
-        isTrackingTouch = true;
+        canUpdateProgress = false;
         cancelUpdateProgressTimer();
     }
 
@@ -496,7 +492,7 @@ public class TxVideoPlayerController
         long position = (long) (mNiceVideoPlayer.getDuration() * seekBar.getProgress() / 100f);
         mNiceVideoPlayer.seekTo(position);
         startDismissTopBottomTimer();
-        isTrackingTouch = false;
+        canUpdateProgress = true;
         //先这样解决拖动进度条AliPlayer seekTo后在onInfo回调中取到的currentPosition不是最新的，有延时。目的是避免seekbar拖动后大幅度跳动
         if (!(mNiceVideoPlayer instanceof AliVideoPlayer)) {
             startUpdateProgressTimer();
@@ -505,7 +501,7 @@ public class TxVideoPlayerController
 
     @Override
     public void updateProgress() {
-        if (!isTrackingTouch) {
+        if (canUpdateProgress) {
             long position = mNiceVideoPlayer.getCurrentPosition();
             long duration = mNiceVideoPlayer.getDuration();
             int bufferPercentage = mNiceVideoPlayer.getBufferPercentage();
