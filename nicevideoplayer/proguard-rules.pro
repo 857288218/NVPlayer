@@ -23,8 +23,11 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+#AliPlayer
 -keep class com.alivc.**{*;}
 -keep class com.aliyun.**{*;}
+-keep class com.cicada.**{*;}
 -dontwarn com.alivc.**
 -dontwarn com.aliyun.**
--keep class tv.danmaku.ijk.media.player.**{*;}
+-dontwarn com.cicada.**

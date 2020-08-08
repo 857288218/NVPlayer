@@ -513,6 +513,7 @@ public class AliVideoPlayer extends FrameLayout
             } else if (infoBean.getCode() == InfoCode.CurrentPosition) {
                 //更新currentPosition
                 currentPosition = infoBean.getExtraValue();
+                mController.updateProgress();
             }
         }
     };

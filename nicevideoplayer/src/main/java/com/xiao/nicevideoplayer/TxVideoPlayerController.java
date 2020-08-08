@@ -87,6 +87,8 @@ public class TxVideoPlayerController
 
     private boolean hasRegisterBatteryReceiver; // 是否已经注册了电池广播
 
+    private boolean isTrackingTouch = false;    // Aliplayer使用
+
     public TxVideoPlayerController(Context context) {
         super(context);
         mContext = context;
@@ -219,7 +221,9 @@ public class TxVideoPlayerController
                 mLength.setVisibility(View.GONE);
                 break;
             case INiceVideoPlayer.STATE_PREPARED:
-                startUpdateProgressTimer();
+                if (!(mNiceVideoPlayer instanceof AliVideoPlayer)) {
+                    startUpdateProgressTimer();
+                }
                 break;
             case INiceVideoPlayer.STATE_PLAYING:
                 mImage.setVisibility(View.GONE);  //当第一帧作为封面时，首帧渲染显示再隐藏封面图
@@ -478,6 +482,7 @@ public class TxVideoPlayerController
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
         //拖动seekbar时先取消进度条更新timer，防止进度条跳的问题
+        isTrackingTouch = true;
         cancelUpdateProgressTimer();
     }
 
@@ -491,32 +496,27 @@ public class TxVideoPlayerController
         long position = (long) (mNiceVideoPlayer.getDuration() * seekBar.getProgress() / 100f);
         mNiceVideoPlayer.seekTo(position);
         startDismissTopBottomTimer();
-
+        isTrackingTouch = false;
         //先这样解决拖动进度条AliPlayer seekTo后在onInfo回调中取到的currentPosition不是最新的，有延时。目的是避免seekbar拖动后大幅度跳动
-        if (mNiceVideoPlayer instanceof AliVideoPlayer) {
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    startUpdateProgressTimer();
-                }
-            }, 1000);
-        } else {
+        if (!(mNiceVideoPlayer instanceof AliVideoPlayer)) {
             startUpdateProgressTimer();
         }
     }
 
     @Override
     public void updateProgress() {
-        long position = mNiceVideoPlayer.getCurrentPosition();
-        long duration = mNiceVideoPlayer.getDuration();
-        int bufferPercentage = mNiceVideoPlayer.getBufferPercentage();
-        mSeek.setSecondaryProgress(bufferPercentage);
-        int progress = (int) (100f * position / duration);
-        mSeek.setProgress(progress);
-        mPosition.setText(NiceUtil.formatTime(position));
-        mDuration.setText(NiceUtil.formatTime(duration));
-        // 更新时间
-        mTime.setText(new SimpleDateFormat("HH:mm", Locale.CHINA).format(new Date()));
+        if (!isTrackingTouch) {
+            long position = mNiceVideoPlayer.getCurrentPosition();
+            long duration = mNiceVideoPlayer.getDuration();
+            int bufferPercentage = mNiceVideoPlayer.getBufferPercentage();
+            mSeek.setSecondaryProgress(bufferPercentage);
+            int progress = (int) (100f * position / duration);
+            mSeek.setProgress(progress);
+            mPosition.setText(NiceUtil.formatTime(position));
+            mDuration.setText(NiceUtil.formatTime(duration));
+            // 更新时间
+            mTime.setText(new SimpleDateFormat("HH:mm", Locale.CHINA).format(new Date()));
+        }
     }
 
     @Override

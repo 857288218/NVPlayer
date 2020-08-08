@@ -44,6 +44,6 @@ dependencies {
     implementation(name: 'ijkplayer-java', ext: 'aar')
 
     //阿里云播放器的两个依赖
-    implementation (name:'AliyunPlayer-4.7.4-full',ext:'aar')
-    implementation 'com.alivc.conan:AlivcConan:0.9.5'
+    implementation (name:'AliyunPlayer-5.1.5-full',ext:'aar')
+    implementation 'com.alivc.conan:AlivcConan:1.0.3'
 }
