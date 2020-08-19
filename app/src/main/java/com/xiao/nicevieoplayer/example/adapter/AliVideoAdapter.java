@@ -28,7 +28,7 @@ public class AliVideoAdapter extends RecyclerView.Adapter<AliVideoViewHolder>{
         AliVideoViewHolder holder = new AliVideoViewHolder(itemView);
         TxVideoPlayerController controller = new TxVideoPlayerController(mContext);
         holder.setController(controller);
-        holder.mVideoPlayer.setLooping(true);
+//        holder.mVideoPlayer.setLooping(true);
         return holder;
     }
 

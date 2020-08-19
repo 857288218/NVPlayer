@@ -368,6 +368,12 @@ public class AliVideoPlayer extends FrameLayout
         mContainer.setKeepScreenOn(true);
         //设置是否循环播放
         aliPlayer.setLoop(isLoop);
+        //画面的缩放模式
+//            if (width > NiceUtil.getScreenWidth(mContext) || height > NiceUtil.getScreenHeight(mContext)) {
+//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FIT);
+//            } else {
+//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FILL);
+//            }
         // 设置监听
         aliPlayer.setOnPreparedListener(mOnPreparedListener);
         aliPlayer.setOnVideoSizeChangedListener(mOnVideoSizeChangedListener);
@@ -414,12 +420,6 @@ public class AliVideoPlayer extends FrameLayout
         @Override
         public void onVideoSizeChanged(int width, int height) {
 //            surfaceView.adaptVideoSize(width, height);
-            //视频始终充满view不变型
-//            if (width > NiceUtil.getScreenWidth(mContext) || height > NiceUtil.getScreenHeight(mContext)) {
-//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FIT);
-//            } else {
-//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FILL);
-//            }
             LogUtil.d("onVideoSizeChanged ——> width：" + width + "， height：" + height);
         }
     };
