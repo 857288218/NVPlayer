@@ -2,18 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/AndroidProject-NVPlayer.iml" filepath="$PROJECT_DIR$/.idea/modules/AndroidProject-NVPlayer.iml" group="NVPlayer" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AndroidProject-NVPlayer-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AndroidProject-NVPlayer-app.iml" group="NVPlayer/app" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nicevideoplayer/AndroidProject-NVPlayer-nicevideoplayer.iml" filepath="$PROJECT_DIR$/.idea/modules/nicevideoplayer/AndroidProject-NVPlayer-nicevideoplayer.iml" group="NVPlayer/nicevideoplayer" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/NVPlayer.iml" filepath="$PROJECT_DIR$/.idea/modules/NVPlayer.iml" group="NVPlayer" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/NVPlayer-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/NVPlayer-app.iml" group="NVPlayer/app" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer-nicevideoplayer.iml" filepath="$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer-nicevideoplayer.iml" group="NVPlayer/nicevideoplayer" />
-      <module fileurl="file://$PROJECT_DIR$/NiceVieoPlayer.iml" filepath="$PROJECT_DIR$/NiceVieoPlayer.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/NiceVieoPlayer-master.iml" filepath="$PROJECT_DIR$/.idea/modules/NiceVieoPlayer-master.iml" group="NiceVieoPlayer-master" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/NiceVieoPlayer-master-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/NiceVieoPlayer-master-app.iml" group="NiceVieoPlayer-master/app" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nicevideoplayer/NiceVieoPlayer-master-nicevideoplayer.iml" filepath="$PROJECT_DIR$/.idea/modules/nicevideoplayer/NiceVieoPlayer-master-nicevideoplayer.iml" group="NiceVieoPlayer-master/nicevideoplayer" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/nicevideoplayer/nicevideoplayer.iml" filepath="$PROJECT_DIR$/nicevideoplayer/nicevideoplayer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/AndroidProject.NVPlayer.iml" filepath="$PROJECT_DIR$/.idea/modules/AndroidProject.NVPlayer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.iml" filepath="$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.iml" />
     </modules>
   </component>
 </project>

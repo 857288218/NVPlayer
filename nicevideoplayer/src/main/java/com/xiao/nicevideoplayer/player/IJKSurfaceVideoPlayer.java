@@ -659,6 +659,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         // 释放播放器
         releasePlayer();
 
-        Runtime.getRuntime().gc();
+        //会引起列表卡顿
+//        Runtime.getRuntime().gc();
     }
 }
