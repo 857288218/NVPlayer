@@ -34,10 +34,11 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
     private int mCurrentState = STATE_IDLE;
     private int mCurrentMode = MODE_NORMAL;
 
-    private Context mContext;
+    private final Context mContext;
     private AudioManager mAudioManager;
     private IMediaPlayer mMediaPlayer;
     private FrameLayout mContainer;
+    // 暂停进入后台再回到前台某些机型会黑屏；使用TextureView不会  https://github.com/Bilibili/ijkplayer/issues/2666
     private NiceSurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
     private NiceVideoPlayerController mController;
@@ -543,8 +544,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         if (mCurrentMode == MODE_FULL_SCREEN) {
             NiceVideoPlayerManager.instance().setAllowRelease(true);
             NiceUtil.showActionBar(mContext);
-            NiceUtil.scanForActivity(mContext)
-                    .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            NiceUtil.scanForActivity(mContext).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
             ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);

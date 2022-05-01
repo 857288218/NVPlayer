@@ -20,7 +20,7 @@ import java.util.TimerTask;
 public abstract class NiceVideoPlayerController
         extends FrameLayout implements View.OnTouchListener {
 
-    private Context mContext;
+    private final Context mContext;
     public INiceVideoPlayer mNiceVideoPlayer;
 
     private Timer mUpdateProgressTimer;

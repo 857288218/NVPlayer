@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/AndroidProject.NVPlayer.iml" filepath="$PROJECT_DIR$/.idea/modules/AndroidProject.NVPlayer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/NVPlayer.iml" filepath="$PROJECT_DIR$/.idea/modules/NVPlayer.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.iml" filepath="$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.iml" />
     </modules>

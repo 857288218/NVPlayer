@@ -34,7 +34,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
     private int mCurrentState = STATE_IDLE;
     private int mCurrentMode = MODE_NORMAL;
 
-    private Context mContext;
+    private final Context mContext;
     private AudioManager mAudioManager;
     private IMediaPlayer mMediaPlayer;
     private FrameLayout mContainer;
@@ -664,6 +664,6 @@ public class IJKTextureVideoPlayer extends FrameLayout
         if (mController != null) {
             mController.reset();
         }
-        Runtime.getRuntime().gc();
+//        Runtime.getRuntime().gc();
     }
 }

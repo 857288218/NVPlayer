@@ -3,12 +3,10 @@ package com.xiao.nicevideoplayer;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
-import android.graphics.Rect;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ContextThemeWrapper;
 import android.util.TypedValue;
-import android.view.View;
 import android.view.WindowManager;
 
 import java.util.Formatter;
@@ -38,7 +36,6 @@ public class NiceUtil {
     /**
      * Get AppCompatActivity from context
      *
-     * @param context
      * @return AppCompatActivity if it's not null
      */
     private static AppCompatActivity getAppCompActivity(Context context) {
@@ -54,7 +51,7 @@ public class NiceUtil {
     public static void showActionBar(Context context) {
         ActionBar ab = getAppCompActivity(context).getSupportActionBar();
         if (ab != null) {
-            ab.setShowHideAnimationEnabled(false);
+//            ab.setShowHideAnimationEnabled(false);
             ab.show();
         }
         scanForActivity(context)
@@ -65,7 +62,7 @@ public class NiceUtil {
     public static void hideActionBar(Context context) {
         ActionBar ab = getAppCompActivity(context).getSupportActionBar();
         if (ab != null) {
-            ab.setShowHideAnimationEnabled(false);
+//            ab.setShowHideAnimationEnabled(false);
             ab.hide();
         }
         scanForActivity(context)
@@ -77,7 +74,6 @@ public class NiceUtil {
     /**
      * 获取屏幕宽度
      *
-     * @param context
      * @return width of the screen.
      */
     public static int getScreenWidth(Context context) {
@@ -87,7 +83,6 @@ public class NiceUtil {
     /**
      * 获取屏幕高度
      *
-     * @param context
      * @return heiht of the screen.
      */
     public static int getScreenHeight(Context context) {
@@ -97,8 +92,7 @@ public class NiceUtil {
     /**
      * dp转px
      *
-     * @param context
-     * @param dpVal   dp value
+     * @param dpVal dp value
      * @return px value
      */
     public static int dp2px(Context context, float dpVal) {
@@ -132,8 +126,7 @@ public class NiceUtil {
     /**
      * 保存播放位置，以便下次播放时接着上次的位置继续播放.
      *
-     * @param context
-     * @param url     视频链接url
+     * @param url 视频链接url
      */
     public static void savePlayPosition(Context context, String url, long position) {
         context.getSharedPreferences("NICE_VIDEO_PALYER_PLAY_POSITION",
@@ -146,8 +139,7 @@ public class NiceUtil {
     /**
      * 取出上次保存的播放位置
      *
-     * @param context
-     * @param url     视频链接url
+     * @param url 视频链接url
      * @return 上次保存的播放位置
      */
     public static long getSavedPlayPosition(Context context, String url) {
