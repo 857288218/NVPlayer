@@ -10,6 +10,7 @@ import android.widget.ImageView;
 
 import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
 import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
+import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import java.util.Timer;
 import java.util.TimerTask;

@@ -3,17 +3,13 @@ package com.xiao.nicevideoplayer.player;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.media.AudioManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
@@ -26,12 +22,11 @@ import com.aliyun.player.bean.InfoCode;
 import com.aliyun.player.nativeclass.CacheConfig;
 import com.aliyun.player.nativeclass.PlayerConfig;
 import com.aliyun.player.source.UrlSource;
-import com.xiao.nicevideoplayer.LogUtil;
+import com.xiao.nicevideoplayer.utils.LogUtil;
 import com.xiao.nicevideoplayer.NiceSurfaceView;
-import com.xiao.nicevideoplayer.NiceUtil;
+import com.xiao.nicevideoplayer.utils.NiceUtil;
 import com.xiao.nicevideoplayer.NiceVideoPlayerController;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
-import com.xiao.nicevideoplayer.R;
 
 import java.util.Map;
 

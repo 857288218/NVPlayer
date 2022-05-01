@@ -2,7 +2,6 @@ package com.xiao.nicevideoplayer;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,10 +10,11 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.xiao.nicevideoplayer.utils.NiceUtil;
+
 import java.util.List;
 
 /**
- * Created by XiaoJianjun on 2017/7/6.
  * 切换清晰度对话框（仿腾讯视频切换清晰度的对话框）.
  */
 public class ChangeClarityDialog extends Dialog {

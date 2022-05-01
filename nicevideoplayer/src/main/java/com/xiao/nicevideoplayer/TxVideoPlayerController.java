@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
+import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

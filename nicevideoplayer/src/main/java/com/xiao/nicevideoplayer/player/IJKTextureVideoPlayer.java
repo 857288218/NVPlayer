@@ -1,5 +1,6 @@
 package com.xiao.nicevideoplayer.player;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
@@ -13,11 +14,11 @@ import android.view.TextureView;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.xiao.nicevideoplayer.LogUtil;
 import com.xiao.nicevideoplayer.NiceTextureView;
-import com.xiao.nicevideoplayer.NiceUtil;
 import com.xiao.nicevideoplayer.NiceVideoPlayerController;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
+import com.xiao.nicevideoplayer.utils.LogUtil;
+import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import java.io.IOException;
 import java.util.Map;
@@ -391,8 +392,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
         LogUtil.d("onSurfaceTextureUpdated");
     }
 
-    private IMediaPlayer.OnPreparedListener mOnPreparedListener
-            = new IMediaPlayer.OnPreparedListener() {
+    private final IMediaPlayer.OnPreparedListener mOnPreparedListener = new IMediaPlayer.OnPreparedListener() {
         @Override
         public void onPrepared(IMediaPlayer mp) {
             mCurrentState = STATE_PREPARED;
@@ -413,8 +413,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnVideoSizeChangedListener mOnVideoSizeChangedListener
-            = new IMediaPlayer.OnVideoSizeChangedListener() {
+    private final IMediaPlayer.OnVideoSizeChangedListener mOnVideoSizeChangedListener = new IMediaPlayer.OnVideoSizeChangedListener() {
         @Override
         public void onVideoSizeChanged(IMediaPlayer mp, int width, int height, int sar_num, int sar_den) {
             mTextureView.adaptVideoSize(width, height);
@@ -422,8 +421,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnCompletionListener mOnCompletionListener
-            = new IMediaPlayer.OnCompletionListener() {
+    private final IMediaPlayer.OnCompletionListener mOnCompletionListener = new IMediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(IMediaPlayer mp) {  //设置了循环播放后，就不会再执行这个回调了
             mCurrentState = STATE_COMPLETED;
@@ -436,8 +434,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnErrorListener mOnErrorListener
-            = new IMediaPlayer.OnErrorListener() {
+    private final IMediaPlayer.OnErrorListener mOnErrorListener = new IMediaPlayer.OnErrorListener() {
         @Override
         public boolean onError(IMediaPlayer mp, int what, int extra) {
             // 直播流播放时去调用mediaPlayer.getDuration会导致-38和-2147483648错误，忽略该错误
@@ -450,8 +447,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnInfoListener mOnInfoListener
-            = new IMediaPlayer.OnInfoListener() {
+    private final IMediaPlayer.OnInfoListener mOnInfoListener = new IMediaPlayer.OnInfoListener() {
         @Override
         public boolean onInfo(IMediaPlayer mp, int what, int extra) {
             if (what == IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
@@ -496,8 +492,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnBufferingUpdateListener mOnBufferingUpdateListener
-            = new IMediaPlayer.OnBufferingUpdateListener() {
+    private final IMediaPlayer.OnBufferingUpdateListener mOnBufferingUpdateListener = new IMediaPlayer.OnBufferingUpdateListener() {
         @Override
         public void onBufferingUpdate(IMediaPlayer mp, int percent) {
             mBufferPercentage = percent;
@@ -515,11 +510,9 @@ public class IJKTextureVideoPlayer extends FrameLayout
         NiceVideoPlayerManager.instance().setAllowRelease(false);
         // 隐藏ActionBar、状态栏，并横屏
         NiceUtil.hideActionBar(mContext);
-        NiceUtil.scanForActivity(mContext)
-                .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        NiceUtil.scanForActivity(mContext).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
-                .findViewById(android.R.id.content);
+        ViewGroup contentView = NiceUtil.scanForActivity(mContext).findViewById(android.R.id.content);
         if (mCurrentMode == MODE_TINY_WINDOW) {
             contentView.removeView(mContainer);
         } else {
@@ -542,15 +535,15 @@ public class IJKTextureVideoPlayer extends FrameLayout
      *
      * @return true退出全屏.
      */
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     public boolean exitFullScreen() {
         if (mCurrentMode == MODE_FULL_SCREEN) {
             NiceVideoPlayerManager.instance().setAllowRelease(true);
             NiceUtil.showActionBar(mContext);
-            NiceUtil.scanForActivity(mContext)
-                    .setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            NiceUtil.scanForActivity(mContext).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
+            ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                     .findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(
@@ -574,8 +567,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
         if (mCurrentMode == MODE_TINY_WINDOW) return;
         this.removeView(mContainer);
 
-        ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
-                .findViewById(android.R.id.content);
+        ViewGroup contentView = NiceUtil.scanForActivity(mContext).findViewById(android.R.id.content);
         // 小窗口的宽度为屏幕宽度的60%，长宽比默认为16:9，右边距、下边距为8dp。
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 (int) (NiceUtil.getScreenWidth(mContext) * 0.6f),
@@ -597,8 +589,7 @@ public class IJKTextureVideoPlayer extends FrameLayout
     @Override
     public boolean exitTinyWindow() {
         if (mCurrentMode == MODE_TINY_WINDOW) {
-            ViewGroup contentView = (ViewGroup) NiceUtil.scanForActivity(mContext)
-                    .findViewById(android.R.id.content);
+            ViewGroup contentView = NiceUtil.scanForActivity(mContext).findViewById(android.R.id.content);
             contentView.removeView(mContainer);
             LayoutParams params = new LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,

@@ -1,4 +1,4 @@
-package com.xiao.nicevideoplayer;
+package com.xiao.nicevideoplayer.utils;
 
 import android.app.Activity;
 import android.content.Context;

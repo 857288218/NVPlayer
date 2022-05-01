@@ -1,5 +1,6 @@
 package com.xiao.nicevideoplayer.player;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
@@ -13,11 +14,11 @@ import android.view.SurfaceHolder;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.xiao.nicevideoplayer.LogUtil;
 import com.xiao.nicevideoplayer.NiceSurfaceView;
-import com.xiao.nicevideoplayer.NiceUtil;
 import com.xiao.nicevideoplayer.NiceVideoPlayerController;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
+import com.xiao.nicevideoplayer.utils.LogUtil;
+import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import java.io.IOException;
 import java.util.Map;
@@ -381,8 +382,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         }
     }
 
-    private IMediaPlayer.OnPreparedListener mOnPreparedListener
-            = new IMediaPlayer.OnPreparedListener() {
+    private final IMediaPlayer.OnPreparedListener mOnPreparedListener = new IMediaPlayer.OnPreparedListener() {
         @Override
         public void onPrepared(IMediaPlayer mp) {
             mCurrentState = STATE_PREPARED;
@@ -404,8 +404,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnVideoSizeChangedListener mOnVideoSizeChangedListener
-            = new IMediaPlayer.OnVideoSizeChangedListener() {
+    private final IMediaPlayer.OnVideoSizeChangedListener mOnVideoSizeChangedListener = new IMediaPlayer.OnVideoSizeChangedListener() {
         @Override
         public void onVideoSizeChanged(IMediaPlayer mp, int width, int height, int sar_num, int sar_den) {
             surfaceView.adaptVideoSize(width, height);
@@ -413,8 +412,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnCompletionListener mOnCompletionListener
-            = new IMediaPlayer.OnCompletionListener() {
+    private final IMediaPlayer.OnCompletionListener mOnCompletionListener = new IMediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(IMediaPlayer mp) {  //设置了循环播放后，就不会再执行这个回调了
             mCurrentState = STATE_COMPLETED;
@@ -427,8 +425,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnErrorListener mOnErrorListener
-            = new IMediaPlayer.OnErrorListener() {
+    private final IMediaPlayer.OnErrorListener mOnErrorListener = new IMediaPlayer.OnErrorListener() {
         @Override
         public boolean onError(IMediaPlayer mp, int what, int extra) {
             // 直播流播放时去调用mediaPlayer.getDuration会导致-38和-2147483648错误，忽略该错误
@@ -441,8 +438,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnInfoListener mOnInfoListener
-            = new IMediaPlayer.OnInfoListener() {
+    private final IMediaPlayer.OnInfoListener mOnInfoListener = new IMediaPlayer.OnInfoListener() {
         @Override
         public boolean onInfo(IMediaPlayer mp, int what, int extra) {
             if (what == IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
@@ -493,8 +489,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
         }
     };
 
-    private IMediaPlayer.OnBufferingUpdateListener mOnBufferingUpdateListener
-            = new IMediaPlayer.OnBufferingUpdateListener() {
+    private final IMediaPlayer.OnBufferingUpdateListener mOnBufferingUpdateListener = new IMediaPlayer.OnBufferingUpdateListener() {
         @Override
         public void onBufferingUpdate(IMediaPlayer mp, int percent) {
             mBufferPercentage = percent;
@@ -539,6 +534,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
      *
      * @return true退出全屏.
      */
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     public boolean exitFullScreen() {
         if (mCurrentMode == MODE_FULL_SCREEN) {
@@ -618,6 +614,7 @@ public class IJKSurfaceVideoPlayer extends FrameLayout
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    // 在主线程释放会卡顿
                     mMediaPlayer.release();
                     mMediaPlayer = null;
                 }

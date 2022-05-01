@@ -2,7 +2,6 @@ package com.xiao.nicevideoplayer;
 
 import android.content.Context;
 import android.view.SurfaceView;
-import android.view.TextureView;
 
 /**
  * 重写TextureView，适配视频的宽高和旋转.

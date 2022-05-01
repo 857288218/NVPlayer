@@ -1,4 +1,4 @@
-package com.xiao.nicevideoplayer;
+package com.xiao.nicevideoplayer.utils;
 
 import android.app.Activity;
 import android.content.Context;
@@ -8,30 +8,32 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.provider.Settings;
 
+import java.lang.ref.WeakReference;
+
 public class ScreenRotateUtils {
     public static float orientationDirection;
-    private static int DATA_X = 0;
-    private static int DATA_Y = 1;
-    private static int DATA_Z = 2;
-    private static int ORIENTATION_UNKNOWN = -1;
+    private static final int DATA_X = 0;
+    private static final int DATA_Y = 1;
+    private static final int DATA_Z = 2;
+    private static final int ORIENTATION_UNKNOWN = -1;
     private static ScreenRotateUtils instance;
-    private Activity mActivity;
-    private boolean isOpenSensor = true;      // 是否打开传输，默认打开
+    private WeakReference<Activity> mActivity;
+    private boolean isOpenSensor = true;         // 是否打开传输，默认打开
     private boolean isEffectSysSetting = true;   // 手机系统的重力感应设置是否生效，默认无效，想要生效改成true就好了
-    private SensorManager sm;
-    private OrientationSensorListener listener;
+    private final SensorManager sm;
+    private final OrientationSensorListener listener;
     private OrientationChangeListener changeListener;
-    private Sensor sensor;
+    private final Sensor sensor;
 
-    public ScreenRotateUtils(Context context) {
-        sm = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        sensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    private ScreenRotateUtils(SensorManager sm) {
+        this.sm = sm;
+        this.sensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         listener = new OrientationSensorListener();
     }
 
     public static ScreenRotateUtils getInstance(Context context) {
         if (instance == null) {
-            instance = new ScreenRotateUtils(context);
+            instance = new ScreenRotateUtils((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
         }
         return instance;
     }
@@ -43,11 +45,9 @@ public class ScreenRotateUtils {
     /**
      * 开启监听
      * 绑定切换横竖屏Activity的生命周期
-     *
-     * @param activity
      */
     public void start(Activity activity) {
-        mActivity = activity;
+        mActivity = new WeakReference<>(activity);
         sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
@@ -56,7 +56,6 @@ public class ScreenRotateUtils {
      */
     public void stop() {
         sm.unregisterListener(listener);
-        mActivity = null;  // 防止内存泄漏
     }
 
     public interface OrientationChangeListener {
@@ -88,19 +87,15 @@ public class ScreenRotateUtils {
                 }
             }
 
-            /**
-             * 获取手机系统的重力感应开关设置，这段代码看需求，不要就删除
-             * screenchange = 1 表示开启，screenchange = 0 表示禁用
-             * 要是禁用了就直接返回
-             */
+            // 获取手机系统的重力感应开关设置，这段代码看需求，不要就删除,screenchange = 1表示开启，screenchange = 0表示禁用要是禁用了就直接返回
             if (isEffectSysSetting) {
                 try {
-                    int isRotate = Settings.System.getInt(mActivity.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION);
+                    int isRotate = Settings.System.getInt(mActivity.get().getContentResolver(), Settings.System.ACCELEROMETER_ROTATION);
                     // 如果用户禁用掉了重力感应就直接return
                     if (isRotate == 0) {
                         return;
                     }
-                } catch (Settings.SettingNotFoundException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 // 判断是否要进行中断信息传递
