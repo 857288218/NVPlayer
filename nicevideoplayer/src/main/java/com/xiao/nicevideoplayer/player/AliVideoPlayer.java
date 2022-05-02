@@ -22,11 +22,11 @@ import com.aliyun.player.bean.InfoCode;
 import com.aliyun.player.nativeclass.CacheConfig;
 import com.aliyun.player.nativeclass.PlayerConfig;
 import com.aliyun.player.source.UrlSource;
-import com.xiao.nicevideoplayer.utils.LogUtil;
 import com.xiao.nicevideoplayer.NiceSurfaceView;
-import com.xiao.nicevideoplayer.utils.NiceUtil;
 import com.xiao.nicevideoplayer.NiceVideoPlayerController;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
+import com.xiao.nicevideoplayer.utils.LogUtil;
+import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import java.util.Map;
 
@@ -37,7 +37,7 @@ public class AliVideoPlayer extends FrameLayout
     private int mCurrentState = STATE_IDLE;
     private int mCurrentMode = MODE_NORMAL;
 
-    private Context mContext;
+    private final Context mContext;
     private AudioManager mAudioManager;
     private AliPlayer aliPlayer;
     private FrameLayout mContainer;
@@ -592,7 +592,7 @@ public class AliVideoPlayer extends FrameLayout
         if (mCurrentMode == MODE_TINY_WINDOW) return;
         removeView(mContainer);
 
-        ViewGroup contentView =  NiceUtil.scanForActivity(mContext)
+        ViewGroup contentView = NiceUtil.scanForActivity(mContext)
                 .findViewById(android.R.id.content);
         // 小窗口的宽度为屏幕宽度的60%，长宽比默认为16:9，右边距、下边距为8dp。
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(

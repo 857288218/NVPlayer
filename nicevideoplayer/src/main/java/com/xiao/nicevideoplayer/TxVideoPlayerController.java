@@ -163,8 +163,8 @@ public class TxVideoPlayerController
     public void setNiceVideoPlayer(INiceVideoPlayer niceVideoPlayer) {
         super.setNiceVideoPlayer(niceVideoPlayer);
         // 给播放器配置视频链接地址
-        if (clarities != null && clarities.size() > 1) {
-            mNiceVideoPlayer.setUp(clarities.get(defaultClarityIndex).videoUrl, null);
+        if (clarities != null && clarities.size() > 1 && mNiceVideoPlayer != null) {
+            mNiceVideoPlayer.setUp(clarities.get(defaultClarityIndex).getVideoUrl(), null);
         }
     }
 
@@ -180,16 +180,16 @@ public class TxVideoPlayerController
 
             List<String> clarityGrades = new ArrayList<>();
             for (Clarity clarity : clarities) {
-                clarityGrades.add(clarity.grade + " " + clarity.p);
+                clarityGrades.add(clarity.getGrade() + " " + clarity.getP());
             }
-            mClarity.setText(clarities.get(defaultClarityIndex).grade);
+            mClarity.setText(clarities.get(defaultClarityIndex).getGrade());
             // 初始化切换清晰度对话框
             mClarityDialog = new ChangeClarityDialog(mContext);
             mClarityDialog.setClarityGrade(clarityGrades, defaultClarityIndex);
             mClarityDialog.setOnClarityCheckedListener(this);
             // 给播放器配置视频链接地址
             if (mNiceVideoPlayer != null) {
-                mNiceVideoPlayer.setUp(clarities.get(defaultClarityIndex).videoUrl, null);
+                mNiceVideoPlayer.setUp(clarities.get(defaultClarityIndex).getVideoUrl(), null);
             }
         }
     }
@@ -354,43 +354,45 @@ public class TxVideoPlayerController
      */
     @Override
     public void onClick(View v) {
-        if (v == mCenterStart) {
-            if (mNiceVideoPlayer.isIdle()) {
-                mNiceVideoPlayer.start();
-            }
-        } else if (v == mBack) {
-            if (mNiceVideoPlayer.isFullScreen()) {
-                mNiceVideoPlayer.exitFullScreen();
-            } else if (mNiceVideoPlayer.isTinyWindow()) {
-                mNiceVideoPlayer.exitTinyWindow();
-            }
-        } else if (v == mRestartPause) {
-            if (mNiceVideoPlayer.isPlaying() || mNiceVideoPlayer.isBufferingPlaying()) {
-                mNiceVideoPlayer.pause();
-            } else if (mNiceVideoPlayer.isPaused() || mNiceVideoPlayer.isBufferingPaused()) {
+        if (mNiceVideoPlayer != null) {
+            if (v == mCenterStart) {
+                if (mNiceVideoPlayer.isIdle()) {
+                    mNiceVideoPlayer.start();
+                }
+            } else if (v == mBack) {
+                if (mNiceVideoPlayer.isFullScreen()) {
+                    mNiceVideoPlayer.exitFullScreen();
+                } else if (mNiceVideoPlayer.isTinyWindow()) {
+                    mNiceVideoPlayer.exitTinyWindow();
+                }
+            } else if (v == mRestartPause) {
+                if (mNiceVideoPlayer.isPlaying() || mNiceVideoPlayer.isBufferingPlaying()) {
+                    mNiceVideoPlayer.pause();
+                } else if (mNiceVideoPlayer.isPaused() || mNiceVideoPlayer.isBufferingPaused()) {
+                    mNiceVideoPlayer.restart();
+                }
+            } else if (v == mFullScreen) {
+                if (mNiceVideoPlayer.isNormal() || mNiceVideoPlayer.isTinyWindow()) {
+                    mNiceVideoPlayer.enterFullScreen();
+                } else if (mNiceVideoPlayer.isFullScreen()) {
+                    mNiceVideoPlayer.exitFullScreen();
+                }
+            } else if (v == mClarity) {
+                setTopBottomVisible(false); // 隐藏top、bottom
+                mClarityDialog.show();     // 显示清晰度对话框
+            } else if (v == mRetry) {
                 mNiceVideoPlayer.restart();
-            }
-        } else if (v == mFullScreen) {
-            if (mNiceVideoPlayer.isNormal() || mNiceVideoPlayer.isTinyWindow()) {
-                mNiceVideoPlayer.enterFullScreen();
-            } else if (mNiceVideoPlayer.isFullScreen()) {
-                mNiceVideoPlayer.exitFullScreen();
-            }
-        } else if (v == mClarity) {
-            setTopBottomVisible(false); // 隐藏top、bottom
-            mClarityDialog.show();     // 显示清晰度对话框
-        } else if (v == mRetry) {
-            mNiceVideoPlayer.restart();
-        } else if (v == mReplay) {
-            mRetry.performClick();
-        } else if (v == mShare) {
-            Toast.makeText(mContext, "分享", Toast.LENGTH_SHORT).show();
-        } else if (v == this) {
-            if (mNiceVideoPlayer.isPlaying()
-                    || mNiceVideoPlayer.isPaused()
-                    || mNiceVideoPlayer.isBufferingPlaying()
-                    || mNiceVideoPlayer.isBufferingPaused()) {
-                setTopBottomVisible(!topBottomVisible);
+            } else if (v == mReplay) {
+                mRetry.performClick();
+            } else if (v == mShare) {
+                Toast.makeText(mContext, "分享", Toast.LENGTH_SHORT).show();
+            } else if (v == this) {
+                if (mNiceVideoPlayer.isPlaying()
+                        || mNiceVideoPlayer.isPaused()
+                        || mNiceVideoPlayer.isBufferingPlaying()
+                        || mNiceVideoPlayer.isBufferingPaused()) {
+                    setTopBottomVisible(!topBottomVisible);
+                }
             }
         }
     }
@@ -399,10 +401,10 @@ public class TxVideoPlayerController
     public void onClarityChanged(int clarityIndex) {
         // 根据切换后的清晰度索引值，设置对应的视频链接地址，并从当前播放位置接着播放
         Clarity clarity = clarities.get(clarityIndex);
-        mClarity.setText(clarity.grade);
+        mClarity.setText(clarity.getGrade());
         long currentPosition = mNiceVideoPlayer.getCurrentPosition();
         mNiceVideoPlayer.releasePlayer();
-        mNiceVideoPlayer.setUp(clarity.videoUrl, null);
+        mNiceVideoPlayer.setUp(clarity.getVideoUrl(), null);
         mNiceVideoPlayer.start(currentPosition);
     }
 
@@ -462,7 +464,7 @@ public class TxVideoPlayerController
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if (fromUser) {
+        if (fromUser && mNiceVideoPlayer != null) {
             //人为滑动seekbar更新当前滑动的进度时间
             long position = (long) (mNiceVideoPlayer.getDuration() * progress / 100f);
             mPosition.setText(NiceUtil.formatTime(position));
@@ -495,7 +497,7 @@ public class TxVideoPlayerController
 
     @Override
     public void updateProgress() {
-        if (canUpdateProgress) {
+        if (canUpdateProgress && mNiceVideoPlayer != null) {
             long position = mNiceVideoPlayer.getCurrentPosition();
             long duration = mNiceVideoPlayer.getDuration();
             int bufferPercentage = mNiceVideoPlayer.getBufferPercentage();
