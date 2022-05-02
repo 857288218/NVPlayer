@@ -128,20 +128,30 @@ public interface INiceVideoPlayer {
      * 以下9个方法是播放器在当前的播放状态
      **********************************/
     boolean isIdle();
+
     boolean isPreparing();
+
     boolean isPrepared();
+
     boolean isBufferingPlaying();
+
     boolean isBufferingPaused();
+
     boolean isPlaying();
+
     boolean isPaused();
+
     boolean isError();
+
     boolean isCompleted();
 
     /*********************************
      * 以下3个方法是播放器的模式
      **********************************/
     boolean isFullScreen();
+
     boolean isTinyWindow();
+
     boolean isNormal();
 
     /**

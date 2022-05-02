@@ -1,14 +1,15 @@
 package com.xiao.nicevideoplayer;
 
 import android.content.Context;
-import android.support.annotation.DrawableRes;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
+import androidx.annotation.DrawableRes;
+
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayerJava;
 import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
 import com.xiao.nicevideoplayer.utils.NiceUtil;
 
@@ -80,15 +81,15 @@ public abstract class NiceVideoPlayerController
      *
      * @param playState 播放状态：
      *                  <ul>
-     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_IDLE}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_PREPARING}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_PREPARED}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_PLAYING}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_PAUSED}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_BUFFERING_PLAYING}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_BUFFERING_PAUSED}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_ERROR}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayer#STATE_COMPLETED}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_IDLE}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_PREPARING}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_PREPARED}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_PLAYING}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_PAUSED}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_BUFFERING_PLAYING}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_BUFFERING_PAUSED}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_ERROR}</li>
+     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_COMPLETED}</li>
      *                  </ul>
      */
     public abstract void onPlayStateChanged(int playState);
@@ -98,9 +99,9 @@ public abstract class NiceVideoPlayerController
      *
      * @param playMode 播放器的模式：
      *                 <ul>
-     *                 <li>{@link IJKSurfaceVideoPlayer#MODE_NORMAL}</li>
-     *                 <li>{@link IJKSurfaceVideoPlayer#MODE_FULL_SCREEN}</li>
-     *                 <li>{@link IJKSurfaceVideoPlayer#MODE_TINY_WINDOW}</li>
+     *                 <li>{@link IJKSurfaceVideoPlayerJava#MODE_NORMAL}</li>
+     *                 <li>{@link IJKSurfaceVideoPlayerJava#MODE_FULL_SCREEN}</li>
+     *                 <li>{@link IJKSurfaceVideoPlayerJava#MODE_TINY_WINDOW}</li>
      *                 </ul>
      */
     public abstract void onPlayModeChanged(int playMode);

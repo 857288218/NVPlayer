@@ -1,10 +1,11 @@
 package com.xiao.nicevieoplayer.example.adapter;
 
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
 import com.xiao.nicevieoplayer.R;
@@ -12,7 +13,6 @@ import com.xiao.nicevieoplayer.example.adapter.holder.VideoViewHolder;
 import com.xiao.nicevieoplayer.example.bean.Video;
 
 import java.util.List;
-
 
 public class VideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
 

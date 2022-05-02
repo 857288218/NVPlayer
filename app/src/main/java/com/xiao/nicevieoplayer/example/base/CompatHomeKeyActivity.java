@@ -2,7 +2,8 @@ package com.xiao.nicevieoplayer.example.base;
 
 import android.graphics.PixelFormat;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevieoplayer.example.util.HomeKeyWatcher;

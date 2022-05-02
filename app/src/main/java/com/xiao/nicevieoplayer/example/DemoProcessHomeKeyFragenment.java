@@ -1,18 +1,18 @@
 package com.xiao.nicevieoplayer.example;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayerJava;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.adapter.VideoAdapter;
-import com.xiao.nicevieoplayer.example.adapter.holder.VideoViewHolder;
 import com.xiao.nicevieoplayer.example.base.CompatHomeKeyFragment;
 import com.xiao.nicevieoplayer.example.util.DataUtil;
 
@@ -48,7 +48,7 @@ public class DemoProcessHomeKeyFragenment extends CompatHomeKeyFragment {
 
             @Override
             public void onChildViewDetachedFromWindow(View view) {
-                IJKSurfaceVideoPlayer niceVideoPlayer = view.findViewById(R.id.nice_video_player);
+                IJKSurfaceVideoPlayerJava niceVideoPlayer = view.findViewById(R.id.nice_video_player);
                 if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) {
                     NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
                 }

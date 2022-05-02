@@ -1,10 +1,11 @@
 package com.xiao.nicevieoplayer.example.util;
 
 import android.graphics.Rect;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayerJava;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 
 /**
@@ -25,8 +26,8 @@ public class AutoPlayUtils {
         for (int i = 0; i <= lastVisiblePosition - firstVisiblePosition; i++) {
             View child = recyclerView.getChildAt(i);
             View view = child.findViewById(jzvdId);
-            if (view != null && view instanceof IJKSurfaceVideoPlayer) {
-                IJKSurfaceVideoPlayer player = (IJKSurfaceVideoPlayer) view;
+            if (view != null && view instanceof IJKSurfaceVideoPlayerJava) {
+                IJKSurfaceVideoPlayerJava player = (IJKSurfaceVideoPlayerJava) view;
                 if (getViewVisiblePercent(player) == 1f) {
                     if (positionInList != i + firstVisiblePosition) {
                         if (player.isIdle()) {

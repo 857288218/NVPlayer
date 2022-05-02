@@ -4,6 +4,14 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/AndroidProject/NVPlayer/app/src/main/res/layout/item_video.xml" value="0.36614583333333334" />
+        <entry key="..\:/NVPlayer/app/src/main/res/layout/activity_change_clarity.xml" value="0.25364583333333335" />
+        <entry key="..\:/NVPlayer/app/src/main/res/layout/activity_main.xml" value="0.25364583333333335" />
+        <entry key="..\:/NVPlayer/app/src/main/res/layout/activity_process_home2.xml" value="0.25364583333333335" />
+        <entry key="..\:/NVPlayer/app/src/main/res/layout/activity_recycler_view.xml" value="0.1" />
+        <entry key="..\:/NVPlayer/app/src/main/res/layout/activity_test.xml" value="0.2390625" />
+        <entry key="..\:/NVPlayer/app/src/main/res/layout/item_ijk_texture_video.xml" value="0.25364583333333335" />
+        <entry key="..\:/NVPlayer/app/src/main/res/layout/item_video.xml" value="0.25364583333333335" />
+        <entry key="..\:/NVPlayer/app/src/main/res/layout/layout_fragment_demo.xml" value="0.25364583333333335" />
       </map>
     </option>
   </component>

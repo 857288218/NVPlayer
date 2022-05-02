@@ -1,60 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.xiao.nicevieoplayer">
+    package="com.xiao.nicevieoplayer">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_app"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".example.MainActivity">
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name=".example.TestActivity"
+            android:exported="true" >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
         <activity
             android:name=".example.TinyWindowPlayActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="可使用小窗口模式播放"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".example.IJKSurfaceListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="在RecylerView视频列表中"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name=".example.IJKTextureListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="在RecylerView视频列表中"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name=".example.AliPlayerListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="在RecylerView视频列表中 AliPlayer surfaceView"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name=".example.ChangeClarityActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="在全屏时可以切换清晰度"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name=".example.ProcessHome2Activity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="Fragment中时处理播放时按下Home键"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>

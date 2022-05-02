@@ -1,11 +1,12 @@
 package com.xiao.nicevieoplayer.example;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.xiao.nicevideoplayer.Clarity;
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayerJava;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
 import com.xiao.nicevideoplayer.player.IJKTextureVideoPlayer;
@@ -27,7 +28,7 @@ public class ChangeClarityActivity extends AppCompatActivity {
 
     private void init() {
         mNiceVideoPlayer = (IJKTextureVideoPlayer) findViewById(R.id.nice_video_player);
-        mNiceVideoPlayer.setPlayerType(IJKSurfaceVideoPlayer.TYPE_IJK); // IjkPlayer or MediaPlayer
+        mNiceVideoPlayer.setPlayerType(IJKSurfaceVideoPlayerJava.TYPE_IJK); // IjkPlayer or MediaPlayer
         TxVideoPlayerController controller = new TxVideoPlayerController(this);
         controller.setTitle("Beautiful China...");
         controller.setLength(117000);
