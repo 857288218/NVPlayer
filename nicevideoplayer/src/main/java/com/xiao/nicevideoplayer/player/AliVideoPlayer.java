@@ -91,6 +91,10 @@ public class AliVideoPlayer extends FrameLayout
         isLoop = looping;
     }
 
+    public void setMute(boolean isMute) {
+        aliPlayer.setMute(isMute);
+    }
+
     /**
      * 是否从上一次的位置继续播放
      *
@@ -636,16 +640,13 @@ public class AliVideoPlayer extends FrameLayout
             mAudioManager.abandonAudioFocus(null);
             mAudioManager = null;
         }
-        if (aliPlayer != null) {
-            //缓解当列表滑动到正在播放的item不可见时，释放会造成列表卡一下的问题
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    aliPlayer.release();
-                    aliPlayer = null;
-                }
-            }).start();
-        }
+        //缓解当列表滑动到正在播放的item不可见时，释放会造成列表卡一下的问题
+        new Thread(() -> {
+            if (aliPlayer != null) {
+                aliPlayer.release();
+                aliPlayer = null;
+            }
+        }).start();
         surfaceHolder = null;
 
         // 解决释放播放器黑一下,使用TextureView没有该问题

@@ -31,8 +31,8 @@ class IJKTextureListActivity : CompatHomeKeyActivity() {
             override fun onChildViewAttachedToWindow(view: View) {}
             override fun onChildViewDetachedFromWindow(view: View) {
                 val niceVideoPlayer: INiceVideoPlayer = view.findViewById(R.id.nice_video_player)
-                if (niceVideoPlayer === NiceVideoPlayerManager.instance().currentNiceVideoPlayer) {
-                    NiceVideoPlayerManager.instance().releaseNiceVideoPlayer()
+                if (niceVideoPlayer === NiceVideoPlayerManager.instance()!!.currentNiceVideoPlayer) {
+                    NiceVideoPlayerManager.instance()!!.releaseNiceVideoPlayer()
                 }
             }
         })

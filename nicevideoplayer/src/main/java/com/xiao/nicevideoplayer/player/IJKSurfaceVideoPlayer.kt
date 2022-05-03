@@ -78,6 +78,15 @@ class IJKSurfaceVideoPlayer(
         isLoop = looping
     }
 
+    // 该方法是使手机媒体静音，不是单纯的静音播放的视频
+    fun setMute(mute: Boolean) {
+        mAudioManager?.adjustStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            if (mute) AudioManager.ADJUST_MUTE else AudioManager.ADJUST_UNMUTE,
+            0
+        )
+    }
+
     /**
      * 设置播放器类型
      *
@@ -106,7 +115,7 @@ class IJKSurfaceVideoPlayer(
 
     override fun start() {
         if (mCurrentState == INiceVideoPlayer.STATE_IDLE) {
-            NiceVideoPlayerManager.instance().currentNiceVideoPlayer = this
+            NiceVideoPlayerManager.instance()!!.currentNiceVideoPlayer = this
             initAudioManager()
             initMediaPlayer()
             initSurfaceView()
@@ -187,8 +196,8 @@ class IJKSurfaceVideoPlayer(
 
     override fun isNormal() = mCurrentMode == INiceVideoPlayer.MODE_NORMAL
 
-    override fun getMaxVolume(): Int =
-        mAudioManager?.getStreamMaxVolume(AudioManager.STREAM_MUSIC) ?: 0
+    override fun getMaxVolume() = mAudioManager?.getStreamMaxVolume(AudioManager.STREAM_MUSIC) ?: 0
+
 
     override fun getVolume(): Int = mAudioManager?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: 0
 
@@ -208,7 +217,8 @@ class IJKSurfaceVideoPlayer(
 
     private fun initAudioManager() {
         if (mAudioManager == null) {
-            mAudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            mAudioManager =
+                context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
             mAudioManager!!.requestAudioFocus(
                 null,
                 AudioManager.STREAM_MUSIC,
@@ -401,7 +411,7 @@ class IJKSurfaceVideoPlayer(
      */
     override fun enterFullScreen() {
         if (mCurrentMode == INiceVideoPlayer.MODE_FULL_SCREEN) return
-        NiceVideoPlayerManager.instance().setAllowRelease(false)
+        NiceVideoPlayerManager.instance()!!.setAllowRelease(false)
         // 隐藏ActionBar、状态栏，并横屏
         NiceUtil.hideActionBar(mContext)
         NiceUtil.scanForActivity(mContext).requestedOrientation =
@@ -434,7 +444,7 @@ class IJKSurfaceVideoPlayer(
     @SuppressLint("SourceLockedOrientationActivity")
     override fun exitFullScreen(): Boolean {
         if (mCurrentMode == INiceVideoPlayer.MODE_FULL_SCREEN) {
-            NiceVideoPlayerManager.instance().setAllowRelease(true)
+            NiceVideoPlayerManager.instance()!!.setAllowRelease(true)
             NiceUtil.showActionBar(mContext)
             NiceUtil.scanForActivity(mContext).requestedOrientation =
                 ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
