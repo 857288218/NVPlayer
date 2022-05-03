@@ -13,10 +13,6 @@ import androidx.appcompat.view.ContextThemeWrapper;
 import java.util.Formatter;
 import java.util.Locale;
 
-/**
- * Created by XiaoJianjun on 2017/5/8.
- * 工具类.
- */
 public class NiceUtil {
     /**
      * Get activity from context object

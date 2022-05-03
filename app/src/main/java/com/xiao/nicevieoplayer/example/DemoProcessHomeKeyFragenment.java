@@ -9,7 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayerJava;
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.adapter.VideoAdapter;
@@ -48,7 +48,7 @@ public class DemoProcessHomeKeyFragenment extends CompatHomeKeyFragment {
 
             @Override
             public void onChildViewDetachedFromWindow(View view) {
-                IJKSurfaceVideoPlayerJava niceVideoPlayer = view.findViewById(R.id.nice_video_player);
+                IJKSurfaceVideoPlayer niceVideoPlayer = view.findViewById(R.id.nice_video_player);
                 if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) {
                     NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
                 }

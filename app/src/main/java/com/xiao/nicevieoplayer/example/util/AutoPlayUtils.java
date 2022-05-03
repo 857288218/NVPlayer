@@ -5,12 +5,11 @@ import android.view.View;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayerJava;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
 
 /**
  * 列表自动播放工具类
- *
  */
 public class AutoPlayUtils {
     public static int positionInList = -1;//记录当前播放列表位置
@@ -26,8 +25,8 @@ public class AutoPlayUtils {
         for (int i = 0; i <= lastVisiblePosition - firstVisiblePosition; i++) {
             View child = recyclerView.getChildAt(i);
             View view = child.findViewById(jzvdId);
-            if (view != null && view instanceof IJKSurfaceVideoPlayerJava) {
-                IJKSurfaceVideoPlayerJava player = (IJKSurfaceVideoPlayerJava) view;
+            if (view instanceof IJKSurfaceVideoPlayer) {
+                IJKSurfaceVideoPlayer player = (IJKSurfaceVideoPlayer) view;
                 if (getViewVisiblePercent(player) == 1f) {
                     if (positionInList != i + firstVisiblePosition) {
                         if (player.isIdle()) {
