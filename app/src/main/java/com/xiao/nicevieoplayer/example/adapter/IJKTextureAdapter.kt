@@ -3,9 +3,12 @@ package com.xiao.nicevieoplayer.example.adapter
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.xiao.nicevideoplayer.TxVideoPlayerController
 import com.xiao.nicevieoplayer.R
+import com.xiao.nicevieoplayer.example.VideoDetailActivity
 import com.xiao.nicevieoplayer.example.adapter.holder.IJKTextureHolder
 import com.xiao.nicevieoplayer.example.bean.Video
 
@@ -17,6 +20,9 @@ class IJKTextureAdapter(private val mContext: Context, private val mVideoList: L
         val holder = IJKTextureHolder(itemView)
         val controller = TxVideoPlayerController(mContext)
         holder.setController(controller)
+        itemView.findViewById<TextView>(R.id.tv_detail).setOnClickListener {
+            VideoDetailActivity.startActivity(mContext as AppCompatActivity, holder.mVideoPlayer.getUrl(), holder.mVideoPlayer.currentPosition)
+        }
         //        holder.mVideoPlayer.setLooping(true);
         return holder
     }

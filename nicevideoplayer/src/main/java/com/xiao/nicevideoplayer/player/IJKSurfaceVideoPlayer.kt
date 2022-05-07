@@ -43,6 +43,23 @@ class IJKSurfaceVideoPlayer(
     private var skipToPosition: Long = 0
     private var isLoop = false
 
+    var onCompletionCallback: (() -> Unit)? = null
+
+    // 播放器开始渲染回调(首帧画面回调)
+    var onVideoRenderStartCallback: (() -> Unit)? = null
+
+    // 开始播放回调
+    var onPlayingCallback: (() -> Unit)? = null
+
+    // 视频暂停回调
+    var onPauseCallback: (() -> Unit)? = null
+
+    // 暂停时视频缓冲回调
+    var onBufferPauseCallback: (() -> Unit)? = null
+
+    // 播放时视频缓冲回调
+    var onBufferPlayingCallback: (() -> Unit)? = null
+
     init {
         mContainer = FrameLayout(mContext)
         mContainer!!.setBackgroundColor(Color.BLACK)
@@ -134,12 +151,14 @@ class IJKSurfaceVideoPlayer(
         if (mCurrentState == INiceVideoPlayer.STATE_PAUSED) {
             mMediaPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_PLAYING
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onPlayingCallback?.invoke()
             LogUtil.d("STATE_PLAYING")
         } else if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
             mMediaPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onBufferPlayingCallback?.invoke()
             LogUtil.d("STATE_BUFFERING_PLAYING")
         } else if (mCurrentState == INiceVideoPlayer.STATE_COMPLETED || mCurrentState == INiceVideoPlayer.STATE_ERROR) {
             mMediaPlayer!!.reset()
@@ -153,13 +172,15 @@ class IJKSurfaceVideoPlayer(
         if (mCurrentState == INiceVideoPlayer.STATE_PLAYING) {
             mMediaPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_PAUSED
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onPauseCallback?.invoke()
             LogUtil.d("STATE_PAUSED")
         }
         if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
             mMediaPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onBufferPauseCallback?.invoke()
             LogUtil.d("STATE_BUFFERING_PAUSED")
         }
     }
@@ -342,6 +363,7 @@ class IJKSurfaceVideoPlayer(
         //设置了循环播放后，就不会再执行这个回调了
         mCurrentState = INiceVideoPlayer.STATE_COMPLETED
         mController?.onPlayStateChanged(mCurrentState)
+        onCompletionCallback?.invoke()
         LogUtil.d("onCompletion ——> STATE_COMPLETED")
         // 清除屏幕常亮
         mContainer?.keepScreenOn = false
@@ -365,14 +387,18 @@ class IJKSurfaceVideoPlayer(
             // 播放器开始渲染，当开始循环播放时，不会回调该方法。回调到这里可能还是没有画面，还需要缓冲
             mCurrentState = INiceVideoPlayer.STATE_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
+            onVideoRenderStartCallback?.invoke()
+            onPlayingCallback?.invoke()
             LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING")
         } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
             // MediaPlayer暂时不播放，以缓冲更多的数据
             if (mCurrentState == INiceVideoPlayer.STATE_PAUSED || mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
                 mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
+                onBufferPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
             } else {
                 mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
+                onBufferPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING")
             }
             mController?.onPlayStateChanged(mCurrentState)
@@ -381,11 +407,13 @@ class IJKSurfaceVideoPlayer(
             if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
                 mCurrentState = INiceVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
+                onPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
             }
             if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
                 mCurrentState = INiceVideoPlayer.STATE_PAUSED
                 mController?.onPlayStateChanged(mCurrentState)
+                onPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED")
             }
         } else if (what == IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED) {
@@ -430,7 +458,7 @@ class IJKSurfaceVideoPlayer(
             )
         )
         mCurrentMode = INiceVideoPlayer.MODE_FULL_SCREEN
-        mController!!.onPlayModeChanged(mCurrentMode)
+        mController?.onPlayModeChanged(mCurrentMode)
         LogUtil.d("MODE_FULL_SCREEN")
     }
 
@@ -458,7 +486,7 @@ class IJKSurfaceVideoPlayer(
                 )
             )
             mCurrentMode = INiceVideoPlayer.MODE_NORMAL
-            mController!!.onPlayModeChanged(mCurrentMode)
+            mController?.onPlayModeChanged(mCurrentMode)
             LogUtil.d("MODE_NORMAL")
             return true
         }
@@ -483,7 +511,7 @@ class IJKSurfaceVideoPlayer(
         params.bottomMargin = NiceUtil.dp2px(mContext, 8f)
         contentView.addView(mContainer, params)
         mCurrentMode = INiceVideoPlayer.MODE_TINY_WINDOW
-        mController!!.onPlayModeChanged(mCurrentMode)
+        mController?.onPlayModeChanged(mCurrentMode)
         LogUtil.d("MODE_TINY_WINDOW")
     }
 
@@ -502,7 +530,7 @@ class IJKSurfaceVideoPlayer(
                 )
             )
             mCurrentMode = INiceVideoPlayer.MODE_NORMAL
-            mController!!.onPlayModeChanged(mCurrentMode)
+            mController?.onPlayModeChanged(mCurrentMode)
             LogUtil.d("MODE_NORMAL")
             return true
         }

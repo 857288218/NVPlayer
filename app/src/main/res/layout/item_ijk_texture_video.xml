@@ -13,4 +13,11 @@
         android:id="@+id/nice_video_player"
         android:layout_width="match_parent"
         android:layout_height="200dp"/>
+
+    <TextView
+        android:id="@+id/tv_detail"
+        android:padding="20dp"
+        android:text="详情"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 </LinearLayout>

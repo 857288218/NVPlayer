@@ -46,6 +46,23 @@ class IJKTextureVideoPlayer constructor(
     private var skipToPosition: Long = 0
     private var isLoop = false
 
+    var onCompletionCallback: (() -> Unit)? = null
+
+    // 播放器开始渲染回调(首帧画面回调)
+    var onVideoRenderStartCallback: (() -> Unit)? = null
+
+    // 开始播放回调
+    var onPlayingCallback: (() -> Unit)? = null
+
+    // 视频暂停回调
+    var onPauseCallback: (() -> Unit)? = null
+
+    // 暂停时视频缓冲回调
+    var onBufferPauseCallback: (() -> Unit)? = null
+
+    // 播放时视频缓冲回调
+    var onBufferPlayingCallback: (() -> Unit)? = null
+
     init {
         mContainer = FrameLayout(mContext)
         mContainer!!.setBackgroundColor(Color.BLACK)
@@ -61,6 +78,8 @@ class IJKTextureVideoPlayer constructor(
         mUrl = url
         mHeaders = headers
     }
+
+    fun getUrl() = mUrl
 
     fun setController(controller: NiceVideoPlayerController?) {
         mContainer?.removeView(mController)
@@ -138,12 +157,14 @@ class IJKTextureVideoPlayer constructor(
         if (mCurrentState == INiceVideoPlayer.STATE_PAUSED) {
             mMediaPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_PLAYING
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onPlayingCallback?.invoke()
             LogUtil.d("STATE_PLAYING")
         } else if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
             mMediaPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onBufferPlayingCallback?.invoke()
             LogUtil.d("STATE_BUFFERING_PLAYING")
         } else if (mCurrentState == INiceVideoPlayer.STATE_COMPLETED || mCurrentState == INiceVideoPlayer.STATE_ERROR) {
             mMediaPlayer!!.reset()
@@ -157,13 +178,15 @@ class IJKTextureVideoPlayer constructor(
         if (mCurrentState == INiceVideoPlayer.STATE_PLAYING) {
             mMediaPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_PAUSED
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onPauseCallback?.invoke()
             LogUtil.d("STATE_PAUSED")
         }
         if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
             mMediaPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onBufferPauseCallback?.invoke()
             LogUtil.d("STATE_BUFFERING_PAUSED")
         }
     }
@@ -354,6 +377,7 @@ class IJKTextureVideoPlayer constructor(
         //设置了循环播放后，就不会再执行这个回调了
         mCurrentState = INiceVideoPlayer.STATE_COMPLETED
         mController?.onPlayStateChanged(mCurrentState)
+        onCompletionCallback?.invoke()
         LogUtil.d("onCompletion ——> STATE_COMPLETED")
         // 清除屏幕常亮
         mContainer?.keepScreenOn = false
@@ -366,7 +390,7 @@ class IJKTextureVideoPlayer constructor(
             // 直播流播放时去调用mediaPlayer.getDuration会导致-38和-2147483648错误，忽略该错误
             if (what != -38 && what != -2147483648 && extra != -38 && extra != -2147483648) {
                 mCurrentState = INiceVideoPlayer.STATE_ERROR
-                mController!!.onPlayStateChanged(mCurrentState)
+                mController?.onPlayStateChanged(mCurrentState)
                 LogUtil.d("onError ——> STATE_ERROR ———— what：$what, extra: $extra")
             }
             true
@@ -377,14 +401,18 @@ class IJKTextureVideoPlayer constructor(
             // 播放器开始渲染
             mCurrentState = INiceVideoPlayer.STATE_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
+            onVideoRenderStartCallback?.invoke()
+            onPlayingCallback?.invoke()
             LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING")
         } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
             // MediaPlayer暂时不播放，以缓冲更多的数据
             if (mCurrentState == INiceVideoPlayer.STATE_PAUSED || mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
                 mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
+                onBufferPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
             } else {
                 mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
+                onBufferPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING")
             }
             mController?.onPlayStateChanged(mCurrentState)
@@ -393,11 +421,13 @@ class IJKTextureVideoPlayer constructor(
             if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
                 mCurrentState = INiceVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
+                onPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
             }
             if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
                 mCurrentState = INiceVideoPlayer.STATE_PAUSED
                 mController?.onPlayStateChanged(mCurrentState)
+                onPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED")
             }
         } else if (what == IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED) {

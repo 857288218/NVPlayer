@@ -5,6 +5,7 @@ import android.view.View;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
 import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevieoplayer.R;
@@ -30,20 +31,20 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
         mController.setTitle(video.getTitle());
         mController.setLength(video.getLength());
 
-        Glide.with(itemView.getContext())
-                .load(video.getImageUrl())
-//                .placeholder(R.drawable.img_default)
-                .into(mController.imageView());
-        //获取第一帧作为封面
 //        Glide.with(itemView.getContext())
-//                .setDefaultRequestOptions(
-//                        new RequestOptions()
-//                                .frame(0000000)
-//                                .fitCenter()
-//                )
-//                .load(video.getVideoUrl())
+//                .load(video.getImageUrl())
 ////                .placeholder(R.drawable.img_default)
 //                .into(mController.imageView());
+        //获取第一帧作为封面
+        Glide.with(itemView.getContext())
+                .setDefaultRequestOptions(
+                        new RequestOptions()
+                                .frame(0000000)
+                                .fitCenter()
+                )
+                .load(video.getVideoUrl())
+//                .placeholder(R.drawable.img_default)
+                .into(mController.imageView());
         mVideoPlayer.setUp(video.getVideoUrl(), null);
     }
 }
