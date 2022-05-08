@@ -91,6 +91,7 @@ class IJKSurfaceVideoPlayer(
     }
 
     fun setLooping(looping: Boolean) {
+        mMediaPlayer?.isLooping = looping
         isLoop = looping
     }
 
@@ -185,7 +186,11 @@ class IJKSurfaceVideoPlayer(
     }
 
     override fun seekTo(pos: Long) {
-        mMediaPlayer?.seekTo(pos)
+        if (mMediaPlayer == null) {
+            start(pos)
+        } else {
+            mMediaPlayer!!.seekTo(pos)
+        }
     }
 
     override fun setVolume(volume: Int) {

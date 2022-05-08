@@ -1,5 +1,6 @@
 package com.xiao.nicevieoplayer.example.adapter.holder;
 
+import android.graphics.Color;
 import android.view.View;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -46,5 +47,6 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
 //                .placeholder(R.drawable.img_default)
                 .into(mController.imageView());
         mVideoPlayer.setUp(video.getVideoUrl(), null);
+        mVideoPlayer.setVideoBackgoundColor(Color.parseColor("#000000"));
     }
 }

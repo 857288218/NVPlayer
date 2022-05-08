@@ -46,7 +46,10 @@ class AliVideoPlayer(
     private var mBufferPercentage = 0
     private var continueFromLastPosition = true
     private var skipToPosition: Long = 0
-    private var isLoop = false
+    private var isLooping = false
+    private var videoBgColor: Int? = null
+    private var isMute = false
+    private var scaleMode = IPlayer.ScaleMode.SCALE_ASPECT_FIT
     private var currentPosition: Long = 0
 
     var onCompletionCallback: (() -> Unit)? = null
@@ -97,15 +100,25 @@ class AliVideoPlayer(
         }
     }
 
-    fun setLooping(looping: Boolean) {
-        isLoop = looping
+    fun setLooping(isLooping: Boolean) {
+        aliPlayer?.isLoop = isLooping
+        this.isLooping = isLooping
     }
 
     fun setMute(isMute: Boolean) {
         aliPlayer?.isMute = isMute
+        this.isMute = isMute
     }
 
-    fun setVideoBackgoundColor(bg: Int) = aliPlayer?.setVideoBackgroundColor(bg)
+    fun setVideoBackgoundColor(bgColor: Int) {
+        aliPlayer?.setVideoBackgroundColor(bgColor)
+        videoBgColor = bgColor
+    }
+
+    fun setScaleMode(scaleMode: IPlayer.ScaleMode) {
+        aliPlayer?.scaleMode = scaleMode
+        this.scaleMode = scaleMode
+    }
 
     /**
      * 是否从上一次的位置继续播放
@@ -176,7 +189,11 @@ class AliVideoPlayer(
     }
 
     override fun seekTo(pos: Long) {
-        aliPlayer?.seekTo(pos)
+        if (aliPlayer == null) {
+            start(pos)
+        } else {
+            aliPlayer!!.seekTo(pos)
+        }
     }
 
     override fun setVolume(volume: Int) {
@@ -312,13 +329,15 @@ class AliVideoPlayer(
         mContainer?.keepScreenOn = true
         aliPlayer?.run {
             //设置是否循环播放
-            isLoop = isLoop
-            //画面的缩放模式
-//            if (width > NiceUtil.getScreenWidth(mContext) || height > NiceUtil.getScreenHeight(mContext)) {
-//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FIT);
-//            } else {
-//                aliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FILL);
-//            }
+            isLoop = isLooping
+            //设置是否静音
+            isMute = this@AliVideoPlayer.isMute
+            //设置播放器背景颜色
+            if (videoBgColor != null) {
+                setVideoBackgroundColor(videoBgColor!!)
+            }
+            //画面的填充模式
+            scaleMode = this@AliVideoPlayer.scaleMode
             // 设置监听
             setOnPreparedListener(mOnPreparedListener)
             setOnVideoSizeChangedListener(mOnVideoSizeChangedListener)

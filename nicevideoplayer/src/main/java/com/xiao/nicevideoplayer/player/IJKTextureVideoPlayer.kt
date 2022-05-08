@@ -96,6 +96,7 @@ class IJKTextureVideoPlayer(
     }
 
     fun setLooping(looping: Boolean) {
+        mMediaPlayer?.isLooping = looping
         isLoop = looping
     }
 
@@ -190,7 +191,11 @@ class IJKTextureVideoPlayer(
     }
 
     override fun seekTo(pos: Long) {
-        mMediaPlayer?.seekTo(pos)
+        if (mMediaPlayer == null) {
+            start(pos)
+        } else {
+            mMediaPlayer!!.seekTo(pos)
+        }
     }
 
     override fun setVolume(volume: Int) {

@@ -97,7 +97,7 @@ public interface INiceVideoPlayer {
     void pause();
 
     /**
-     * seek到制定的位置继续播放
+     * seek到指定的位置继续播放
      *
      * @param pos 播放位置
      */
