@@ -5,9 +5,9 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevideoplayer.utils.ScreenRotateUtils;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
-import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.base.CompatHomeKeyActivity;
 

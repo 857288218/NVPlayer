@@ -3,7 +3,6 @@ package com.xiao.nicevideoplayer.player
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.graphics.Color
 import android.graphics.SurfaceTexture
 import android.media.AudioManager
 import android.net.Uri
@@ -23,7 +22,7 @@ import tv.danmaku.ijk.media.player.IMediaPlayer
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
 import java.io.IOException
 
-class IJKTextureVideoPlayer constructor(
+class IJKTextureVideoPlayer(
     private val mContext: Context,
     attrs: AttributeSet? = null
 ) : FrameLayout(mContext, attrs), INiceVideoPlayer, SurfaceTextureListener {
@@ -65,7 +64,6 @@ class IJKTextureVideoPlayer constructor(
 
     init {
         mContainer = FrameLayout(mContext)
-        mContainer!!.setBackgroundColor(Color.BLACK)
         this.addView(
             mContainer, LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
