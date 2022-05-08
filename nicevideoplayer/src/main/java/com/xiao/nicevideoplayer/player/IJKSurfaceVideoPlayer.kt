@@ -48,7 +48,7 @@ class IJKSurfaceVideoPlayer(
     // 播放器开始渲染回调(首帧画面回调)
     var onVideoRenderStartCallback: (() -> Unit)? = null
 
-    // 开始播放回调
+    // 开始播放回调(包括首次播放、暂停后继续播放、缓冲结束后继续播放)
     var onPlayingCallback: (() -> Unit)? = null
 
     // 视频暂停回调

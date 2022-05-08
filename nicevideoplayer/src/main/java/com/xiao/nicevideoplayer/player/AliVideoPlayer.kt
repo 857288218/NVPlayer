@@ -49,6 +49,23 @@ class AliVideoPlayer(
     private var isLoop = false
     private var currentPosition: Long = 0
 
+    var onCompletionCallback: (() -> Unit)? = null
+
+    // 播放器开始渲染回调(首帧画面回调)
+    var onVideoRenderStartCallback: (() -> Unit)? = null
+
+    // 开始播放回调(包括首次播放、暂停后继续播放、缓冲结束后继续播放)
+    var onPlayingCallback: (() -> Unit)? = null
+
+    // 视频暂停回调
+    var onPauseCallback: (() -> Unit)? = null
+
+    // 暂停时视频缓冲回调
+    var onBufferPauseCallback: (() -> Unit)? = null
+
+    // 播放时视频缓冲回调
+    var onBufferPlayingCallback: (() -> Unit)? = null
+
     init {
         mContainer = FrameLayout(mContext)
         this.addView(
@@ -125,12 +142,14 @@ class AliVideoPlayer(
             LogUtil.d("STATE_PLAYING")
             aliPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_PLAYING
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onPlayingCallback?.invoke()
         } else if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
             LogUtil.d("STATE_BUFFERING_PLAYING")
             aliPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
-            mController!!.onPlayStateChanged(mCurrentState)
+            mController?.onPlayStateChanged(mCurrentState)
+            onBufferPlayingCallback?.invoke()
         } else if (mCurrentState == INiceVideoPlayer.STATE_COMPLETED || mCurrentState == INiceVideoPlayer.STATE_ERROR) {
             aliPlayer!!.reset()
             openMediaPlayer()
@@ -145,12 +164,14 @@ class AliVideoPlayer(
             aliPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
+            onPauseCallback?.invoke()
         }
         if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
             LogUtil.d("STATE_BUFFERING_PAUSED")
             aliPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
+            onBufferPauseCallback?.invoke()
         }
     }
 
@@ -346,6 +367,7 @@ class AliVideoPlayer(
         LogUtil.d("onCompletion ——> STATE_COMPLETED")
         mCurrentState = INiceVideoPlayer.STATE_COMPLETED
         mController?.onPlayStateChanged(mCurrentState)
+        onCompletionCallback?.invoke()
         // 清除屏幕常亮
         mContainer?.keepScreenOn = false
         // 重置当前播放进度
@@ -362,6 +384,8 @@ class AliVideoPlayer(
         LogUtil.d("onRenderingStart")
         mCurrentState = INiceVideoPlayer.STATE_PLAYING
         mController?.onPlayStateChanged(mCurrentState)
+        onVideoRenderStartCallback?.invoke()
+        onPlayingCallback?.invoke()
     }
     private val mOnLoadingStatusListener: OnLoadingStatusListener =
         object : OnLoadingStatusListener {
@@ -369,9 +393,11 @@ class AliVideoPlayer(
                 //缓冲开始, 可能还没播放画面就开始缓冲
                 if (mCurrentState == INiceVideoPlayer.STATE_PAUSED || mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
                     mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
+                    onBufferPauseCallback?.invoke()
                     LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
                 } else {
                     mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
+                    onBufferPlayingCallback?.invoke()
                     LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING")
                 }
                 mController?.onPlayStateChanged(mCurrentState)
@@ -388,11 +414,13 @@ class AliVideoPlayer(
                     LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
                     mCurrentState = INiceVideoPlayer.STATE_PLAYING
                     mController?.onPlayStateChanged(mCurrentState)
+                    onPlayingCallback?.invoke()
                 }
                 if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
                     LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED")
                     mCurrentState = INiceVideoPlayer.STATE_PAUSED
                     mController?.onPlayStateChanged(mCurrentState)
+                    onPauseCallback?.invoke()
                 }
             }
         }
