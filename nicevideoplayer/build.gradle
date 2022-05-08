@@ -56,10 +56,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.4.1'
 
-    //阿里云播放器的两个依赖
-    implementation (name:'AliyunPlayer-5.1.5-full',ext:'aar')
-    implementation 'com.alivc.conan:AlivcConan:1.0.3'
-
+    implementation (name:'AliyunPlayer-5.4.6.0-full',ext:'aar')
 }
 repositories {
     mavenCentral()

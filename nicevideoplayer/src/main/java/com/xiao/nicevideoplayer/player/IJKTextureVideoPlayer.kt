@@ -260,14 +260,16 @@ class IJKTextureVideoPlayer constructor(
                 INiceVideoPlayer.TYPE_IJK -> IjkMediaPlayer()
                 else -> {
                     IjkMediaPlayer()
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "analyzemaxduration", 100L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "probesize", 10240L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "flush_packets", 1L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(4, "packet-buffering", 0L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(4, "framedrop", 1L);
                 }
             }
             mMediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+            if (mMediaPlayer is IjkMediaPlayer) {
+//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "analyzemaxduration", 100L)
+//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "probesize", 10240L)
+//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "flush_packets", 1L)
+//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "packet-buffering", 0L)
+//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "framedrop", 1L)
+            }
         }
     }
 
