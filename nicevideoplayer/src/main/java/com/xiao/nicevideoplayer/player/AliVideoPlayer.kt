@@ -51,6 +51,7 @@ class AliVideoPlayer(
     private var isMute = false
     private var scaleMode = IPlayer.ScaleMode.SCALE_ASPECT_FIT
     private var currentPosition: Long = 0
+    private var isSeekToPause = false
 
     var onCompletionCallback: (() -> Unit)? = null
 
@@ -196,7 +197,16 @@ class AliVideoPlayer(
             start(pos)
         } else {
             aliPlayer!!.seekTo(pos)
+            if (isSeekToPause) {
+                aliPlayer!!.pause()
+                isSeekToPause = false
+            }
         }
+    }
+
+    override fun seekToPause(pos: Long) {
+        isSeekToPause = true
+        seekTo(pos)
     }
 
     override fun setVolume(volume: Int) {
@@ -368,16 +378,20 @@ class AliVideoPlayer(
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
-        aliPlayer!!.start()
+
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
-        if (skipToPosition != 0L) {
-            // 跳到指定位置播放
-            aliPlayer!!.seekTo(skipToPosition)
-            skipToPosition = 0
-        } else if (continueFromLastPosition) {
-            // 从上次的保存位置播放
-            val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
-            aliPlayer!!.seekTo(savedPlayPosition)
+        when {
+            skipToPosition != 0L -> {
+                // 跳到指定位置播放
+                seekTo(skipToPosition)
+                skipToPosition = 0
+            }
+            continueFromLastPosition -> {
+                // 从上次的保存位置播放
+                val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
+                aliPlayer!!.seekTo(savedPlayPosition)
+            }
+            else -> aliPlayer!!.start()
         }
     }
     private val mOnVideoSizeChangedListener =

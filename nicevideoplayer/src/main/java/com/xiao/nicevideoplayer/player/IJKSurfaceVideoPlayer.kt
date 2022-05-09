@@ -42,6 +42,7 @@ class IJKSurfaceVideoPlayer(
     private var continueFromLastPosition = true
     private var skipToPosition: Long = 0
     private var isLoop = false
+    private var isSeekToPause = false
 
     var onCompletionCallback: (() -> Unit)? = null
 
@@ -193,7 +194,16 @@ class IJKSurfaceVideoPlayer(
             start(pos)
         } else {
             mMediaPlayer!!.seekTo(pos)
+            if (isSeekToPause) {
+                mMediaPlayer!!.pause()
+                isSeekToPause = false
+            }
         }
+    }
+
+    override fun seekToPause(pos: Long) {
+        isSeekToPause = true
+        seekTo(pos)
     }
 
     override fun setVolume(volume: Int) {
@@ -348,16 +358,20 @@ class IJKSurfaceVideoPlayer(
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
-        mp.start()
+
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
-        if (skipToPosition != 0L) {
-            // 跳到指定位置播放
-            mp.seekTo(skipToPosition)
-            skipToPosition = 0
-        } else if (continueFromLastPosition) {
-            // 从上次的保存位置播放
-            val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
-            mp.seekTo(savedPlayPosition)
+        when {
+            skipToPosition != 0L -> {
+                // 跳到指定位置播放
+                seekTo(skipToPosition)
+                skipToPosition = 0
+            }
+            continueFromLastPosition -> {
+                // 从上次的保存位置播放
+                val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
+                mp.seekTo(savedPlayPosition)
+            }
+            else -> mp.start()
         }
     }
 

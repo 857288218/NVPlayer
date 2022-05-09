@@ -357,7 +357,7 @@ public class TxVideoPlayerController
         if (mNiceVideoPlayer != null) {
             if (v == mCenterStart) {
                 if (mNiceVideoPlayer.isIdle()) {
-                    mNiceVideoPlayer.seekTo(60000);
+                    mNiceVideoPlayer.start();
                 }
             } else if (v == mBack) {
                 if (mNiceVideoPlayer.isFullScreen()) {

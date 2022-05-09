@@ -104,6 +104,13 @@ public interface INiceVideoPlayer {
     void seekTo(long pos);
 
     /**
+     * seek到指定的位置暂停
+     *
+     * @param pos 暂停位置
+     */
+    void seekToPause(long pos);
+
+    /**
      * 设置音量
      *
      * @param volume 音量值
