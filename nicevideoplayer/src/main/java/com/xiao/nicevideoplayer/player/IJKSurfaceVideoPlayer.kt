@@ -60,6 +60,9 @@ class IJKSurfaceVideoPlayer(
     // 播放时视频缓冲回调
     var onBufferPlayingCallback: (() -> Unit)? = null
 
+    // 视频准备完成回调
+    var onPreparedCallback: (() -> Unit)? = null
+
     init {
         mContainer = FrameLayout(mContext)
         this.addView(
@@ -343,6 +346,7 @@ class IJKSurfaceVideoPlayer(
         //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
         //当开始循环播放时，不会回调该方法
         mController?.onPlayStateChanged(mCurrentState)
+        onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
         mp.start()
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况

@@ -7,6 +7,7 @@ import android.view.View.OnTouchListener
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
+import com.aliyun.player.AliPlayer
 import com.xiao.nicevideoplayer.player.INiceVideoPlayer
 import com.xiao.nicevideoplayer.utils.NiceUtil
 import java.util.*
@@ -123,14 +124,10 @@ abstract class NiceVideoPlayerController(val mContext: Context) : FrameLayout(mC
      * 取消更新进度的计时器。
      */
     fun cancelUpdateProgressTimer() {
-        if (mUpdateProgressTimer != null) {
-            mUpdateProgressTimer!!.cancel()
-            mUpdateProgressTimer = null
-        }
-        if (mUpdateProgressTimerTask != null) {
-            mUpdateProgressTimerTask!!.cancel()
-            mUpdateProgressTimerTask = null
-        }
+        mUpdateProgressTimer?.cancel()
+        mUpdateProgressTimer = null
+        mUpdateProgressTimerTask?.cancel()
+        mUpdateProgressTimerTask = null
     }
 
     /**
@@ -225,7 +222,9 @@ abstract class NiceVideoPlayerController(val mContext: Context) : FrameLayout(mC
                 if (mNeedChangePosition) {
                     mNiceVideoPlayer!!.seekTo(mNewPosition)
                     hideChangePosition()
-                    startUpdateProgressTimer()
+                    if (mNiceVideoPlayer !is AliPlayer) {
+                        startUpdateProgressTimer()
+                    }
                     canUpdateProgress = true
                     return true
                 }

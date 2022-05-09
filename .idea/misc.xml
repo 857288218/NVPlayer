@@ -15,6 +15,8 @@
         <entry key="..\:/NVPlayer/app/src/main/res/layout/item_video.xml" value="0.25364583333333335" />
         <entry key="..\:/NVPlayer/app/src/main/res/layout/layout_fragment_demo.xml" value="0.25364583333333335" />
         <entry key="..\:/NVPlayer/nicevideoplayer/src/main/res/drawable/bg_change_clarity_checked.xml" value="0.1565" />
+        <entry key="..\:/NVPlayer/nicevideoplayer/src/main/res/drawable/seek_progress.xml" value="0.259" />
+        <entry key="..\:/NVPlayer/nicevideoplayer/src/main/res/drawable/seek_thumb.xml" value="0.259" />
         <entry key="..\:/NVPlayer/nicevideoplayer/src/main/res/layout/item_change_clarity.xml" value="0.25364583333333335" />
         <entry key="..\:/NVPlayer/nicevideoplayer/src/main/res/layout/tx_video_palyer_controller.xml" value="0.25364583333333335" />
       </map>
