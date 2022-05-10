@@ -176,7 +176,7 @@ class AliVideoPlayer(
     }
 
     override fun pause() {
-        if (mCurrentState == INiceVideoPlayer.STATE_PLAYING) {
+        if (mCurrentState == INiceVideoPlayer.STATE_PLAYING || isSeekToPause) {
             LogUtil.d("STATE_PAUSED")
             aliPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_PAUSED
@@ -198,7 +198,7 @@ class AliVideoPlayer(
         } else {
             aliPlayer!!.seekTo(pos)
             if (isSeekToPause) {
-                aliPlayer!!.pause()
+                pause()
                 isSeekToPause = false
             }
         }
@@ -417,12 +417,16 @@ class AliVideoPlayer(
         LogUtil.d("onError ——> STATE_ERROR")
     }
     private val mOnRenderingStartListener = OnRenderingStartListener {
-        //首帧渲染显示事件
         LogUtil.d("onRenderingStart")
-        mCurrentState = INiceVideoPlayer.STATE_PLAYING
-        mController?.onPlayStateChanged(mCurrentState)
+        //首帧渲染显示事件;条件判断避免外部直接调用seekToPause后这里导致mCurrentState不对
+        if (mCurrentState != INiceVideoPlayer.STATE_PAUSED
+            && mCurrentState != INiceVideoPlayer.STATE_BUFFERING_PAUSED
+        ) {
+            mCurrentState = INiceVideoPlayer.STATE_PLAYING
+            mController?.onPlayStateChanged(mCurrentState)
+            onPlayingCallback?.invoke()
+        }
         onVideoRenderStartCallback?.invoke()
-        onPlayingCallback?.invoke()
     }
     private val mOnLoadingStatusListener: OnLoadingStatusListener =
         object : OnLoadingStatusListener {

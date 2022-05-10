@@ -178,7 +178,7 @@ class IJKTextureVideoPlayer(
     }
 
     override fun pause() {
-        if (mCurrentState == INiceVideoPlayer.STATE_PLAYING) {
+        if (mCurrentState == INiceVideoPlayer.STATE_PLAYING || isSeekToPause) {
             mMediaPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
@@ -200,7 +200,7 @@ class IJKTextureVideoPlayer(
         } else {
             mMediaPlayer!!.seekTo(pos)
             if (isSeekToPause) {
-                mMediaPlayer!!.pause()
+                pause()
                 isSeekToPause = false
             }
         }
@@ -422,11 +422,14 @@ class IJKTextureVideoPlayer(
 
     private val mOnInfoListener = IMediaPlayer.OnInfoListener { _: IMediaPlayer, what, extra ->
         if (what == IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-            // 播放器开始渲染
-            mCurrentState = INiceVideoPlayer.STATE_PLAYING
-            mController?.onPlayStateChanged(mCurrentState)
+            // 播放器开始渲染;条件判断避免外部直接调用seekToPause后这里导致mCurrentState不对
+            if (mCurrentState != INiceVideoPlayer.STATE_PAUSED
+                && mCurrentState != INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
+                mCurrentState = INiceVideoPlayer.STATE_PLAYING
+                mController?.onPlayStateChanged(mCurrentState)
+                onPlayingCallback?.invoke()
+            }
             onVideoRenderStartCallback?.invoke()
-            onPlayingCallback?.invoke()
             LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING")
         } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
             // MediaPlayer暂时不播放，以缓冲更多的数据
