@@ -369,7 +369,8 @@ class IJKTextureVideoPlayer(
 
     private val mOnPreparedListener = IMediaPlayer.OnPreparedListener { mp ->
         mCurrentState = INiceVideoPlayer.STATE_PREPARED
-        //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
+        //在视频准备完成后才能获取Duration，width;
+        // 视频准备完成后自动播放,可以不调用start
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")

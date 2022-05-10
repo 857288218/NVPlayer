@@ -378,7 +378,8 @@ class AliVideoPlayer(
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
-
+        // AliPlayer Prepared后不会自动播放 && start前seekTo也不会播放
+        aliPlayer!!.start()
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
         when {
             skipToPosition != 0L -> {
@@ -391,7 +392,6 @@ class AliVideoPlayer(
                 val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
                 aliPlayer!!.seekTo(savedPlayPosition)
             }
-            else -> aliPlayer!!.start()
         }
     }
     private val mOnVideoSizeChangedListener =

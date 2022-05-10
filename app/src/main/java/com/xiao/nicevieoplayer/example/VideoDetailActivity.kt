@@ -23,8 +23,8 @@ class VideoDetailActivity : AppCompatActivity() {
     private val videoUrlBottom =
         "https://mtenroll.oss-cn-hangzhou.aliyuncs.com/ueditor/video/20180131/6365302297303492635856363.mp4"
 
-    private lateinit var videoPlayer: IJKTextureVideoPlayer
-    private lateinit var videoPlayer2: IJKTextureVideoPlayer
+    private lateinit var videoPlayer: AliVideoPlayer
+    private lateinit var videoPlayer2: AliVideoPlayer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,8 +34,9 @@ class VideoDetailActivity : AppCompatActivity() {
         videoPlayer2 = findViewById(R.id.nice_video_player2)
         videoPlayer2.setUp(videoUrlBottom, null)
         videoPlayer.setUp(videoUrlTop, null)
-        videoPlayer2.start()
-        videoPlayer.start()
+        // 两个视频同时播放需要把NiceVideoManager中release注释
+        videoPlayer2.start(6000)
+        videoPlayer.start(6000)
     }
 
     override fun onDestroy() {
