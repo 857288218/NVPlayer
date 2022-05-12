@@ -28,7 +28,7 @@ public class IJKTextureHolder extends RecyclerView.ViewHolder {
 
     public void setController(TxVideoPlayerController controller) {
         mController = controller;
-        mVideoPlayer.setController(mController);
+        mVideoPlayer.setController(mController, true);
     }
 
     public void bindData(Video video) {

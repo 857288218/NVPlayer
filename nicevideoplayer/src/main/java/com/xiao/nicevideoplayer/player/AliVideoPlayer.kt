@@ -25,6 +25,7 @@ import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 
+// 问题：不能播放项目raw/assets文件夹中视频
 class AliVideoPlayer(
     private val mContext: Context,
     attrs: AttributeSet? = null
@@ -203,7 +204,7 @@ class AliVideoPlayer(
         if (aliPlayer == null) {
             start(pos)
         } else {
-            aliPlayer!!.seekTo(pos)
+            aliPlayer!!.seekTo(pos, IPlayer.SeekMode.Accurate)
             if (isSeekToPause) {
                 pause()
                 isSeekToPause = false
@@ -396,7 +397,7 @@ class AliVideoPlayer(
             continueFromLastPosition -> {
                 // 从上次的保存位置播放
                 val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
-                aliPlayer!!.seekTo(savedPlayPosition)
+                aliPlayer!!.seekTo(savedPlayPosition, IPlayer.SeekMode.Accurate)
             }
         }
     }

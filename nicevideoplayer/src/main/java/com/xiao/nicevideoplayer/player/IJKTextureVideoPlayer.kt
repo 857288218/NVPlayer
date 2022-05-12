@@ -22,6 +22,7 @@ import tv.danmaku.ijk.media.player.IMediaPlayer
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
 import java.io.IOException
 
+//问题：1.没有提供seekto SEEK_CLOSEST,只能seek到关键帧
 class IJKTextureVideoPlayer(
     private val mContext: Context,
     attrs: AttributeSet? = null
@@ -77,6 +78,8 @@ class IJKTextureVideoPlayer(
             )
         )
     }
+
+    fun getUrl() = mUrl
 
     override fun setUp(url: String, headers: Map<String, String>?) {
         mUrl = url

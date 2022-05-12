@@ -3,40 +3,43 @@ package com.xiao.nicevideoplayer.player
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.graphics.SurfaceTexture
 import android.media.AudioManager
+import android.media.MediaPlayer
+import android.media.MediaPlayer.SEEK_CLOSEST
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
+import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.SurfaceHolder
+import android.view.Surface
+import android.view.TextureView
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import com.xiao.nicevideoplayer.NiceSurfaceView
+import com.xiao.nicevideoplayer.NiceTextureView
 import com.xiao.nicevideoplayer.NiceVideoPlayerController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
-import tv.danmaku.ijk.media.player.AndroidMediaPlayer
-import tv.danmaku.ijk.media.player.IMediaPlayer
-import tv.danmaku.ijk.media.player.IjkMediaPlayer
 import java.io.IOException
 
-// 问题：切后台暂停后，回到前台不主动播放，会黑屏。
-// 使用TextureView没有该问题;AliPlayer也没问题；如果使用IJKPlayer建议使用IJKTextureVideoPlayer
-class IJKSurfaceVideoPlayer(
+//问题：
+// 1.SEEK_CLOSEST比普通seekTo显示画面慢(如果seek到的地方是关键帧不会慢),即onInfo首帧回调要比prepared回调慢1.5s左右
+// 2.切后台继续播放，回到前台画面会从切后台时的画面跳到正确画面 闪一下
+class MediaVideoPlayer constructor(
     private val mContext: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(mContext, attrs), INiceVideoPlayer, SurfaceHolder.Callback {
+) : FrameLayout(mContext, attrs), INiceVideoPlayer, TextureView.SurfaceTextureListener {
     private var mPlayerType = INiceVideoPlayer.TYPE_IJK
     private var mCurrentState = INiceVideoPlayer.STATE_IDLE
     private var mCurrentMode = INiceVideoPlayer.MODE_NORMAL
+
     private var mAudioManager: AudioManager? = null
-    private var mMediaPlayer: IMediaPlayer? = null
+    private var mMediaPlayer: MediaPlayer? = null
     private var mContainer: FrameLayout? = null
-    private var surfaceView: NiceSurfaceView? = null
-    private var surfaceHolder: SurfaceHolder? = null
+    private var mTextureView: NiceTextureView? = null
     private var mController: NiceVideoPlayerController? = null
+    private var mSurfaceTexture: SurfaceTexture? = null
+    private var mSurface: Surface? = null
     private var mUrl: String? = null
     private var mRawId: Int? = null
     private var mHeaders: Map<String, String>? = null
@@ -46,6 +49,7 @@ class IJKSurfaceVideoPlayer(
     private var isLoop = false
     private var isSeekToPause = false
 
+    // 播放完成回调
     var onCompletionCallback: (() -> Unit)? = null
 
     // 播放器开始渲染回调(首帧画面回调)
@@ -85,18 +89,21 @@ class IJKSurfaceVideoPlayer(
         mRawId = rawId
     }
 
-    fun setController(controller: NiceVideoPlayerController?) {
+    fun setController(controller: NiceVideoPlayerController?, isAdd: Boolean = true) {
         mContainer?.removeView(mController)
         mController = controller
-        mController?.run {
-            reset()
-            setNiceVideoPlayer(this@IJKSurfaceVideoPlayer)
-            mContainer?.addView(
-                this, LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
+        mController?.let {
+            it.reset()
+            it.setNiceVideoPlayer(this)
+            if (isAdd) {
+                mContainer?.addView(
+                    it,
+                    LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -133,22 +140,30 @@ class IJKSurfaceVideoPlayer(
     }
 
     override fun setSpeed(speed: Float) {
-        if (mMediaPlayer is IjkMediaPlayer) {
-            (mMediaPlayer as IjkMediaPlayer).setSpeed(speed)
-        } else {
-            LogUtil.d("只有IjkPlayer才能设置播放速度")
-        }
     }
 
     override fun start() {
         if (mCurrentState == INiceVideoPlayer.STATE_IDLE) {
-            NiceVideoPlayerManager.instance()!!.currentNiceVideoPlayer = this
+//            NiceVideoPlayerManager.instance()!!.currentNiceVideoPlayer = this
             initAudioManager()
             initMediaPlayer()
-            initSurfaceView()
-            addSurfaceView()
+            initTextureView()
+            addTextureView()
+        } else if (mCurrentState == INiceVideoPlayer.STATE_COMPLETED
+            || mCurrentState == INiceVideoPlayer.STATE_ERROR
+            || mCurrentState == INiceVideoPlayer.STATE_PAUSED
+            || mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED
+        ) {
+            restart()
         } else {
             LogUtil.d("NiceVideoPlayer只有在mCurrentState == STATE_IDLE时才能调用start方法.")
+        }
+    }
+
+    // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
+    fun fixSkipToPosition(delta: Long) {
+        if (skipToPosition > 0) {
+            skipToPosition += delta
         }
     }
 
@@ -199,7 +214,13 @@ class IJKSurfaceVideoPlayer(
         if (mMediaPlayer == null) {
             start(pos)
         } else {
-            mMediaPlayer!!.seekTo(pos)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // SEEK_CLOSEST比普通seekTo显示画面慢,onInfo的首帧回调要比prepared回调慢1.5s左右，
+                // 即画面会有1.5s的白屏时间但期间视频是运行的
+                mMediaPlayer!!.seekTo(pos, SEEK_CLOSEST)
+            } else {
+                mMediaPlayer!!.seekTo(pos.toInt())
+            }
             if (isSeekToPause) {
                 pause()
                 isSeekToPause = false
@@ -242,22 +263,23 @@ class IJKSurfaceVideoPlayer(
 
     override fun getMaxVolume() = mAudioManager?.getStreamMaxVolume(AudioManager.STREAM_MUSIC) ?: 0
 
-
     override fun getVolume(): Int = mAudioManager?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: 0
 
-    override fun getDuration(): Long = mMediaPlayer?.duration ?: 0
+    override fun getDuration() = mMediaPlayer?.duration?.toLong() ?: 0
 
-    override fun getCurrentPosition(): Long = mMediaPlayer?.currentPosition ?: 0
+    override fun getCurrentPosition(): Long {
+        return try {
+            mMediaPlayer?.currentPosition?.toLong() ?: 0
+        } catch (e: Exception) {
+            0
+        }
+    }
 
     override fun getBufferPercentage(): Int = mBufferPercentage
 
-    override fun getSpeed(speed: Float) = if (mMediaPlayer is IjkMediaPlayer) {
-        (mMediaPlayer as IjkMediaPlayer).getSpeed(speed)
-    } else 0F
+    override fun getSpeed(speed: Float) = 0f
 
-    override fun getTcpSpeed(): Long = if (mMediaPlayer is IjkMediaPlayer) {
-        (mMediaPlayer as IjkMediaPlayer).tcpSpeed
-    } else 0
+    override fun getTcpSpeed(): Long = 0
 
     private fun initAudioManager() {
         if (mAudioManager == null) {
@@ -273,60 +295,43 @@ class IJKSurfaceVideoPlayer(
 
     private fun initMediaPlayer() {
         if (mMediaPlayer == null) {
-            mMediaPlayer = when (mPlayerType) {
-                INiceVideoPlayer.TYPE_NATIVE -> AndroidMediaPlayer()
-                INiceVideoPlayer.TYPE_IJK -> IjkMediaPlayer()
-                else -> {
-                    IjkMediaPlayer()
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "analyzemaxduration", 100L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "probesize", 10240L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(1, "flush_packets", 1L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(4, "packet-buffering", 0L);
-//                    ((IjkMediaPlayer)mMediaPlayer).setOption(4, "framedrop", 1L);
-                }
-            }
+            mMediaPlayer = MediaPlayer()
             mMediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
         }
     }
 
-    private fun initSurfaceView() {
-        if (surfaceView == null) {
-            surfaceView = NiceSurfaceView(mContext)
-            surfaceView!!.holder.addCallback(this)
+    private fun initTextureView() {
+        if (mTextureView == null) {
+            mTextureView = NiceTextureView(mContext)
+            mTextureView!!.surfaceTextureListener = this
         }
     }
 
-    private fun addSurfaceView() {
-        mContainer!!.removeView(surfaceView)
-        //添加完surfaceView后，会回调surfaceCreated
-        mContainer!!.addView(
-            surfaceView, 0, LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                Gravity.CENTER
+    private fun addTextureView() {
+        mContainer?.let {
+            it.removeView(mTextureView)
+            it.addView(
+                mTextureView, 0, LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    Gravity.CENTER
+                )
             )
-        )
+        }
     }
 
-    override fun surfaceCreated(holder: SurfaceHolder) {
-        if (surfaceHolder == null) {
-            surfaceHolder = holder
+    override fun onSurfaceTextureAvailable(
+        surfaceTexture: SurfaceTexture,
+        width: Int,
+        height: Int
+    ) {
+        LogUtil.d("onSurfaceTextureAvailable")
+        if (mSurfaceTexture == null) {
+            mSurfaceTexture = surfaceTexture
             openMediaPlayer()
         } else {
-            //todo(rjq) 切后台暂停后，回到前台不主动播放，会黑屏。原因是activity onPause后，SurfaceView会被销毁，回调surfaceDestroyed()方法;
-            // 使用TextureView没有该问题;AliPlayer也没问题
-            //下面代码可以解决切后台暂停后，回到前台主动播放黑屏问题，但是不能解决上述问题
-            mMediaPlayer!!.setDisplay(surfaceHolder)
+            mTextureView?.setSurfaceTexture(mSurfaceTexture!!)
         }
-        LogUtil.d("surfaceCreated")
-    }
-
-    override fun surfaceDestroyed(holder: SurfaceHolder) {
-        LogUtil.d("surfaceDestroyed")
-    }
-
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        LogUtil.d("surfaceChanged")
     }
 
     private fun openMediaPlayer() {
@@ -346,12 +351,14 @@ class IJKSurfaceVideoPlayer(
             try {
                 if (mRawId != null) {
                     val afd = resources.openRawResourceFd(mRawId!!)
-                    val rawDataSourceProvider = IJKRawDataSourceProvider(afd)
-                    setDataSource(rawDataSourceProvider)
+                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
                 } else {
                     setDataSource(mContext.applicationContext, Uri.parse(mUrl), mHeaders)
                 }
-                setDisplay(surfaceHolder)
+                if (mSurface == null) {
+                    mSurface = Surface(mSurfaceTexture)
+                }
+                setSurface(mSurface)
                 prepareAsync()
                 mCurrentState = INiceVideoPlayer.STATE_PREPARING
                 mController?.onPlayStateChanged(mCurrentState)
@@ -363,16 +370,29 @@ class IJKSurfaceVideoPlayer(
         }
     }
 
-    private val mOnPreparedListener = IMediaPlayer.OnPreparedListener { mp: IMediaPlayer ->
+    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+        LogUtil.d("onSurfaceTextureSizeChanged")
+    }
+
+    override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
+        LogUtil.d("onSurfaceTextureDestroyed")
+        return mSurfaceTexture == null
+    }
+
+    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+        // LogUtil.d("onSurfaceTextureUpdated")
+    }
+
+    private val mOnPreparedListener = MediaPlayer.OnPreparedListener { mp ->
         mCurrentState = INiceVideoPlayer.STATE_PREPARED
         //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
-        //当开始循环播放时，不会回调该方法
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
 
-        // ijkplayer在视频准备完后会自动播放
-        //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
+        // 准备完成需要手动播放
+        mp.start()
+        //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致清晰度切换后，又切到continueFromLastPosition的情况
         when {
             skipToPosition != 0L -> {
                 // 跳到指定位置播放
@@ -382,19 +402,22 @@ class IJKSurfaceVideoPlayer(
             continueFromLastPosition -> {
                 // 从上次的保存位置播放
                 val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
-                mp.seekTo(savedPlayPosition)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    mp.seekTo(savedPlayPosition, SEEK_CLOSEST)
+                } else {
+                    mp.seekTo(savedPlayPosition.toInt())
+                }
             }
-            // else -> mp.start()
         }
     }
 
     private val mOnVideoSizeChangedListener =
-        IMediaPlayer.OnVideoSizeChangedListener { _: IMediaPlayer, width, height, _, _ ->
-            surfaceView?.adaptVideoSize(width, height)
+        MediaPlayer.OnVideoSizeChangedListener { _: MediaPlayer, width, height ->
+            mTextureView?.adaptVideoSize(width, height)
             LogUtil.d("onVideoSizeChanged ——> width：$width， height：$height")
         }
 
-    private val mOnCompletionListener = IMediaPlayer.OnCompletionListener {
+    private val mOnCompletionListener = MediaPlayer.OnCompletionListener {
         //设置了循环播放后，就不会再执行这个回调了
         mCurrentState = INiceVideoPlayer.STATE_COMPLETED
         mController?.onPlayStateChanged(mCurrentState)
@@ -403,11 +426,11 @@ class IJKSurfaceVideoPlayer(
         // 清除屏幕常亮
         mContainer?.keepScreenOn = false
         // 重置当前播放进度
-        NiceUtil.savePlayPosition(context, mUrl, 0)
+//        NiceUtil.savePlayPosition(context, mUrl, 0)
     }
 
     private val mOnErrorListener =
-        IMediaPlayer.OnErrorListener { _: IMediaPlayer, what, extra ->
+        MediaPlayer.OnErrorListener { _: MediaPlayer, what, extra ->
             // 直播流播放时去调用mediaPlayer.getDuration会导致-38和-2147483648错误，忽略该错误
             if (what != -38 && what != -2147483648 && extra != -38 && extra != -2147483648) {
                 mCurrentState = INiceVideoPlayer.STATE_ERROR
@@ -417,10 +440,9 @@ class IJKSurfaceVideoPlayer(
             true
         }
 
-    private val mOnInfoListener = IMediaPlayer.OnInfoListener { _: IMediaPlayer, what, extra ->
-        if (what == IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-            // 播放器开始渲染，当开始循环播放时，不会回调该方法。回调到这里可能还是没有画面，还需要缓冲
-            // 条件判断避免外部直接调用seekToPause后这里导致mCurrentState不对
+    private val mOnInfoListener = MediaPlayer.OnInfoListener { _: MediaPlayer, what, extra ->
+        if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+            // 播放器开始渲染;条件判断避免外部直接调用seekToPause后这里导致mCurrentState不对
             if (mCurrentState != INiceVideoPlayer.STATE_PAUSED
                 && mCurrentState != INiceVideoPlayer.STATE_BUFFERING_PAUSED
             ) {
@@ -430,7 +452,7 @@ class IJKSurfaceVideoPlayer(
             }
             onVideoRenderStartCallback?.invoke()
             LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING")
-        } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
+        } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
             // MediaPlayer暂时不播放，以缓冲更多的数据
             if (mCurrentState == INiceVideoPlayer.STATE_PAUSED || mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
                 mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
@@ -442,7 +464,7 @@ class IJKSurfaceVideoPlayer(
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING")
             }
             mController?.onPlayStateChanged(mCurrentState)
-        } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_END) {
+        } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
             // 填充缓冲区后，MediaPlayer恢复播放/暂停
             if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
                 mCurrentState = INiceVideoPlayer.STATE_PLAYING
@@ -456,19 +478,16 @@ class IJKSurfaceVideoPlayer(
                 onPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED")
             }
-        } else if (what == IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED) {
-            // 视频旋转了extra度，需要恢复
-            surfaceView?.rotation = extra.toFloat()
-            LogUtil.d("视频旋转角度：$extra")
-        } else if (what == IMediaPlayer.MEDIA_INFO_NOT_SEEKABLE) {
+        } else if (what == MediaPlayer.MEDIA_INFO_NOT_SEEKABLE) {
             LogUtil.d("视频不能seekTo，为直播视频")
         } else {
             LogUtil.d("onInfo ——> what：$what")
         }
         true
     }
+
     private val mOnBufferingUpdateListener =
-        IMediaPlayer.OnBufferingUpdateListener { _: IMediaPlayer, percent ->
+        MediaPlayer.OnBufferingUpdateListener { _: MediaPlayer, percent ->
             mBufferPercentage = percent
         }
 
@@ -484,8 +503,8 @@ class IJKSurfaceVideoPlayer(
         NiceUtil.hideActionBar(mContext)
         NiceUtil.scanForActivity(mContext).requestedOrientation =
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        val contentView = NiceUtil.scanForActivity(mContext)
-            .findViewById<ViewGroup>(android.R.id.content)
+        val contentView =
+            NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
         if (mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW) {
             contentView.removeView(mContainer)
         } else {
@@ -516,8 +535,8 @@ class IJKSurfaceVideoPlayer(
             NiceUtil.showActionBar(mContext)
             NiceUtil.scanForActivity(mContext).requestedOrientation =
                 ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            val contentView = NiceUtil.scanForActivity(mContext)
-                .findViewById<ViewGroup>(android.R.id.content)
+            val contentView =
+                NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
             contentView.removeView(mContainer)
             this.addView(
                 mContainer, LayoutParams(
@@ -539,8 +558,8 @@ class IJKSurfaceVideoPlayer(
     override fun enterTinyWindow() {
         if (mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW) return
         removeView(mContainer)
-        val contentView = NiceUtil.scanForActivity(mContext)
-            .findViewById<ViewGroup>(android.R.id.content)
+        val contentView =
+            NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
         // 小窗口的宽度为屏幕宽度的60%，长宽比默认为16:9，右边距、下边距为8dp。
         val params = LayoutParams(
             (NiceUtil.getScreenWidth(mContext) * 0.6f).toInt(),
@@ -560,8 +579,8 @@ class IJKSurfaceVideoPlayer(
      */
     override fun exitTinyWindow(): Boolean {
         if (mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW) {
-            val contentView = NiceUtil.scanForActivity(mContext)
-                .findViewById<ViewGroup>(android.R.id.content)
+            val contentView =
+                NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
             contentView.removeView(mContainer)
             this.addView(
                 mContainer, LayoutParams(
@@ -580,24 +599,25 @@ class IJKSurfaceVideoPlayer(
     override fun releasePlayer() {
         mAudioManager?.abandonAudioFocus(null)
         mAudioManager = null
-        // todo(rjq) 使用协程或线程池
-        Thread { // 在主线程释放会卡顿
+        Thread {
             mMediaPlayer?.release()
             mMediaPlayer = null
         }.start()
-        surfaceHolder = null
-        // 解决释放播放器黑一下,使用TextureView没有该问题
-        Handler(Looper.getMainLooper()).post { mContainer?.removeView(surfaceView) }
+        mContainer?.removeView(mTextureView)
+        mSurface?.release()
+        mSurface = null
+        mSurfaceTexture?.release()
+        mSurfaceTexture = null
         mCurrentState = INiceVideoPlayer.STATE_IDLE
     }
 
     override fun release() {
         // 保存播放位置
-        if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
-            NiceUtil.savePlayPosition(mContext, mUrl, currentPosition)
-        } else if (isCompleted) {
-            NiceUtil.savePlayPosition(mContext, mUrl, 0)
-        }
+//        if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
+//            NiceUtil.savePlayPosition(mContext, mUrl, currentPosition)
+//        } else if (isCompleted) {
+//            NiceUtil.savePlayPosition(mContext, mUrl, 0)
+//        }
         // 退出全屏或小窗口
         if (isFullScreen) {
             exitFullScreen()
@@ -607,13 +627,10 @@ class IJKSurfaceVideoPlayer(
         }
         mCurrentMode = INiceVideoPlayer.MODE_NORMAL
 
-        // 恢复控制器
-        mController?.reset()
-
         // 释放播放器
         releasePlayer()
-
-        //会引起列表卡顿
-//        Runtime.getRuntime().gc();
+        // 恢复控制器
+        mController?.reset()
+        LogUtil.d("release")
     }
 }

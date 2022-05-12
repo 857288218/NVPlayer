@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="200dp"/>
 
-    <com.xiao.nicevideoplayer.player.AliVideoPlayer
+    <com.xiao.nicevideoplayer.player.MediaVideoPlayer
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/nice_video_player"
         android:id="@+id/nice_video_player2"

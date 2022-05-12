@@ -37,7 +37,7 @@ public class ChangeClarityActivity extends AppCompatActivity {
                 .load("http://imgsrc.baidu.com/image/c0%3Dshijue%2C0%2C0%2C245%2C40/sign=304dee3ab299a9012f38537575fc600e/91529822720e0cf3f8b77cd50046f21fbe09aa5f.jpg")
                 .placeholder(R.drawable.img_default)
                 .into(controller.imageView());
-        mNiceVideoPlayer.setController(controller);
+        mNiceVideoPlayer.setController(controller, true);
     }
 
     public List<Clarity> getClarites() {
