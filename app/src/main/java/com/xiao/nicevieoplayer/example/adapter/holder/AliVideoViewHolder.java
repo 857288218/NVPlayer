@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.xiao.nicevideoplayer.TxVideoPlayerController;
+import com.xiao.nicevideoplayer.player.AliTextureVideoPlayer;
 import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.bean.Video;
@@ -47,6 +48,6 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
 //                .placeholder(R.drawable.img_default)
                 .into(mController.imageView());
         mVideoPlayer.setUp(video.getVideoUrl(), null);
-        mVideoPlayer.setVideoBackgoundColor(Color.parseColor("#000000"));
+        mVideoPlayer.setVideoBackgroundColor(Color.parseColor("#000000"));
     }
 }

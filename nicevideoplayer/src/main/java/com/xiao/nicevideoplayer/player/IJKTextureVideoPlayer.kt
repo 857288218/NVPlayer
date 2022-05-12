@@ -39,6 +39,7 @@ class IJKTextureVideoPlayer(
     private var mSurfaceTexture: SurfaceTexture? = null
     private var mSurface: Surface? = null
     private var mUrl: String? = null
+    private var mRawId: Int? = null
     private var mHeaders: Map<String, String>? = null
     private var mBufferPercentage = 0
     private var continueFromLastPosition = true
@@ -46,6 +47,7 @@ class IJKTextureVideoPlayer(
     private var isLoop = false
     private var isSeekToPause = false
 
+    // 播放完成回调
     var onCompletionCallback: (() -> Unit)? = null
 
     // 播放器开始渲染回调(首帧画面回调)
@@ -81,21 +83,25 @@ class IJKTextureVideoPlayer(
         mHeaders = headers
     }
 
-    fun getUrl() = mUrl
+    fun setUp(rawId: Int) {
+        mRawId = rawId
+    }
 
-    fun setController(controller: NiceVideoPlayerController?) {
+    fun setController(controller: NiceVideoPlayerController?, isAdd: Boolean = true) {
         mContainer?.removeView(mController)
         mController = controller
         mController?.let {
             it.reset()
             it.setNiceVideoPlayer(this)
-            mContainer?.addView(
-                it,
-                LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
+            if (isAdd) {
+                mContainer?.addView(
+                    it,
+                    LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -146,8 +152,21 @@ class IJKTextureVideoPlayer(
             initMediaPlayer()
             initTextureView()
             addTextureView()
+        } else if (mCurrentState == INiceVideoPlayer.STATE_COMPLETED
+            || mCurrentState == INiceVideoPlayer.STATE_ERROR
+            || mCurrentState == INiceVideoPlayer.STATE_PAUSED
+            || mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED
+        ) {
+            restart()
         } else {
             LogUtil.d("NiceVideoPlayer只有在mCurrentState == STATE_IDLE时才能调用start方法.")
+        }
+    }
+
+    // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
+    fun fixSkipToPosition(delta: Long) {
+        if (skipToPosition > 0) {
+            skipToPosition += delta
         }
     }
 
@@ -275,17 +294,12 @@ class IJKTextureVideoPlayer(
                 INiceVideoPlayer.TYPE_NATIVE -> AndroidMediaPlayer()
                 INiceVideoPlayer.TYPE_IJK -> IjkMediaPlayer()
                 else -> {
-                    IjkMediaPlayer()
+                    IjkMediaPlayer().apply {
+                        setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 1)
+                    }
                 }
             }
             mMediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
-            if (mMediaPlayer is IjkMediaPlayer) {
-//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "analyzemaxduration", 100L)
-//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "probesize", 10240L)
-//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "flush_packets", 1L)
-//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "packet-buffering", 0L)
-//                (mMediaPlayer as IjkMediaPlayer).setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "framedrop", 1L)
-            }
         }
     }
 
@@ -338,7 +352,13 @@ class IJKTextureVideoPlayer(
             setOnBufferingUpdateListener(mOnBufferingUpdateListener)
             // 设置dataSource
             try {
-                setDataSource(mContext.applicationContext, Uri.parse(mUrl), mHeaders)
+                if (mRawId != null) {
+                    val afd = resources.openRawResourceFd(mRawId!!)
+                    val rawDataSourceProvider = IJKRawDataSourceProvider(afd)
+                    setDataSource(rawDataSourceProvider)
+                } else {
+                    setDataSource(mContext.applicationContext, Uri.parse(mUrl), mHeaders)
+                }
                 if (mSurface == null) {
                     mSurface = Surface(mSurfaceTexture)
                 }
@@ -369,12 +389,12 @@ class IJKTextureVideoPlayer(
 
     private val mOnPreparedListener = IMediaPlayer.OnPreparedListener { mp ->
         mCurrentState = INiceVideoPlayer.STATE_PREPARED
-        //在视频准备完成后才能获取Duration，width;
-        // 视频准备完成后自动播放,可以不调用start
+        //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration()
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
 
+        // ijkplayer在视频准备完后会自动播放
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致清晰度切换后，又切到continueFromLastPosition的情况
         when {
             skipToPosition != 0L -> {
@@ -387,7 +407,7 @@ class IJKTextureVideoPlayer(
                 val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
                 mp.seekTo(savedPlayPosition)
             }
-            else -> mp.start()
+            // else -> mp.start()
         }
     }
 
@@ -406,7 +426,7 @@ class IJKTextureVideoPlayer(
         // 清除屏幕常亮
         mContainer?.keepScreenOn = false
         // 重置当前播放进度
-        NiceUtil.savePlayPosition(context, mUrl, 0)
+//        NiceUtil.savePlayPosition(context, mUrl, 0)
     }
 
     private val mOnErrorListener =
@@ -424,7 +444,8 @@ class IJKTextureVideoPlayer(
         if (what == IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
             // 播放器开始渲染;条件判断避免外部直接调用seekToPause后这里导致mCurrentState不对
             if (mCurrentState != INiceVideoPlayer.STATE_PAUSED
-                && mCurrentState != INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
+                && mCurrentState != INiceVideoPlayer.STATE_BUFFERING_PAUSED
+            ) {
                 mCurrentState = INiceVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
@@ -596,11 +617,11 @@ class IJKTextureVideoPlayer(
 
     override fun release() {
         // 保存播放位置
-        if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
-            NiceUtil.savePlayPosition(mContext, mUrl, currentPosition)
-        } else if (isCompleted) {
-            NiceUtil.savePlayPosition(mContext, mUrl, 0)
-        }
+       if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
+           NiceUtil.savePlayPosition(mContext, mUrl, currentPosition)
+       } else if (isCompleted) {
+           NiceUtil.savePlayPosition(mContext, mUrl, 0)
+       }
         // 退出全屏或小窗口
         if (isFullScreen) {
             exitFullScreen()
@@ -615,6 +636,7 @@ class IJKTextureVideoPlayer(
 
         // 恢复控制器
         mController?.reset()
+        LogUtil.d("release")
         //        Runtime.getRuntime().gc();
     }
 }

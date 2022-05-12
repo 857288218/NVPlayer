@@ -36,6 +36,7 @@ class IJKSurfaceVideoPlayer(
     private var surfaceHolder: SurfaceHolder? = null
     private var mController: NiceVideoPlayerController? = null
     private var mUrl: String? = null
+    private var mRawId: Int? = null
     private var mHeaders: Map<String, String>? = null
     private var mBufferPercentage = 0
     private var continueFromLastPosition = true
@@ -76,6 +77,10 @@ class IJKSurfaceVideoPlayer(
     override fun setUp(url: String, headers: Map<String, String>?) {
         mUrl = url
         mHeaders = headers
+    }
+
+    fun setUp(rawId: Int) {
+        mRawId = rawId
     }
 
     fun setController(controller: NiceVideoPlayerController?) {
@@ -337,7 +342,13 @@ class IJKSurfaceVideoPlayer(
             setOnBufferingUpdateListener(mOnBufferingUpdateListener)
             // 设置dataSource
             try {
-                setDataSource(mContext.applicationContext, Uri.parse(mUrl), mHeaders)
+                if (mRawId != null) {
+                    val afd = resources.openRawResourceFd(mRawId!!)
+                    val rawDataSourceProvider = IJKRawDataSourceProvider(afd)
+                    setDataSource(rawDataSourceProvider)
+                } else {
+                    setDataSource(mContext.applicationContext, Uri.parse(mUrl), mHeaders)
+                }
                 setDisplay(surfaceHolder)
                 prepareAsync()
                 mCurrentState = INiceVideoPlayer.STATE_PREPARING
@@ -358,6 +369,7 @@ class IJKSurfaceVideoPlayer(
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
 
+        // ijkplayer在视频准备完后会自动播放
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
         when {
             skipToPosition != 0L -> {
@@ -370,7 +382,7 @@ class IJKSurfaceVideoPlayer(
                 val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
                 mp.seekTo(savedPlayPosition)
             }
-            else -> mp.start()
+            // else -> mp.start()
         }
     }
 
