@@ -80,6 +80,8 @@ class MediaVideoPlayer constructor(
         )
     }
 
+    fun getUrl() = mUrl
+
     override fun setUp(url: String, headers: Map<String, String>?) {
         mUrl = url
         mHeaders = headers
