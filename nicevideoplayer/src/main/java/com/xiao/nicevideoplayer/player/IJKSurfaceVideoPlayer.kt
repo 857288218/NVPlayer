@@ -23,7 +23,7 @@ import java.io.IOException
 
 // 问题：
 // 1.切后台暂停后，回到前台不主动播放，会黑屏。使用TextureView或AliPlayer没问题；
-// 2.MEDIA_INFO_VIDEO_RENDERING_START回调也不会马上显示画面会闪黑一下，使用TextureView或AliPlayer没问题
+// 2.MEDIA_INFO_VIDEO_RENDERING_START回调不会马上显示画面会闪黑一下，使用TextureView或AliPlayer没问题
 // 如果使用IJKPlayer建议使用TextuewView显示画面
 class IJKSurfaceVideoPlayer(
     private val mContext: Context,
@@ -44,7 +44,7 @@ class IJKSurfaceVideoPlayer(
     private var mHeaders: Map<String, String>? = null
     private var mBufferPercentage = 0
     private var continueFromLastPosition = true
-    private var skipToPosition: Long = 0
+    private var startToPosition: Long = 0
     private var isLoop = false
     private var isStartToPause = false
 
@@ -148,14 +148,14 @@ class IJKSurfaceVideoPlayer(
     }
 
     // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
-    fun fixSkipToPosition(delta: Long) {
-        if (skipToPosition > 0) {
-            skipToPosition += delta
+    fun fixStartToPosition(delta: Long) {
+        if (startToPosition > 0) {
+            startToPosition += delta
         }
     }
 
     override fun start(position: Long) {
-        skipToPosition = position
+        startToPosition = position
         start()
     }
 
@@ -372,10 +372,10 @@ class IJKSurfaceVideoPlayer(
         mp.start()
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
         when {
-            skipToPosition != 0L -> {
+            startToPosition != 0L -> {
                 // 跳到指定位置播放
-                seekTo(skipToPosition)
-                skipToPosition = 0
+                seekTo(startToPosition)
+                startToPosition = 0
             }
             continueFromLastPosition -> {
                 // 从上次的保存位置播放

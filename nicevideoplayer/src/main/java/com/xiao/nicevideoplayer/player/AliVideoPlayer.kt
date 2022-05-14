@@ -46,7 +46,7 @@ class AliVideoPlayer(
     private var mHeaders: Map<String, String>? = null
     private var mBufferPercentage = 0
     private var continueFromLastPosition = true
-    private var skipToPosition: Long = 0
+    private var startToPosition: Long = 0
     private var isLooping = false
     private var videoBgColor: Int? = null
     private var isMute = false
@@ -153,14 +153,14 @@ class AliVideoPlayer(
     }
 
     // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
-    fun fixSkipToPosition(delta: Long) {
-        if (skipToPosition > 0) {
-            skipToPosition += delta
+    fun fixStarToPosition(delta: Long) {
+        if (startToPosition > 0) {
+            startToPosition += delta
         }
     }
 
     override fun start(position: Long) {
-        skipToPosition = position
+        startToPosition = position
         start()
     }
 
@@ -384,15 +384,17 @@ class AliVideoPlayer(
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
-        // Prepared后不会自动播放 && start前seekTo也不会播放
+        // Prepared后不会自动播放 && aliPlayer.start()前seekTo也不会播放只是定位到指定位置
         //todo(rjq) 添加prepare方法，在这里不调用start
-        aliPlayer!!.start()
+        if (!isStartToPause) {
+            aliPlayer!!.start()
+        }
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
         when {
-            skipToPosition != 0L -> {
+            startToPosition != 0L -> {
                 // 跳到指定位置播放
-                seekTo(skipToPosition)
-                skipToPosition = 0
+                seekTo(startToPosition)
+                startToPosition = 0
             }
             continueFromLastPosition -> {
                 // 从上次的保存位置播放
@@ -427,7 +429,7 @@ class AliVideoPlayer(
         //首帧渲染显示事件
         LogUtil.d("onRenderingStart")
         onVideoRenderStartCallback?.invoke()
-        // 这里先回调mController的STATE_RENDERING_START，然后如果不是isStartToPause再回调STATE_PLAYING
+        // 这里先回调mController#STATE_RENDERING_START，然后如果不是isStartToPause再回调STATE_PLAYING
         mCurrentState = INiceVideoPlayer.STATE_PLAYING
         mController?.onPlayStateChanged(INiceVideoPlayer.STATE_RENDERING_START)
         if (isStartToPause) {

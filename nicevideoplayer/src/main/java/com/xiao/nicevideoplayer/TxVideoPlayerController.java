@@ -359,7 +359,7 @@ public class TxVideoPlayerController
         if (mNiceVideoPlayer != null) {
             if (v == mCenterStart) {
                 if (mNiceVideoPlayer.isIdle()) {
-                    mNiceVideoPlayer.startToPause(15000);
+                    mNiceVideoPlayer.startToPause(32000);
 //                    mNiceVideoPlayer.start(15000);
 //                    mNiceVideoPlayer.start();
                 }

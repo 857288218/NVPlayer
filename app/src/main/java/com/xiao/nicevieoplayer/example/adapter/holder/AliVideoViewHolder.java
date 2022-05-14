@@ -1,17 +1,16 @@
 package com.xiao.nicevieoplayer.example.adapter.holder;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.xiao.nicevideoplayer.TxVideoPlayerController;
+import com.xiao.nicevideoplayer.player.AliVideoPlayer;
+import com.xiao.nicevieoplayer.R;
+import com.xiao.nicevieoplayer.example.bean.Video;
+
 import android.graphics.Color;
 import android.view.View;
 
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-import com.xiao.nicevideoplayer.TxVideoPlayerController;
-import com.xiao.nicevideoplayer.player.AliTextureVideoPlayer;
-import com.xiao.nicevideoplayer.player.AliVideoPlayer;
-import com.xiao.nicevieoplayer.R;
-import com.xiao.nicevieoplayer.example.bean.Video;
 
 public class AliVideoViewHolder extends RecyclerView.ViewHolder {
     public TxVideoPlayerController mController;
@@ -39,14 +38,14 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
 //                .into(mController.imageView());
         //获取第一帧作为封面
         Glide.with(itemView.getContext())
-                .setDefaultRequestOptions(
-                        new RequestOptions()
-                                .frame(0000000)
-                                .fitCenter()
-                )
-                .load(video.getVideoUrl())
+             .setDefaultRequestOptions(
+                     new RequestOptions()
+                             .frame(0000000)
+                             .fitCenter()
+                                      )
+             .load(video.getVideoUrl())
 //                .placeholder(R.drawable.img_default)
-                .into(mController.imageView());
+             .into(mController.imageView());
         mVideoPlayer.setUp(video.getVideoUrl(), null);
         mVideoPlayer.setVideoBackgroundColor(Color.parseColor("#000000"));
     }

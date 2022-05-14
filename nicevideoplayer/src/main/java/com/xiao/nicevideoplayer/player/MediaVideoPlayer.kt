@@ -23,9 +23,8 @@ import com.xiao.nicevideoplayer.utils.NiceUtil
 import java.io.IOException
 
 //问题：
-// 1.SEEK_CLOSEST比普通seekTo显示画面慢(如果seek到的地方是关键帧不会慢),即onInfo首帧回调要比prepared回调慢1.5s左右
-// 2.切后台继续播放，回到前台画面会从切后台时的画面跳到正确画面 闪一下
-// 3.只支持硬解
+// 1.start(pos)/startToPause(pos)精准seek显示画面慢(seek到的地方是关键帧不会慢),即首帧回调比prepared回调慢1.5s左右；IJKPlayer 700ms左右
+// 2.只支持硬解
 class MediaVideoPlayer constructor(
     private val mContext: Context,
     attrs: AttributeSet? = null
@@ -45,7 +44,7 @@ class MediaVideoPlayer constructor(
     private var mHeaders: Map<String, String>? = null
     private var mBufferPercentage = 0
     private var continueFromLastPosition = true
-    private var skipToPosition: Long = 0
+    private var startToPosition: Long = 0
     private var isLoop = false
     private var isStartToPause = false
 
@@ -137,7 +136,7 @@ class MediaVideoPlayer constructor(
 
     override fun start() {
         if (isIdle) {
-           NiceVideoPlayerManager.instance()!!.currentNiceVideoPlayer = this
+            NiceVideoPlayerManager.instance()!!.currentNiceVideoPlayer = this
             initAudioManager()
             initMediaPlayer()
             initTextureView()
@@ -150,14 +149,14 @@ class MediaVideoPlayer constructor(
     }
 
     // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
-    fun fixSkipToPosition(delta: Long) {
-        if (skipToPosition > 0) {
-            skipToPosition += delta
+    fun fixStartToPosition(delta: Long) {
+        if (startToPosition > 0) {
+            startToPosition += delta
         }
     }
 
     override fun start(position: Long) {
-        skipToPosition = position
+        startToPosition = position
         start()
     }
 
@@ -379,10 +378,10 @@ class MediaVideoPlayer constructor(
         mp.start()
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致清晰度切换后，又切到continueFromLastPosition的情况
         when {
-            skipToPosition != 0L -> {
+            startToPosition != 0L -> {
                 // 跳到指定位置播放
-                seekTo(skipToPosition)
-                skipToPosition = 0
+                seekTo(startToPosition)
+                startToPosition = 0
             }
             continueFromLastPosition -> {
                 // 从上次的保存位置播放

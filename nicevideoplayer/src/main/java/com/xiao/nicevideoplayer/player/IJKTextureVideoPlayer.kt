@@ -41,7 +41,7 @@ class IJKTextureVideoPlayer(
     private var mHeaders: Map<String, String>? = null
     private var mBufferPercentage = 0
     private var continueFromLastPosition = true
-    private var skipToPosition: Long = 0
+    private var startToPosition: Long = 0
     private var isLoop = false
     private var isStartToPause = false
 
@@ -146,14 +146,14 @@ class IJKTextureVideoPlayer(
     }
 
     // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
-    fun fixSkipToPosition(delta: Long) {
-        if (skipToPosition > 0) {
-            skipToPosition += delta
+    fun fixStartToPosition(delta: Long) {
+        if (startToPosition > 0) {
+            startToPosition += delta
         }
     }
 
     override fun start(position: Long) {
-        skipToPosition = position
+        startToPosition = position
         start()
     }
 
@@ -372,13 +372,14 @@ class IJKTextureVideoPlayer(
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
 
+        // seekTo只能在start后调用，start前调用seekTo无作用
         mp.start()
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致清晰度切换后，又切到continueFromLastPosition的情况
         when {
-            skipToPosition != 0L -> {
+            startToPosition != 0L -> {
                 // 跳到指定位置播放
-                seekTo(skipToPosition)
-                skipToPosition = 0
+                seekTo(startToPosition)
+                startToPosition = 0
             }
             continueFromLastPosition -> {
                 // 从上次的保存位置播放
