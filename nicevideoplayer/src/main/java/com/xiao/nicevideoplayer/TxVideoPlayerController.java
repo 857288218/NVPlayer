@@ -1,5 +1,9 @@
 package com.xiao.nicevideoplayer;
 
+import com.xiao.nicevideoplayer.player.AliVideoPlayer;
+import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
+import com.xiao.nicevideoplayer.utils.NiceUtil;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,17 +19,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.DrawableRes;
-
-import com.xiao.nicevideoplayer.player.AliVideoPlayer;
-import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
-import com.xiao.nicevideoplayer.utils.NiceUtil;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import androidx.annotation.DrawableRes;
 
 /**
  * 仿腾讯视频热点列表页播放器控制器.
@@ -33,8 +33,8 @@ import java.util.Locale;
 public class TxVideoPlayerController
         extends NiceVideoPlayerController
         implements View.OnClickListener,
-        SeekBar.OnSeekBarChangeListener,
-        ChangeClarityDialog.OnClarityChangedListener {
+                   SeekBar.OnSeekBarChangeListener,
+                   ChangeClarityDialog.OnClarityChangedListener {
 
     private final Context mContext;
     private ImageView mImage;
@@ -200,7 +200,6 @@ public class TxVideoPlayerController
             case INiceVideoPlayer.STATE_IDLE:
                 break;
             case INiceVideoPlayer.STATE_PREPARING:
-//                mImage.setVisibility(View.GONE);  //当第一帧作为封面时，首帧渲染显示再隐藏封面图
                 mLoading.setVisibility(View.VISIBLE);
                 mLoadText.setText("正在准备...");
                 mError.setVisibility(View.GONE);
@@ -215,14 +214,17 @@ public class TxVideoPlayerController
                     startUpdateProgressTimer();
                 }
                 break;
+            case INiceVideoPlayer.STATE_RENDERING_START:
+                // 首帧渲染显示再隐藏封面图
+                mImage.setVisibility(View.GONE);
+                break;
             case INiceVideoPlayer.STATE_PLAYING:
-                mImage.setVisibility(View.GONE);  //当第一帧作为封面时，首帧渲染显示再隐藏封面图
+//                mImage.setVisibility(View.GONE);
                 mLoading.setVisibility(View.GONE);
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 startDismissTopBottomTimer();
                 break;
             case INiceVideoPlayer.STATE_PAUSED:
-                mImage.setVisibility(View.GONE);    //当第一帧作为封面时，首帧渲染显示再隐藏封面图
                 mLoading.setVisibility(View.GONE);
                 mRestartPause.setImageResource(R.drawable.ic_player_start);
                 cancelDismissTopBottomTimer();
@@ -278,7 +280,7 @@ public class TxVideoPlayerController
                 mBatteryTime.setVisibility(View.VISIBLE);
                 if (!hasRegisterBatteryReceiver) {
                     mContext.registerReceiver(mBatterReceiver,
-                            new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                                              new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                     hasRegisterBatteryReceiver = true;
                 }
                 break;
@@ -296,7 +298,7 @@ public class TxVideoPlayerController
         @Override
         public void onReceive(Context context, Intent intent) {
             int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS,
-                    BatteryManager.BATTERY_STATUS_UNKNOWN);
+                                            BatteryManager.BATTERY_STATUS_UNKNOWN);
             if (status == BatteryManager.BATTERY_STATUS_CHARGING) {
                 // 充电中
                 mBattery.setImageResource(R.drawable.battery_charging);
@@ -349,15 +351,17 @@ public class TxVideoPlayerController
     }
 
     /**
-     * 尽量不要在onClick中直接处理控件的隐藏、显示及各种UI逻辑。
-     * UI相关的逻辑都尽量到{@link #onPlayStateChanged}和{@link #onPlayModeChanged}中处理.
+     * 尽量不要在onClick中直接处理控件的隐藏、显示及各种UI逻辑。 UI相关的逻辑都尽量到{@link #onPlayStateChanged}和{@link
+     * #onPlayModeChanged}中处理.
      */
     @Override
     public void onClick(View v) {
         if (mNiceVideoPlayer != null) {
             if (v == mCenterStart) {
                 if (mNiceVideoPlayer.isIdle()) {
-                    mNiceVideoPlayer.start();
+                    mNiceVideoPlayer.startToPause(15000);
+//                    mNiceVideoPlayer.start(15000);
+//                    mNiceVideoPlayer.start();
                 }
             } else if (v == mBack) {
                 if (mNiceVideoPlayer.isFullScreen()) {

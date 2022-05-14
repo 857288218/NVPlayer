@@ -25,7 +25,7 @@ import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 
-// 问题：不能播放项目raw/assets文件夹中视频
+// 问题：1.不支持播放项目raw/assets文件夹中视频
 class AliVideoPlayer(
     private val mContext: Context,
     attrs: AttributeSet? = null
@@ -52,7 +52,7 @@ class AliVideoPlayer(
     private var isMute = false
     private var scaleMode = IPlayer.ScaleMode.SCALE_ASPECT_FIT
     private var currentPosition: Long = 0
-    private var isSeekToPause = false
+    private var isStartToPause = false
 
     var onCompletionCallback: (() -> Unit)? = null
 
@@ -139,12 +139,14 @@ class AliVideoPlayer(
     }
 
     override fun start() {
-        if (mCurrentState == INiceVideoPlayer.STATE_IDLE) {
+        if (isIdle) {
             NiceVideoPlayerManager.instance().currentNiceVideoPlayer = this
             initAudioManager()
             initMediaPlayer()
             initSurfaceView()
             addSurfaceView()
+        } else if (isCompleted || isError || isPaused || isBufferingPaused) {
+            restart()
         } else {
             LogUtil.d("NiceVideoPlayer只有在mCurrentState == STATE_IDLE时才能调用start方法.")
         }
@@ -162,20 +164,25 @@ class AliVideoPlayer(
         start()
     }
 
+    override fun startToPause(pos: Long) {
+        isStartToPause = true
+        start(pos)
+    }
+
     override fun restart() {
-        if (mCurrentState == INiceVideoPlayer.STATE_PAUSED) {
+        if (isPaused) {
             LogUtil.d("STATE_PLAYING")
             aliPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onPlayingCallback?.invoke()
-        } else if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
+        } else if (isBufferingPaused) {
             LogUtil.d("STATE_BUFFERING_PLAYING")
             aliPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onBufferPlayingCallback?.invoke()
-        } else if (mCurrentState == INiceVideoPlayer.STATE_COMPLETED || mCurrentState == INiceVideoPlayer.STATE_ERROR) {
+        } else if (isCompleted || isError) {
             aliPlayer!!.reset()
             openMediaPlayer()
         } else {
@@ -184,14 +191,14 @@ class AliVideoPlayer(
     }
 
     override fun pause() {
-        if (mCurrentState == INiceVideoPlayer.STATE_PLAYING || isSeekToPause) {
+        if (isPlaying) {
             LogUtil.d("STATE_PAUSED")
             aliPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
             onPauseCallback?.invoke()
         }
-        if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
+        if (isBufferingPlaying) {
             LogUtil.d("STATE_BUFFERING_PAUSED")
             aliPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
@@ -205,16 +212,7 @@ class AliVideoPlayer(
             start(pos)
         } else {
             aliPlayer!!.seekTo(pos, IPlayer.SeekMode.Accurate)
-            if (isSeekToPause) {
-                pause()
-                isSeekToPause = false
-            }
         }
-    }
-
-    override fun seekToPause(pos: Long) {
-        isSeekToPause = true
-        seekTo(pos)
     }
 
     override fun setVolume(volume: Int) {
@@ -257,12 +255,7 @@ class AliVideoPlayer(
 
     override fun getSpeed(speed: Float): Float = aliPlayer?.speed ?: 0F
 
-    override fun getTcpSpeed(): Long {
-//        if (mMediaPlayer instanceof IjkMediaPlayer) {
-//            return ((IjkMediaPlayer) mMediaPlayer).getTcpSpeed();
-//        }
-        return 0
-    }
+    override fun getTcpSpeed() = 0L
 
     private fun initAudioManager() {
         if (mAudioManager == null) {
@@ -279,6 +272,11 @@ class AliVideoPlayer(
     private fun initMediaPlayer() {
         if (aliPlayer == null) {
             aliPlayer = AliPlayerFactory.createAliPlayer(mContext)
+        }
+    }
+
+    private fun setConfig() {
+        if (aliPlayer != null) {
             val cacheConfig = CacheConfig()
             //开启缓存功能
             cacheConfig.mEnable = true
@@ -348,6 +346,7 @@ class AliVideoPlayer(
         // 屏幕常亮
         mContainer?.keepScreenOn = true
         aliPlayer?.run {
+            setConfig()
             //设置是否循环播放
             isLoop = isLooping
             //设置是否静音
@@ -385,7 +384,8 @@ class AliVideoPlayer(
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
-        // AliPlayer Prepared后不会自动播放 && start前seekTo也不会播放
+        // Prepared后不会自动播放 && start前seekTo也不会播放
+        //todo(rjq) 添加prepare方法，在这里不调用start
         aliPlayer!!.start()
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
         when {
@@ -424,22 +424,25 @@ class AliVideoPlayer(
         LogUtil.d("onError ——> STATE_ERROR")
     }
     private val mOnRenderingStartListener = OnRenderingStartListener {
+        //首帧渲染显示事件
         LogUtil.d("onRenderingStart")
-        //首帧渲染显示事件;条件判断避免外部直接调用seekToPause后这里导致mCurrentState不对
-        if (mCurrentState != INiceVideoPlayer.STATE_PAUSED
-            && mCurrentState != INiceVideoPlayer.STATE_BUFFERING_PAUSED
-        ) {
-            mCurrentState = INiceVideoPlayer.STATE_PLAYING
+        onVideoRenderStartCallback?.invoke()
+        // 这里先回调mController的STATE_RENDERING_START，然后如果不是isStartToPause再回调STATE_PLAYING
+        mCurrentState = INiceVideoPlayer.STATE_PLAYING
+        mController?.onPlayStateChanged(INiceVideoPlayer.STATE_RENDERING_START)
+        if (isStartToPause) {
+            pause()
+            isStartToPause = false
+        } else {
             mController?.onPlayStateChanged(mCurrentState)
             onPlayingCallback?.invoke()
         }
-        onVideoRenderStartCallback?.invoke()
     }
     private val mOnLoadingStatusListener: OnLoadingStatusListener =
         object : OnLoadingStatusListener {
             override fun onLoadingBegin() {
                 //缓冲开始, 可能还没播放画面就开始缓冲
-                if (mCurrentState == INiceVideoPlayer.STATE_PAUSED || mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
+                if (isPaused || isBufferingPaused) {
                     mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
                     onBufferPauseCallback?.invoke()
                     LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
@@ -458,13 +461,13 @@ class AliVideoPlayer(
 
             override fun onLoadingEnd() {
                 //缓冲结束
-                if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
+                if (isBufferingPlaying) {
                     LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
                     mCurrentState = INiceVideoPlayer.STATE_PLAYING
                     mController?.onPlayStateChanged(mCurrentState)
                     onPlayingCallback?.invoke()
                 }
-                if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
+                if (isBufferingPaused) {
                     LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED")
                     mCurrentState = INiceVideoPlayer.STATE_PAUSED
                     mController?.onPlayStateChanged(mCurrentState)
@@ -503,7 +506,7 @@ class AliVideoPlayer(
      * 以避免Activity重新走生命周期
      */
     override fun enterFullScreen() {
-        if (mCurrentMode == INiceVideoPlayer.MODE_FULL_SCREEN) return
+        if (isFullScreen) return
         NiceVideoPlayerManager.instance().setAllowRelease(false)
         // 隐藏ActionBar、状态栏，并横屏
         NiceUtil.hideActionBar(mContext)
@@ -511,7 +514,7 @@ class AliVideoPlayer(
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val contentView = NiceUtil.scanForActivity(mContext)
             .findViewById<ViewGroup>(android.R.id.content)
-        if (mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW) {
+        if (isTinyWindow) {
             contentView.removeView(mContainer)
         } else {
             removeView(mContainer)
@@ -534,7 +537,7 @@ class AliVideoPlayer(
      * @return true退出全屏.
      */
     override fun exitFullScreen(): Boolean {
-        if (mCurrentMode == INiceVideoPlayer.MODE_FULL_SCREEN) {
+        if (isFullScreen) {
             NiceVideoPlayerManager.instance().setAllowRelease(true)
             NiceUtil.showActionBar(mContext)
             NiceUtil.scanForActivity(mContext).requestedOrientation =
@@ -559,7 +562,7 @@ class AliVideoPlayer(
      * 进入小窗口播放，小窗口播放的实现原理与全屏播放类似。
      */
     override fun enterTinyWindow() {
-        if (mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW) return
+        if (isTinyWindow) return
         removeView(mContainer)
         val contentView = NiceUtil.scanForActivity(mContext)
             .findViewById<ViewGroup>(android.R.id.content)
@@ -581,7 +584,7 @@ class AliVideoPlayer(
      * 退出小窗口播放
      */
     override fun exitTinyWindow(): Boolean {
-        if (mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW) {
+        if (isTinyWindow) {
             val contentView = NiceUtil.scanForActivity(mContext)
                 .findViewById<ViewGroup>(android.R.id.content)
             contentView.removeView(mContainer)
@@ -634,6 +637,5 @@ class AliVideoPlayer(
 
         // 释放播放器
         releasePlayer()
-//        Runtime.getRuntime().gc();
     }
 }

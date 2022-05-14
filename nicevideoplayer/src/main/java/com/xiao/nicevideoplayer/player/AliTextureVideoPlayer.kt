@@ -50,7 +50,7 @@ class AliTextureVideoPlayer(
     private var isMute = false
     private var scaleMode = IPlayer.ScaleMode.SCALE_ASPECT_FIT
     private var currentPosition: Long = 0
-    private var isSeekToPause = false
+    private var isStartToPause = false
 
     var onCompletionCallback: (() -> Unit)? = null
 
@@ -188,7 +188,7 @@ class AliTextureVideoPlayer(
     }
 
     override fun pause() {
-        if (mCurrentState == INiceVideoPlayer.STATE_PLAYING || isSeekToPause) {
+        if (mCurrentState == INiceVideoPlayer.STATE_PLAYING || isStartToPause) {
             LogUtil.d("STATE_PAUSED")
             aliPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_PAUSED
@@ -209,15 +209,11 @@ class AliTextureVideoPlayer(
             start(pos)
         } else {
             aliPlayer!!.seekTo(pos, IPlayer.SeekMode.Accurate)
-            if (isSeekToPause) {
-                pause()
-                isSeekToPause = false
-            }
         }
     }
 
-    override fun seekToPause(pos: Long) {
-        isSeekToPause = true
+    override fun startToPause(pos: Long) {
+        isStartToPause = true
         seekTo(pos)
     }
 
@@ -435,15 +431,16 @@ class AliTextureVideoPlayer(
     }
     private val mOnRenderingStartListener = IPlayer.OnRenderingStartListener {
         LogUtil.d("onRenderingStart")
-        //首帧渲染显示事件;条件判断避免外部直接调用seekToPause后这里导致mCurrentState不对
-        if (mCurrentState != INiceVideoPlayer.STATE_PAUSED
-            && mCurrentState != INiceVideoPlayer.STATE_BUFFERING_PAUSED
-        ) {
+        onVideoRenderStartCallback?.invoke()
+        mController?.onPlayStateChanged(INiceVideoPlayer.STATE_RENDERING_START)
+        if (isStartToPause) {
+            pause()
+            isStartToPause = false
+        } else {
             mCurrentState = INiceVideoPlayer.STATE_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onPlayingCallback?.invoke()
         }
-        onVideoRenderStartCallback?.invoke()
     }
     private val mOnLoadingStatusListener: IPlayer.OnLoadingStatusListener =
         object : IPlayer.OnLoadingStatusListener {

@@ -28,7 +28,6 @@ public class ChangeClarityActivity extends AppCompatActivity {
 
     private void init() {
         mNiceVideoPlayer = (IJKTextureVideoPlayer) findViewById(R.id.nice_video_player);
-        mNiceVideoPlayer.setPlayerType(IJKSurfaceVideoPlayer.TYPE_IJK); // IjkPlayer or MediaPlayer
         TxVideoPlayerController controller = new TxVideoPlayerController(this);
         controller.setTitle("Beautiful China...");
         controller.setLength(117000);

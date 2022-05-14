@@ -6,7 +6,6 @@ import java.util.Map;
  * NiceVideoPlayer抽象接口
  */
 public interface INiceVideoPlayer {
-
     /**
      * 播放错误
      **/
@@ -24,25 +23,29 @@ public interface INiceVideoPlayer {
      **/
     int STATE_PREPARED = 2;
     /**
+     * 第一帧画面渲染
+     **/
+    int STATE_RENDERING_START = 3;
+    /**
      * 正在播放
      **/
-    int STATE_PLAYING = 3;
+    int STATE_PLAYING = 4;
     /**
      * 暂停播放
      **/
-    int STATE_PAUSED = 4;
+    int STATE_PAUSED = 5;
     /**
      * 正在缓冲(播放器正在播放时，缓冲区数据不足，进行缓冲，缓冲区数据足够后恢复播放)
      **/
-    int STATE_BUFFERING_PLAYING = 5;
+    int STATE_BUFFERING_PLAYING = 6;
     /**
-     * 正在缓冲(播放器正在播放时，缓冲区数据不足，进行缓冲，此时暂停播放器，继续缓冲，缓冲区数据足够后恢复暂停
+     * 正在缓冲(播放器正在播放时，缓冲区数据不足，进行缓冲，此时暂停播放器，继续缓冲，缓冲区数据足够后恢复暂停;或播放器暂停时缓冲
      **/
-    int STATE_BUFFERING_PAUSED = 6;
+    int STATE_BUFFERING_PAUSED = 7;
     /**
      * 播放完成
      **/
-    int STATE_COMPLETED = 7;
+    int STATE_COMPLETED = 8;
 
     /**
      * 普通模式
@@ -56,15 +59,6 @@ public interface INiceVideoPlayer {
      * 小窗口模式
      **/
     int MODE_TINY_WINDOW = 12;
-
-    /**
-     * IjkPlayer
-     **/
-    int TYPE_IJK = 111;
-    /**
-     * MediaPlayer
-     **/
-    int TYPE_NATIVE = 222;
 
     /**
      * 设置视频Url，以及headers
@@ -87,6 +81,13 @@ public interface INiceVideoPlayer {
     void start(long position);
 
     /**
+     * 到指定的位置暂停
+     *
+     * @param pos 暂停位置
+     */
+    void startToPause(long pos);
+
+    /**
      * 重新播放，播放器被暂停、播放错误、播放完成后，需要调用此方法重新播放
      */
     void restart();
@@ -102,13 +103,6 @@ public interface INiceVideoPlayer {
      * @param pos 播放位置
      */
     void seekTo(long pos);
-
-    /**
-     * seek到指定的位置暂停
-     *
-     * @param pos 暂停位置
-     */
-    void seekToPause(long pos);
 
     /**
      * 设置音量
@@ -236,15 +230,13 @@ public interface INiceVideoPlayer {
     boolean exitTinyWindow();
 
     /**
-     * 此处只释放播放器（如果要释放播放器并恢复控制器状态需要调用{@link #release()}方法）
-     * 不管是全屏、小窗口还是Normal状态下控制器的UI都不恢复初始状态
+     * 此处只释放播放器（如果要释放播放器并恢复控制器状态需要调用{@link #release()}方法） 不管是全屏、小窗口还是Normal状态下控制器的UI都不恢复初始状态
      * 这样以便在当前播放器状态下可以方便的切换不同的清晰度的视频地址
      */
     void releasePlayer();
 
     /**
-     * 释放INiceVideoPlayer，释放后，内部的播放器被释放掉，同时如果在全屏、小窗口模式下都会退出
-     * 并且控制器的UI也应该恢复到最初始的状态.
+     * 释放INiceVideoPlayer，释放后，内部的播放器被释放掉，同时如果在全屏、小窗口模式下都会退出 并且控制器的UI也应该恢复到最初始的状态.
      */
     void release();
 }

@@ -18,7 +18,7 @@ public class VideoViewHolder extends RecyclerView.ViewHolder {
 
     public VideoViewHolder(View itemView) {
         super(itemView);
-        mVideoPlayer = (IJKSurfaceVideoPlayer) itemView.findViewById(R.id.nice_video_player);
+        mVideoPlayer = itemView.findViewById(R.id.nice_video_player);
         // 将列表中的每个视频设置为默认16:9的比例
         ViewGroup.LayoutParams params = mVideoPlayer.getLayoutParams();
         params.width = itemView.getResources().getDisplayMetrics().widthPixels; // 宽度为屏幕宽度
@@ -28,7 +28,7 @@ public class VideoViewHolder extends RecyclerView.ViewHolder {
 
     public void setController(TxVideoPlayerController controller) {
         mController = controller;
-        mVideoPlayer.setController(mController);
+        mVideoPlayer.setController(mController, true);
     }
 
     public void bindData(Video video) {

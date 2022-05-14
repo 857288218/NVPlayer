@@ -25,11 +25,11 @@ import java.io.IOException
 //问题：
 // 1.SEEK_CLOSEST比普通seekTo显示画面慢(如果seek到的地方是关键帧不会慢),即onInfo首帧回调要比prepared回调慢1.5s左右
 // 2.切后台继续播放，回到前台画面会从切后台时的画面跳到正确画面 闪一下
+// 3.只支持硬解
 class MediaVideoPlayer constructor(
     private val mContext: Context,
     attrs: AttributeSet? = null
 ) : FrameLayout(mContext, attrs), INiceVideoPlayer, TextureView.SurfaceTextureListener {
-    private var mPlayerType = INiceVideoPlayer.TYPE_IJK
     private var mCurrentState = INiceVideoPlayer.STATE_IDLE
     private var mCurrentMode = INiceVideoPlayer.MODE_NORMAL
 
@@ -47,7 +47,7 @@ class MediaVideoPlayer constructor(
     private var continueFromLastPosition = true
     private var skipToPosition: Long = 0
     private var isLoop = false
-    private var isSeekToPause = false
+    private var isStartToPause = false
 
     // 播放完成回调
     var onCompletionCallback: (() -> Unit)? = null
@@ -124,15 +124,6 @@ class MediaVideoPlayer constructor(
     }
 
     /**
-     * 设置播放器类型
-     *
-     * @param playerType IjkPlayer or MediaPlayer.
-     */
-    fun setPlayerType(playerType: Int) {
-        mPlayerType = playerType
-    }
-
-    /**
      * 是否从上一次的位置继续播放
      *
      * @param continueFromLastPosition true从上一次的位置继续播放
@@ -145,17 +136,13 @@ class MediaVideoPlayer constructor(
     }
 
     override fun start() {
-        if (mCurrentState == INiceVideoPlayer.STATE_IDLE) {
-//            NiceVideoPlayerManager.instance()!!.currentNiceVideoPlayer = this
+        if (isIdle) {
+           NiceVideoPlayerManager.instance()!!.currentNiceVideoPlayer = this
             initAudioManager()
             initMediaPlayer()
             initTextureView()
             addTextureView()
-        } else if (mCurrentState == INiceVideoPlayer.STATE_COMPLETED
-            || mCurrentState == INiceVideoPlayer.STATE_ERROR
-            || mCurrentState == INiceVideoPlayer.STATE_PAUSED
-            || mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED
-        ) {
+        } else if (isCompleted || isError || isPaused || isBufferingPaused) {
             restart()
         } else {
             LogUtil.d("NiceVideoPlayer只有在mCurrentState == STATE_IDLE时才能调用start方法.")
@@ -174,20 +161,25 @@ class MediaVideoPlayer constructor(
         start()
     }
 
+    override fun startToPause(pos: Long) {
+        isStartToPause = true
+        start(pos)
+    }
+
     override fun restart() {
-        if (mCurrentState == INiceVideoPlayer.STATE_PAUSED) {
+        if (isPaused) {
             mMediaPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onPlayingCallback?.invoke()
             LogUtil.d("STATE_PLAYING")
-        } else if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
+        } else if (isBufferingPaused) {
             mMediaPlayer!!.start()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onBufferPlayingCallback?.invoke()
             LogUtil.d("STATE_BUFFERING_PLAYING")
-        } else if (mCurrentState == INiceVideoPlayer.STATE_COMPLETED || mCurrentState == INiceVideoPlayer.STATE_ERROR) {
+        } else if (isCompleted || isError) {
             mMediaPlayer!!.reset()
             openMediaPlayer()
         } else {
@@ -196,14 +188,14 @@ class MediaVideoPlayer constructor(
     }
 
     override fun pause() {
-        if (mCurrentState == INiceVideoPlayer.STATE_PLAYING || isSeekToPause) {
+        if (isPlaying) {
             mMediaPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
             onPauseCallback?.invoke()
             LogUtil.d("STATE_PAUSED")
         }
-        if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
+        if (isBufferingPlaying) {
             mMediaPlayer!!.pause()
             mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
@@ -223,16 +215,7 @@ class MediaVideoPlayer constructor(
             } else {
                 mMediaPlayer!!.seekTo(pos.toInt())
             }
-            if (isSeekToPause) {
-                pause()
-                isSeekToPause = false
-            }
         }
-    }
-
-    override fun seekToPause(pos: Long) {
-        isSeekToPause = true
-        seekTo(pos)
     }
 
     override fun setVolume(volume: Int) {
@@ -392,7 +375,7 @@ class MediaVideoPlayer constructor(
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
 
-        // 准备完成需要手动播放
+        //todo(rjq) 添加prepare方法在这里判断是否播放
         mp.start()
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致清晰度切换后，又切到continueFromLastPosition的情况
         when {
@@ -444,19 +427,20 @@ class MediaVideoPlayer constructor(
 
     private val mOnInfoListener = MediaPlayer.OnInfoListener { _: MediaPlayer, what, extra ->
         if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-            // 播放器开始渲染;条件判断避免外部直接调用seekToPause后这里导致mCurrentState不对
-            if (mCurrentState != INiceVideoPlayer.STATE_PAUSED
-                && mCurrentState != INiceVideoPlayer.STATE_BUFFERING_PAUSED
-            ) {
-                mCurrentState = INiceVideoPlayer.STATE_PLAYING
+            LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING")
+            onVideoRenderStartCallback?.invoke()
+            mCurrentState = INiceVideoPlayer.STATE_PLAYING
+            mController?.onPlayStateChanged(INiceVideoPlayer.STATE_RENDERING_START)
+            if (isStartToPause) {
+                pause()
+                isStartToPause = false
+            } else {
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
             }
-            onVideoRenderStartCallback?.invoke()
-            LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING")
         } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
             // MediaPlayer暂时不播放，以缓冲更多的数据
-            if (mCurrentState == INiceVideoPlayer.STATE_PAUSED || mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
+            if (isPaused || isBufferingPaused) {
                 mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
                 onBufferPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
@@ -468,13 +452,13 @@ class MediaVideoPlayer constructor(
             mController?.onPlayStateChanged(mCurrentState)
         } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
             // 填充缓冲区后，MediaPlayer恢复播放/暂停
-            if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING) {
+            if (isBufferingPlaying) {
                 mCurrentState = INiceVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
             }
-            if (mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED) {
+            if (isBufferingPaused) {
                 mCurrentState = INiceVideoPlayer.STATE_PAUSED
                 mController?.onPlayStateChanged(mCurrentState)
                 onPauseCallback?.invoke()
@@ -499,7 +483,7 @@ class MediaVideoPlayer constructor(
      * 以避免Activity重新走生命周期
      */
     override fun enterFullScreen() {
-        if (mCurrentMode == INiceVideoPlayer.MODE_FULL_SCREEN) return
+        if (isFullScreen) return
         NiceVideoPlayerManager.instance()!!.setAllowRelease(false)
         // 隐藏ActionBar、状态栏，并横屏
         NiceUtil.hideActionBar(mContext)
@@ -507,7 +491,7 @@ class MediaVideoPlayer constructor(
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val contentView =
             NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
-        if (mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW) {
+        if (isTinyWindow) {
             contentView.removeView(mContainer)
         } else {
             removeView(mContainer)
@@ -532,7 +516,7 @@ class MediaVideoPlayer constructor(
      */
     @SuppressLint("SourceLockedOrientationActivity")
     override fun exitFullScreen(): Boolean {
-        if (mCurrentMode == INiceVideoPlayer.MODE_FULL_SCREEN) {
+        if (isFullScreen) {
             NiceVideoPlayerManager.instance()!!.setAllowRelease(true)
             NiceUtil.showActionBar(mContext)
             NiceUtil.scanForActivity(mContext).requestedOrientation =
@@ -558,7 +542,7 @@ class MediaVideoPlayer constructor(
      * 进入小窗口播放，小窗口播放的实现原理与全屏播放类似。
      */
     override fun enterTinyWindow() {
-        if (mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW) return
+        if (isTinyWindow) return
         removeView(mContainer)
         val contentView =
             NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
@@ -580,7 +564,7 @@ class MediaVideoPlayer constructor(
      * 退出小窗口播放
      */
     override fun exitTinyWindow(): Boolean {
-        if (mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW) {
+        if (isTinyWindow) {
             val contentView =
                 NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
             contentView.removeView(mContainer)
