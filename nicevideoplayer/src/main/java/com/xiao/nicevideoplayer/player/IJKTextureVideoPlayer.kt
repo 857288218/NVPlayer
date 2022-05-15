@@ -44,6 +44,7 @@ class IJKTextureVideoPlayer(
     private var startToPosition: Long = 0
     private var isLoop = false
     private var isStartToPause = false
+    private var isOnlyPrepare = false
 
     // 播放完成回调
     var onCompletionCallback: (() -> Unit)? = null
@@ -133,19 +134,21 @@ class IJKTextureVideoPlayer(
 
     override fun start() {
         if (isIdle) {
-            NiceVideoPlayerManager.instance()!!.currentNiceVideoPlayer = this
             initAudioManager()
             initMediaPlayer()
             initTextureView()
             addTextureView()
         } else if (isCompleted || isError || isPaused || isBufferingPaused) {
             restart()
+        } else if (isPrepared) {
+            mMediaPlayer?.start()
+            customStartToPos()
         } else {
-            LogUtil.d("NiceVideoPlayer只有在mCurrentState == STATE_IDLE时才能调用start方法.")
+            LogUtil.d("NiceVideoPlayer mCurrentState == ${mCurrentState}.不能调用start()")
         }
     }
 
-    // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
+    // 如果startToPosition ！= 0，在start前可以选择调整skipToPosition
     fun fixStartToPosition(delta: Long) {
         if (startToPosition > 0) {
             startToPosition += delta
@@ -162,6 +165,11 @@ class IJKTextureVideoPlayer(
         start(pos)
     }
 
+    fun prepare() {
+        isOnlyPrepare = true
+        start()
+    }
+
     override fun restart() {
         if (isPaused) {
             mMediaPlayer!!.start()
@@ -175,11 +183,17 @@ class IJKTextureVideoPlayer(
             mController?.onPlayStateChanged(mCurrentState)
             onBufferPlayingCallback?.invoke()
             LogUtil.d("STATE_BUFFERING_PLAYING")
-        } else if (isCompleted || isError) {
-            // reset后会使播放器设置的属性清空，openMediaPlayer重新设置回调和属性
-            // 播放完成可以直接mMediaPlayer!!.start()再次播放，这样不会回调prepared和render_start
+        } else if (isError) {
             mMediaPlayer!!.reset()
             openMediaPlayer()
+        } else if (isCompleted) {
+            mController?.onPlayStateChanged(INiceVideoPlayer.STATE_PREPARED)
+            onPreparedCallback?.invoke()
+            mController?.onPlayStateChanged(INiceVideoPlayer.STATE_RENDERING_START)
+            onVideoRenderStartCallback?.invoke()
+            mController?.onPlayStateChanged(INiceVideoPlayer.STATE_PLAYING)
+            onPlayingCallback?.invoke()
+            mMediaPlayer!!.start()
         } else {
             LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
         }
@@ -373,19 +387,22 @@ class IJKTextureVideoPlayer(
         LogUtil.d("onPrepared ——> STATE_PREPARED")
 
         // seekTo只能在start后调用，start前调用seekTo无作用
-        mp.start()
-        //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致清晰度切换后，又切到continueFromLastPosition的情况
-        when {
-            startToPosition != 0L -> {
-                // 跳到指定位置播放
-                seekTo(startToPosition)
-                startToPosition = 0
-            }
-            continueFromLastPosition -> {
-                // 从上次的保存位置播放
-                val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
-                mp.seekTo(savedPlayPosition)
-            }
+        if (!isOnlyPrepare) {
+            mp.start()
+        }
+        customStartToPos()
+        isOnlyPrepare = false
+    }
+
+    private fun customStartToPos() {
+        //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
+        if (startToPosition > 0) {
+            seekTo(startToPosition)
+            startToPosition = 0
+        } else if (continueFromLastPosition) {
+            // 从上次的保存位置播放
+            val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
+            seekTo(savedPlayPosition)
         }
     }
 
@@ -611,10 +628,8 @@ class IJKTextureVideoPlayer(
             exitTinyWindow()
         }
         mCurrentMode = INiceVideoPlayer.MODE_NORMAL
-
         // 释放播放器
         releasePlayer()
-
         // 恢复控制器
         mController?.reset()
         LogUtil.d("release")

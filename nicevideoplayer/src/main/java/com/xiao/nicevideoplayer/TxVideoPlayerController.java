@@ -1,7 +1,9 @@
 package com.xiao.nicevideoplayer;
 
 import com.xiao.nicevideoplayer.player.AliVideoPlayer;
+import com.xiao.nicevideoplayer.player.IJKTextureVideoPlayer;
 import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
+import com.xiao.nicevideoplayer.player.MediaVideoPlayer;
 import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import android.content.BroadcastReceiver;
@@ -206,15 +208,20 @@ public class TxVideoPlayerController
                 mCompleted.setVisibility(View.GONE);
                 mTop.setVisibility(View.GONE);
                 mBottom.setVisibility(View.GONE);
-                mCenterStart.setVisibility(View.GONE);
                 mLength.setVisibility(View.GONE);
+                if (!(mNiceVideoPlayer instanceof AliVideoPlayer) && !(mNiceVideoPlayer instanceof IJKTextureVideoPlayer)) {
+                    mCenterStart.setVisibility(View.GONE);
+                }
                 break;
             case INiceVideoPlayer.STATE_PREPARED:
+                mLoading.setVisibility(View.GONE);
+                mCompleted.setVisibility(View.GONE);
                 if (!(mNiceVideoPlayer instanceof AliVideoPlayer)) {
                     startUpdateProgressTimer();
                 }
                 break;
             case INiceVideoPlayer.STATE_RENDERING_START:
+                mCenterStart.setVisibility(View.GONE);
                 // 首帧渲染显示再隐藏封面图
                 mImage.setVisibility(View.GONE);
                 break;
@@ -358,11 +365,10 @@ public class TxVideoPlayerController
     public void onClick(View v) {
         if (mNiceVideoPlayer != null) {
             if (v == mCenterStart) {
-                if (mNiceVideoPlayer.isIdle()) {
-                    mNiceVideoPlayer.startToPause(32000);
-//                    mNiceVideoPlayer.start(15000);
-//                    mNiceVideoPlayer.start();
-                }
+                NiceVideoPlayerManager.instance().setCurrentNiceVideoPlayer(mNiceVideoPlayer);
+//                mNiceVideoPlayer.startToPause(32000);
+//                mNiceVideoPlayer.start(15000);
+                mNiceVideoPlayer.start();
             } else if (v == mBack) {
                 if (mNiceVideoPlayer.isFullScreen()) {
                     mNiceVideoPlayer.exitFullScreen();

@@ -47,6 +47,7 @@ public class AliVideoViewHolder extends RecyclerView.ViewHolder {
 //                .placeholder(R.drawable.img_default)
              .into(mController.imageView());
         mVideoPlayer.setUp(video.getVideoUrl(), null);
+        mVideoPlayer.prepare();
         mVideoPlayer.setVideoBackgroundColor(Color.parseColor("#000000"));
     }
 }

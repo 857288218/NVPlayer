@@ -24,7 +24,7 @@ import java.io.IOException
 // 问题：
 // 1.切后台暂停后，回到前台不主动播放，会黑屏。使用TextureView或AliPlayer没问题；
 // 2.MEDIA_INFO_VIDEO_RENDERING_START回调不会马上显示画面会闪黑一下，使用TextureView或AliPlayer没问题
-// 如果使用IJKPlayer建议使用TextuewView显示画面
+// 如果使用IJKPlayer建议使用TextuewView显示画面;该类不是最新代码不维护了，如果非要使用surfaceView，需要将该类同步IJKTexture的逻辑代码
 class IJKSurfaceVideoPlayer(
     private val mContext: Context,
     attrs: AttributeSet? = null
@@ -147,7 +147,7 @@ class IJKSurfaceVideoPlayer(
         }
     }
 
-    // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
+    // 如果startToPosition ！= 0，在start前可以选择调整skipToPosition
     fun fixStartToPosition(delta: Long) {
         if (startToPosition > 0) {
             startToPosition += delta

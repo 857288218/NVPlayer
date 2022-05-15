@@ -23,6 +23,7 @@ import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 
+// 不维护该类；如果使用TextureView填充画面，只参考相关部分，逻辑部分用AliVideoPlayer的
 class AliTextureVideoPlayer(
     private val mContext: Context,
     attrs: AttributeSet? = null

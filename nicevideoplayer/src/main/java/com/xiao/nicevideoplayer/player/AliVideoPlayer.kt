@@ -29,9 +29,7 @@ import com.xiao.nicevideoplayer.utils.NiceUtil
 class AliVideoPlayer(
     private val mContext: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(
-    mContext, attrs
-), INiceVideoPlayer, SurfaceHolder.Callback {
+) : FrameLayout(mContext, attrs), INiceVideoPlayer, SurfaceHolder.Callback {
 
     private var mCurrentState = INiceVideoPlayer.STATE_IDLE
     private var mCurrentMode = INiceVideoPlayer.MODE_NORMAL
@@ -45,7 +43,7 @@ class AliVideoPlayer(
     private var mUrl: String? = null
     private var mHeaders: Map<String, String>? = null
     private var mBufferPercentage = 0
-    private var continueFromLastPosition = true
+    private var continueFromLastPosition = false
     private var startToPosition: Long = 0
     private var isLooping = false
     private var videoBgColor: Int? = null
@@ -53,6 +51,7 @@ class AliVideoPlayer(
     private var scaleMode = IPlayer.ScaleMode.SCALE_ASPECT_FIT
     private var currentPosition: Long = 0
     private var isStartToPause = false
+    private var isOnlyPrepare = false
 
     var onCompletionCallback: (() -> Unit)? = null
 
@@ -140,19 +139,21 @@ class AliVideoPlayer(
 
     override fun start() {
         if (isIdle) {
-            NiceVideoPlayerManager.instance().currentNiceVideoPlayer = this
             initAudioManager()
             initMediaPlayer()
             initSurfaceView()
             addSurfaceView()
         } else if (isCompleted || isError || isPaused || isBufferingPaused) {
             restart()
+        } else if (isPrepared) {
+            aliPlayer?.start()
+            customStartToPos()
         } else {
-            LogUtil.d("NiceVideoPlayer只有在mCurrentState == STATE_IDLE时才能调用start方法.")
+            LogUtil.d("NiceVideoPlayer mCurrentState == ${mCurrentState}.不能调用start()")
         }
     }
 
-    // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
+    // 如果startToPosition ！= 0，在start前可以选择调整skipToPosition
     fun fixStarToPosition(delta: Long) {
         if (startToPosition > 0) {
             startToPosition += delta
@@ -169,6 +170,11 @@ class AliVideoPlayer(
         start(pos)
     }
 
+    fun prepare() {
+        isOnlyPrepare = true
+        start()
+    }
+
     override fun restart() {
         if (isPaused) {
             LogUtil.d("STATE_PLAYING")
@@ -183,6 +189,7 @@ class AliVideoPlayer(
             mController?.onPlayStateChanged(mCurrentState)
             onBufferPlayingCallback?.invoke()
         } else if (isCompleted || isError) {
+            // todo(rjq) 播放完成后 再次播放不reset？ 但是直接调用aliPlayer.start没有重新播放 ijk会重新播放
             aliPlayer!!.reset()
             openMediaPlayer()
         } else {
@@ -347,17 +354,13 @@ class AliVideoPlayer(
         mContainer?.keepScreenOn = true
         aliPlayer?.run {
             setConfig()
-            //设置是否循环播放
             isLoop = isLooping
-            //设置是否静音
             isMute = this@AliVideoPlayer.isMute
-            //设置播放器背景颜色
             if (videoBgColor != null) {
                 setVideoBackgroundColor(videoBgColor!!)
             }
             //画面的填充模式
             scaleMode = this@AliVideoPlayer.scaleMode
-            // 设置监听
             setOnPreparedListener(mOnPreparedListener)
             setOnVideoSizeChangedListener(mOnVideoSizeChangedListener)
             setOnCompletionListener(mOnCompletionListener)
@@ -367,8 +370,7 @@ class AliVideoPlayer(
             setOnInfoListener(mOnInfoListener)
             setOnSeekCompleteListener(mOnSeekCompleteListener)
             // 设置dataSource
-            val urlSource = UrlSource()
-            urlSource.uri = mUrl
+            val urlSource = UrlSource().apply { uri = mUrl }
             setDataSource(urlSource)
             setSurface(surfaceHolder?.surface)
             prepare()
@@ -379,30 +381,30 @@ class AliVideoPlayer(
     }
 
     private val mOnPreparedListener = IPlayer.OnPreparedListener {
-        //自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
         mCurrentState = INiceVideoPlayer.STATE_PREPARED
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
-        // Prepared后不会自动播放 && aliPlayer.start()前seekTo也不会播放只是定位到指定位置
-        //todo(rjq) 添加prepare方法，在这里不调用start
-        if (!isStartToPause) {
+        // 不设置autoPlay Prepared后不自动播放 && aliPlayer.start()前seekTo也不会播放只是定位到指定位置
+        if (!isStartToPause && !isOnlyPrepare) {
             aliPlayer!!.start()
         }
+        isOnlyPrepare = false
+        customStartToPos()
+    }
+
+    private fun customStartToPos() {
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
-        when {
-            startToPosition != 0L -> {
-                // 跳到指定位置播放
-                seekTo(startToPosition)
-                startToPosition = 0
-            }
-            continueFromLastPosition -> {
-                // 从上次的保存位置播放
-                val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
-                aliPlayer!!.seekTo(savedPlayPosition, IPlayer.SeekMode.Accurate)
-            }
+        if (startToPosition > 0) {
+            seekTo(startToPosition)
+            startToPosition = 0
+        } else if (continueFromLastPosition) {
+            // 从上次的保存位置播放
+            val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
+            seekTo(savedPlayPosition)
         }
     }
+
     private val mOnVideoSizeChangedListener =
         IPlayer.OnVideoSizeChangedListener { width, height ->
             // surfaceView.adaptVideoSize(width, height);
@@ -480,11 +482,8 @@ class AliVideoPlayer(
     private val mOnInfoListener = IPlayer.OnInfoListener { infoBean ->
         when {
             infoBean.code.value == InfoCode.AutoPlayStart.value -> {
-                // 自动播放开始事件;注意：自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
-                // 还没确认是否会回调onRenderingStart，如果不回调这里需要执行一下onPlayStateChanged（STATE_PLAYING）
+                // 自动播放开始事件：自动播放时依然会回调onPrepared，OnInfoListener.AutoPlayStart，onRenderingStart
                 LogUtil.d("onInfo ——> AutoPlayStart")
-                mCurrentState = INiceVideoPlayer.STATE_PREPARED
-                mController?.onPlayStateChanged(mCurrentState)
             }
             infoBean.code.value == InfoCode.LoopingStart.value -> {
                 //循环播放开始事件,不会回调onPrepared，onRenderingStart，onCompletion
@@ -612,7 +611,6 @@ class AliVideoPlayer(
             aliPlayer = null
         }.start()
         surfaceHolder = null
-
         // 解决释放播放器时黑一下,使用TextureView没有该问题
         Handler(Looper.getMainLooper()).post { mContainer?.removeView(surfaceView) }
         mCurrentState = INiceVideoPlayer.STATE_IDLE
@@ -633,10 +631,8 @@ class AliVideoPlayer(
             exitTinyWindow()
         }
         mCurrentMode = INiceVideoPlayer.MODE_NORMAL
-
         // 恢复控制器
         mController?.reset()
-
         // 释放播放器
         releasePlayer()
     }
