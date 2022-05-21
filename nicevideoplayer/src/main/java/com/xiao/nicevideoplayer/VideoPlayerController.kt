@@ -8,7 +8,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
 import com.aliyun.player.AliPlayer
-import com.xiao.nicevideoplayer.player.INiceVideoPlayer
+import com.xiao.nicevideoplayer.player.IVideoPlayer
 import com.xiao.nicevideoplayer.utils.NiceUtil
 import java.util.*
 import kotlin.math.abs
@@ -17,7 +17,7 @@ abstract class VideoPlayerController(val mContext: Context) : FrameLayout(mConte
     OnTouchListener {
 
     @JvmField
-    var mNiceVideoPlayer: INiceVideoPlayer? = null
+    var mNiceVideoPlayer: IVideoPlayer? = null
     private var mUpdateProgressTimer: Timer? = null
     private var mUpdateProgressTimerTask: TimerTask? = null
     private var mDownX = 0f
@@ -37,7 +37,7 @@ abstract class VideoPlayerController(val mContext: Context) : FrameLayout(mConte
         this.setOnTouchListener(this)
     }
 
-    open fun setNiceVideoPlayer(niceVideoPlayer: INiceVideoPlayer?) {
+    open fun setNiceVideoPlayer(niceVideoPlayer: IVideoPlayer?) {
         mNiceVideoPlayer = niceVideoPlayer
     }
 

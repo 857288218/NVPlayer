@@ -2,7 +2,7 @@ package com.xiao.nicevideoplayer;
 
 import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevideoplayer.player.IJKTextureVideoPlayer;
-import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
+import com.xiao.nicevideoplayer.player.IVideoPlayer;
 import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import android.content.BroadcastReceiver;
@@ -161,7 +161,7 @@ public class TxVideoPlayerController
     }
 
     @Override
-    public void setNiceVideoPlayer(INiceVideoPlayer niceVideoPlayer) {
+    public void setNiceVideoPlayer(IVideoPlayer niceVideoPlayer) {
         super.setNiceVideoPlayer(niceVideoPlayer);
         // 给播放器配置视频链接地址
         if (clarities != null && clarities.size() > 1 && mNiceVideoPlayer != null) {
@@ -198,9 +198,9 @@ public class TxVideoPlayerController
     @Override
     public void onPlayStateChanged(int playState) {
         switch (playState) {
-            case INiceVideoPlayer.STATE_IDLE:
+            case IVideoPlayer.STATE_IDLE:
                 break;
-            case INiceVideoPlayer.STATE_PREPARING:
+            case IVideoPlayer.STATE_PREPARING:
                 mLoading.setVisibility(View.VISIBLE);
                 mLoadText.setText("正在准备...");
                 mError.setVisibility(View.GONE);
@@ -212,48 +212,48 @@ public class TxVideoPlayerController
                     mCenterStart.setVisibility(View.GONE);
                 }
                 break;
-            case INiceVideoPlayer.STATE_PREPARED:
+            case IVideoPlayer.STATE_PREPARED:
                 mLoading.setVisibility(View.GONE);
                 mCompleted.setVisibility(View.GONE);
                 if (!(mNiceVideoPlayer instanceof AliVideoPlayer)) {
                     startUpdateProgressTimer();
                 }
                 break;
-            case INiceVideoPlayer.STATE_RENDERING_START:
+            case IVideoPlayer.STATE_RENDERING_START:
                 mCenterStart.setVisibility(View.GONE);
                 // 首帧渲染显示再隐藏封面图
                 mImage.setVisibility(View.GONE);
                 break;
-            case INiceVideoPlayer.STATE_PLAYING:
+            case IVideoPlayer.STATE_PLAYING:
 //                mImage.setVisibility(View.GONE);
                 mLoading.setVisibility(View.GONE);
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 startDismissTopBottomTimer();
                 break;
-            case INiceVideoPlayer.STATE_PAUSED:
+            case IVideoPlayer.STATE_PAUSED:
                 mLoading.setVisibility(View.GONE);
                 mRestartPause.setImageResource(R.drawable.ic_player_start);
                 cancelDismissTopBottomTimer();
                 break;
-            case INiceVideoPlayer.STATE_BUFFERING_PLAYING:
+            case IVideoPlayer.STATE_BUFFERING_PLAYING:
                 mLoading.setVisibility(View.VISIBLE);
                 mRestartPause.setImageResource(R.drawable.ic_player_pause);
                 mLoadText.setText("正在缓冲...");
                 startDismissTopBottomTimer();
                 break;
-            case INiceVideoPlayer.STATE_BUFFERING_PAUSED:
+            case IVideoPlayer.STATE_BUFFERING_PAUSED:
                 mLoading.setVisibility(View.VISIBLE);
                 mRestartPause.setImageResource(R.drawable.ic_player_start);
                 mLoadText.setText("正在缓冲...");
                 cancelDismissTopBottomTimer();
                 break;
-            case INiceVideoPlayer.STATE_ERROR:
+            case IVideoPlayer.STATE_ERROR:
                 cancelUpdateProgressTimer();
                 setTopBottomVisible(false);
                 mTop.setVisibility(View.VISIBLE);
                 mError.setVisibility(View.VISIBLE);
                 break;
-            case INiceVideoPlayer.STATE_COMPLETED:
+            case IVideoPlayer.STATE_COMPLETED:
                 cancelUpdateProgressTimer();
                 setTopBottomVisible(false);
 //                mImage.setVisibility(View.VISIBLE);  //播放完成就停在最后一帧
@@ -265,7 +265,7 @@ public class TxVideoPlayerController
     @Override
     public void onPlayModeChanged(int playMode) {
         switch (playMode) {
-            case INiceVideoPlayer.MODE_NORMAL:
+            case IVideoPlayer.MODE_NORMAL:
                 mBack.setVisibility(View.GONE);
                 mFullScreen.setImageResource(R.drawable.ic_player_enlarge);
                 mFullScreen.setVisibility(View.VISIBLE);
@@ -276,7 +276,7 @@ public class TxVideoPlayerController
                     hasRegisterBatteryReceiver = false;
                 }
                 break;
-            case INiceVideoPlayer.MODE_FULL_SCREEN:
+            case IVideoPlayer.MODE_FULL_SCREEN:
                 mBack.setVisibility(View.VISIBLE);
                 mFullScreen.setVisibility(View.GONE);
                 mFullScreen.setImageResource(R.drawable.ic_player_shrink);
@@ -290,7 +290,7 @@ public class TxVideoPlayerController
                     hasRegisterBatteryReceiver = true;
                 }
                 break;
-            case INiceVideoPlayer.MODE_TINY_WINDOW:
+            case IVideoPlayer.MODE_TINY_WINDOW:
                 mBack.setVisibility(View.VISIBLE);
                 mClarity.setVisibility(View.GONE);
                 break;

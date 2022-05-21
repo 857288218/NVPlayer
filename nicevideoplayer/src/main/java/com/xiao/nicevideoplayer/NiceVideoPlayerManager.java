@@ -1,13 +1,13 @@
 package com.xiao.nicevideoplayer;
 
-import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
+import com.xiao.nicevideoplayer.player.IVideoPlayer;
 
 /**
  * 视频播放器管理器.
  */
 public class NiceVideoPlayerManager {
 
-    private INiceVideoPlayer mVideoPlayer;
+    private IVideoPlayer mVideoPlayer;
 
     //是否允许释放播放器,解决屏幕中最后一个可见item在进入全屏后会执行onChildViewDetachedFromWindow，导致释放播放器会立刻退出全屏
     private boolean allowRelease = true;
@@ -28,11 +28,11 @@ public class NiceVideoPlayerManager {
         this.allowRelease = allowRelease;
     }
 
-    public INiceVideoPlayer getCurrentNiceVideoPlayer() {
+    public IVideoPlayer getCurrentNiceVideoPlayer() {
         return mVideoPlayer;
     }
 
-    public void setCurrentNiceVideoPlayer(INiceVideoPlayer videoPlayer) {
+    public void setCurrentNiceVideoPlayer(IVideoPlayer videoPlayer) {
         if (mVideoPlayer != videoPlayer) {
             releaseNiceVideoPlayer();
             mVideoPlayer = videoPlayer;

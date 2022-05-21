@@ -29,10 +29,10 @@ import com.xiao.nicevideoplayer.utils.NiceUtil
 class AliVideoPlayer(
     private val mContext: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(mContext, attrs), INiceVideoPlayer, SurfaceHolder.Callback {
+) : FrameLayout(mContext, attrs), IVideoPlayer, SurfaceHolder.Callback {
 
-    private var mCurrentState = INiceVideoPlayer.STATE_IDLE
-    private var mCurrentMode = INiceVideoPlayer.MODE_NORMAL
+    private var mCurrentState = IVideoPlayer.STATE_IDLE
+    private var mCurrentMode = IVideoPlayer.MODE_NORMAL
 
     private var mAudioManager: AudioManager? = null
     private var aliPlayer: AliPlayer? = null
@@ -180,13 +180,13 @@ class AliVideoPlayer(
         if (isPaused) {
             LogUtil.d("STATE_PLAYING")
             aliPlayer!!.start()
-            mCurrentState = INiceVideoPlayer.STATE_PLAYING
+            mCurrentState = IVideoPlayer.STATE_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onPlayingCallback?.invoke()
         } else if (isBufferingPaused) {
             LogUtil.d("STATE_BUFFERING_PLAYING")
             aliPlayer!!.start()
-            mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
+            mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onBufferPlayingCallback?.invoke()
         } else if (isCompleted || isError) {
@@ -202,14 +202,14 @@ class AliVideoPlayer(
         if (isPlaying) {
             LogUtil.d("STATE_PAUSED")
             aliPlayer!!.pause()
-            mCurrentState = INiceVideoPlayer.STATE_PAUSED
+            mCurrentState = IVideoPlayer.STATE_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
             onPauseCallback?.invoke()
         }
         if (isBufferingPlaying) {
             LogUtil.d("STATE_BUFFERING_PAUSED")
             aliPlayer!!.pause()
-            mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
+            mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
             onBufferPauseCallback?.invoke()
         }
@@ -227,29 +227,29 @@ class AliVideoPlayer(
         mAudioManager?.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
     }
 
-    override fun isIdle() = mCurrentState == INiceVideoPlayer.STATE_IDLE
+    override fun isIdle() = mCurrentState == IVideoPlayer.STATE_IDLE
 
-    override fun isPreparing() = mCurrentState == INiceVideoPlayer.STATE_PREPARING
+    override fun isPreparing() = mCurrentState == IVideoPlayer.STATE_PREPARING
 
-    override fun isPrepared() = mCurrentState == INiceVideoPlayer.STATE_PREPARED
+    override fun isPrepared() = mCurrentState == IVideoPlayer.STATE_PREPARED
 
-    override fun isBufferingPlaying() = mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PLAYING
+    override fun isBufferingPlaying() = mCurrentState == IVideoPlayer.STATE_BUFFERING_PLAYING
 
-    override fun isBufferingPaused() = mCurrentState == INiceVideoPlayer.STATE_BUFFERING_PAUSED
+    override fun isBufferingPaused() = mCurrentState == IVideoPlayer.STATE_BUFFERING_PAUSED
 
-    override fun isPlaying() = mCurrentState == INiceVideoPlayer.STATE_PLAYING
+    override fun isPlaying() = mCurrentState == IVideoPlayer.STATE_PLAYING
 
-    override fun isPaused() = mCurrentState == INiceVideoPlayer.STATE_PAUSED
+    override fun isPaused() = mCurrentState == IVideoPlayer.STATE_PAUSED
 
-    override fun isError() = mCurrentState == INiceVideoPlayer.STATE_ERROR
+    override fun isError() = mCurrentState == IVideoPlayer.STATE_ERROR
 
-    override fun isCompleted() = mCurrentState == INiceVideoPlayer.STATE_COMPLETED
+    override fun isCompleted() = mCurrentState == IVideoPlayer.STATE_COMPLETED
 
-    override fun isFullScreen() = mCurrentMode == INiceVideoPlayer.MODE_FULL_SCREEN
+    override fun isFullScreen() = mCurrentMode == IVideoPlayer.MODE_FULL_SCREEN
 
-    override fun isTinyWindow() = mCurrentMode == INiceVideoPlayer.MODE_TINY_WINDOW
+    override fun isTinyWindow() = mCurrentMode == IVideoPlayer.MODE_TINY_WINDOW
 
-    override fun isNormal() = mCurrentMode == INiceVideoPlayer.MODE_NORMAL
+    override fun isNormal() = mCurrentMode == IVideoPlayer.MODE_NORMAL
 
     override fun getMaxVolume() = mAudioManager?.getStreamMaxVolume(AudioManager.STREAM_MUSIC) ?: 0
 
@@ -373,14 +373,14 @@ class AliVideoPlayer(
             setDataSource(urlSource)
             setSurface(surfaceHolder?.surface)
             prepare()
-            mCurrentState = INiceVideoPlayer.STATE_PREPARING
+            mCurrentState = IVideoPlayer.STATE_PREPARING
             mController?.onPlayStateChanged(mCurrentState)
             LogUtil.d("STATE_PREPARING")
         }
     }
 
     private val mOnPreparedListener = IPlayer.OnPreparedListener {
-        mCurrentState = INiceVideoPlayer.STATE_PREPARED
+        mCurrentState = IVideoPlayer.STATE_PREPARED
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
@@ -414,7 +414,7 @@ class AliVideoPlayer(
     private val mOnCompletionListener = IPlayer.OnCompletionListener {
         //设置了循环播放后，就不会再执行这个回调了
         LogUtil.d("onCompletion ——> STATE_COMPLETED")
-        mCurrentState = INiceVideoPlayer.STATE_COMPLETED
+        mCurrentState = IVideoPlayer.STATE_COMPLETED
         mController?.onPlayStateChanged(mCurrentState)
         onCompletionCallback?.invoke()
         // 清除屏幕常亮
@@ -424,7 +424,7 @@ class AliVideoPlayer(
     }
     private val mOnErrorListener = IPlayer.OnErrorListener {
         //出错事件
-        mCurrentState = INiceVideoPlayer.STATE_ERROR
+        mCurrentState = IVideoPlayer.STATE_ERROR
         mController?.onPlayStateChanged(mCurrentState)
         LogUtil.d("onError ——> STATE_ERROR")
     }
@@ -433,8 +433,8 @@ class AliVideoPlayer(
         LogUtil.d("onRenderingStart")
         onVideoRenderStartCallback?.invoke()
         // 这里先回调mController#STATE_RENDERING_START，然后如果不是isStartToPause再回调STATE_PLAYING
-        mCurrentState = INiceVideoPlayer.STATE_PLAYING
-        mController?.onPlayStateChanged(INiceVideoPlayer.STATE_RENDERING_START)
+        mCurrentState = IVideoPlayer.STATE_PLAYING
+        mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
         if (isStartToPause) {
             pause()
             isStartToPause = false
@@ -448,11 +448,11 @@ class AliVideoPlayer(
             override fun onLoadingBegin() {
                 //缓冲开始, 可能还没播放画面就开始缓冲
                 if (isPaused || isBufferingPaused) {
-                    mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PAUSED
+                    mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
                     onBufferPauseCallback?.invoke()
                     LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
                 } else {
-                    mCurrentState = INiceVideoPlayer.STATE_BUFFERING_PLAYING
+                    mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
                     onBufferPlayingCallback?.invoke()
                     LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING")
                 }
@@ -468,13 +468,13 @@ class AliVideoPlayer(
                 //缓冲结束
                 if (isBufferingPlaying) {
                     LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
-                    mCurrentState = INiceVideoPlayer.STATE_PLAYING
+                    mCurrentState = IVideoPlayer.STATE_PLAYING
                     mController?.onPlayStateChanged(mCurrentState)
                     onPlayingCallback?.invoke()
                 }
                 if (isBufferingPaused) {
                     LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED")
-                    mCurrentState = INiceVideoPlayer.STATE_PAUSED
+                    mCurrentState = IVideoPlayer.STATE_PAUSED
                     mController?.onPlayStateChanged(mCurrentState)
                     onPauseCallback?.invoke()
                 }
@@ -526,7 +526,7 @@ class AliVideoPlayer(
             ViewGroup.LayoutParams.MATCH_PARENT
         )
         contentView.addView(mContainer, params)
-        mCurrentMode = INiceVideoPlayer.MODE_FULL_SCREEN
+        mCurrentMode = IVideoPlayer.MODE_FULL_SCREEN
         mController?.onPlayModeChanged(mCurrentMode)
         LogUtil.d("MODE_FULL_SCREEN")
     }
@@ -552,7 +552,7 @@ class AliVideoPlayer(
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             this.addView(mContainer, params)
-            mCurrentMode = INiceVideoPlayer.MODE_NORMAL
+            mCurrentMode = IVideoPlayer.MODE_NORMAL
             mController?.onPlayModeChanged(mCurrentMode)
             LogUtil.d("MODE_NORMAL")
             return true
@@ -577,7 +577,7 @@ class AliVideoPlayer(
         params.rightMargin = NiceUtil.dp2px(mContext, 8f)
         params.bottomMargin = NiceUtil.dp2px(mContext, 8f)
         contentView.addView(mContainer, params)
-        mCurrentMode = INiceVideoPlayer.MODE_TINY_WINDOW
+        mCurrentMode = IVideoPlayer.MODE_TINY_WINDOW
         mController?.onPlayModeChanged(mCurrentMode)
         LogUtil.d("MODE_TINY_WINDOW")
     }
@@ -595,7 +595,7 @@ class AliVideoPlayer(
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             this.addView(mContainer, params)
-            mCurrentMode = INiceVideoPlayer.MODE_NORMAL
+            mCurrentMode = IVideoPlayer.MODE_NORMAL
             mController?.onPlayModeChanged(mCurrentMode)
             LogUtil.d("MODE_NORMAL")
             return true
@@ -614,7 +614,7 @@ class AliVideoPlayer(
         surfaceHolder = null
         // 解决释放播放器时黑一下,使用TextureView没有该问题
         Handler(Looper.getMainLooper()).post { mContainer?.removeView(surfaceView) }
-        mCurrentState = INiceVideoPlayer.STATE_IDLE
+        mCurrentState = IVideoPlayer.STATE_IDLE
     }
 
     override fun release() {
@@ -631,7 +631,7 @@ class AliVideoPlayer(
         if (isTinyWindow) {
             exitTinyWindow()
         }
-        mCurrentMode = INiceVideoPlayer.MODE_NORMAL
+        mCurrentMode = IVideoPlayer.MODE_NORMAL
         // 恢复控制器
         mController?.reset()
         // 释放播放器
