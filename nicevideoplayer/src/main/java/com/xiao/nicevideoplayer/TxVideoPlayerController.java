@@ -3,7 +3,6 @@ package com.xiao.nicevideoplayer;
 import com.xiao.nicevideoplayer.player.AliVideoPlayer;
 import com.xiao.nicevideoplayer.player.IJKTextureVideoPlayer;
 import com.xiao.nicevideoplayer.player.INiceVideoPlayer;
-import com.xiao.nicevideoplayer.player.MediaVideoPlayer;
 import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import android.content.BroadcastReceiver;
@@ -33,7 +32,7 @@ import androidx.annotation.DrawableRes;
  * 仿腾讯视频热点列表页播放器控制器.
  */
 public class TxVideoPlayerController
-        extends NiceVideoPlayerController
+        extends VideoPlayerController
         implements View.OnClickListener,
                    SeekBar.OnSeekBarChangeListener,
                    ChangeClarityDialog.OnClarityChangedListener {

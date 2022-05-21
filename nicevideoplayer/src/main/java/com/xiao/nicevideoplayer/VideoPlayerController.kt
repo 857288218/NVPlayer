@@ -13,7 +13,7 @@ import com.xiao.nicevideoplayer.utils.NiceUtil
 import java.util.*
 import kotlin.math.abs
 
-abstract class NiceVideoPlayerController(val mContext: Context) : FrameLayout(mContext),
+abstract class VideoPlayerController(val mContext: Context) : FrameLayout(mContext),
     OnTouchListener {
 
     @JvmField

@@ -18,7 +18,7 @@ import com.aliyun.player.bean.InfoCode
 import com.aliyun.player.nativeclass.CacheConfig
 import com.aliyun.player.source.UrlSource
 import com.xiao.nicevideoplayer.NiceTextureView
-import com.xiao.nicevideoplayer.NiceVideoPlayerController
+import com.xiao.nicevideoplayer.VideoPlayerController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
@@ -40,7 +40,7 @@ class AliTextureVideoPlayer(
     private var mTextureView: NiceTextureView? = null
     private var mSurfaceTexture: SurfaceTexture? = null
     private var mSurface: Surface? = null
-    private var mController: NiceVideoPlayerController? = null
+    private var mController: VideoPlayerController? = null
     private var mUrl: String? = null
     private var mHeaders: Map<String, String>? = null
     private var mBufferPercentage = 0
@@ -88,7 +88,7 @@ class AliTextureVideoPlayer(
         mHeaders = headers
     }
 
-    fun setController(controller: NiceVideoPlayerController?) {
+    fun setController(controller: VideoPlayerController?) {
         mContainer?.removeView(mController)
         mController = controller
         mController?.let {

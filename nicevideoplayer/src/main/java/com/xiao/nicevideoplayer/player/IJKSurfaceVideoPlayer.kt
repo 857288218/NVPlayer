@@ -13,7 +13,7 @@ import android.view.SurfaceHolder
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.xiao.nicevideoplayer.NiceSurfaceView
-import com.xiao.nicevideoplayer.NiceVideoPlayerController
+import com.xiao.nicevideoplayer.VideoPlayerController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
@@ -38,7 +38,7 @@ class IJKSurfaceVideoPlayer(
     private var mContainer: FrameLayout? = null
     private var surfaceView: NiceSurfaceView? = null
     private var surfaceHolder: SurfaceHolder? = null
-    private var mController: NiceVideoPlayerController? = null
+    private var mController: VideoPlayerController? = null
     private var mUrl: String? = null
     private var mRawId: Int? = null
     private var mHeaders: Map<String, String>? = null
@@ -89,7 +89,7 @@ class IJKSurfaceVideoPlayer(
         mRawId = rawId
     }
 
-    fun setController(controller: NiceVideoPlayerController?, isAdd: Boolean = true) {
+    fun setController(controller: VideoPlayerController?, isAdd: Boolean = true) {
         mContainer?.removeView(mController)
         mController = controller
         mController?.run {

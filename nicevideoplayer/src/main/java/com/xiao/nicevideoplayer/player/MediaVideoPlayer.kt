@@ -16,7 +16,7 @@ import android.view.TextureView
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.xiao.nicevideoplayer.NiceTextureView
-import com.xiao.nicevideoplayer.NiceVideoPlayerController
+import com.xiao.nicevideoplayer.VideoPlayerController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
@@ -37,7 +37,7 @@ class MediaVideoPlayer constructor(
     private var mMediaPlayer: MediaPlayer? = null
     private var mContainer: FrameLayout? = null
     private var mTextureView: NiceTextureView? = null
-    private var mController: NiceVideoPlayerController? = null
+    private var mController: VideoPlayerController? = null
     private var mSurfaceTexture: SurfaceTexture? = null
     private var mSurface: Surface? = null
     private var mUrl: String? = null
@@ -92,7 +92,7 @@ class MediaVideoPlayer constructor(
         mRawId = rawId
     }
 
-    fun setController(controller: NiceVideoPlayerController?, isAdd: Boolean = true) {
+    fun setController(controller: VideoPlayerController?, isAdd: Boolean = true) {
         mContainer?.removeView(mController)
         mController = controller
         mController?.let {
