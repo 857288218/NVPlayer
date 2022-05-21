@@ -2,9 +2,6 @@ package com.xiao.nicevideoplayer.player;
 
 import java.util.Map;
 
-/**
- * NiceVideoPlayer抽象接口
- */
 public interface IVideoPlayer {
     /**
      * 播放错误

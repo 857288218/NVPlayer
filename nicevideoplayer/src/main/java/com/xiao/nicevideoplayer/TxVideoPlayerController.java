@@ -140,29 +140,25 @@ public class TxVideoPlayerController
         this.setOnClickListener(this);
     }
 
-    @Override
     public void setTitle(String title) {
         mTitle.setText(title);
     }
 
-    @Override
     public ImageView imageView() {
         return mImage;
     }
 
-    @Override
     public void setImage(@DrawableRes int resId) {
         mImage.setImageResource(resId);
     }
 
-    @Override
     public void setLength(long length) {
         mLength.setText(NiceUtil.formatTime(length));
     }
 
     @Override
-    public void setNiceVideoPlayer(IVideoPlayer niceVideoPlayer) {
-        super.setNiceVideoPlayer(niceVideoPlayer);
+    public void setVideoPlayer(IVideoPlayer niceVideoPlayer) {
+        super.setVideoPlayer(niceVideoPlayer);
         // 给播放器配置视频链接地址
         if (clarities != null && clarities.size() > 1 && mNiceVideoPlayer != null) {
             mNiceVideoPlayer.setUp(clarities.get(defaultClarityIndex).getVideoUrl(), null);
@@ -208,7 +204,8 @@ public class TxVideoPlayerController
                 mTop.setVisibility(View.GONE);
                 mBottom.setVisibility(View.GONE);
                 mLength.setVisibility(View.GONE);
-                if (!(mNiceVideoPlayer instanceof AliVideoPlayer) && !(mNiceVideoPlayer instanceof IJKTextureVideoPlayer)) {
+                if (!(mNiceVideoPlayer instanceof AliVideoPlayer)
+                        && !(mNiceVideoPlayer instanceof IJKTextureVideoPlayer)) {
                     mCenterStart.setVisibility(View.GONE);
                 }
                 break;
@@ -332,8 +329,6 @@ public class TxVideoPlayerController
 
     @Override
     public void reset() {
-        cancelUpdateProgressTimer();
-        cancelDismissTopBottomTimer();
         topBottomVisible = false;
         cancelUpdateProgressTimer();
         cancelDismissTopBottomTimer();

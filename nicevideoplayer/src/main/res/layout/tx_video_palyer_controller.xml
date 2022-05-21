@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
-    <!--底图 给个黑色：解决全屏播放时由于surfaceview挖洞会短暂显示之前的页面造成闪烁-->
+    <!--底图 给个黑色-->
     <ImageView
         android:background="#000000"
         android:id="@+id/image"

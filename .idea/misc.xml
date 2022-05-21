@@ -23,6 +23,7 @@
         <entry key="app/src/main/res/layout/item_alivideo.xml" value="0.2115036231884058" />
         <entry key="app/src/main/res/layout/item_ijk_texture_video.xml" value="0.22916666666666666" />
         <entry key="app/src/main/res/layout/item_video.xml" value="0.21739130434782608" />
+        <entry key="nicevideoplayer/src/main/res/layout/tx_video_palyer_controller.xml" value="0.2421875" />
       </map>
     </option>
   </component>

@@ -93,7 +93,7 @@ class IJKTextureVideoPlayer(
         mController = controller
         mController?.run {
             reset()
-            setNiceVideoPlayer(this@IJKTextureVideoPlayer)
+            setVideoPlayer(this@IJKTextureVideoPlayer)
             if (isAdd) {
                 mContainer?.addView(
                     this, LayoutParams(

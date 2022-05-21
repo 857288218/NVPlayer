@@ -93,7 +93,7 @@ class AliTextureVideoPlayer(
         mController = controller
         mController?.let {
             it.reset()
-            it.setNiceVideoPlayer(this)
+            it.setVideoPlayer(this)
             mContainer?.addView(
                 it,
                 LayoutParams(

@@ -94,7 +94,7 @@ class IJKSurfaceVideoPlayer(
         mController = controller
         mController?.run {
             reset()
-            setNiceVideoPlayer(this@IJKSurfaceVideoPlayer)
+            setVideoPlayer(this@IJKSurfaceVideoPlayer)
             if (isAdd) {
                 mContainer?.addView(
                     this, LayoutParams(

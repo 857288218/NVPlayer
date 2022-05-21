@@ -16,8 +16,8 @@ import android.view.TextureView
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.xiao.nicevideoplayer.NiceTextureView
-import com.xiao.nicevideoplayer.VideoPlayerController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
+import com.xiao.nicevideoplayer.VideoPlayerController
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 import java.io.IOException
@@ -97,7 +97,7 @@ class MediaVideoPlayer constructor(
         mController = controller
         mController?.let {
             it.reset()
-            it.setNiceVideoPlayer(this)
+            it.setVideoPlayer(this)
             if (isAdd) {
                 mContainer?.addView(
                     it,

@@ -5,12 +5,11 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
 import android.widget.FrameLayout
-import android.widget.ImageView
-import androidx.annotation.DrawableRes
 import com.aliyun.player.AliPlayer
 import com.xiao.nicevideoplayer.player.IVideoPlayer
 import com.xiao.nicevideoplayer.utils.NiceUtil
-import java.util.*
+import java.util.Timer
+import java.util.TimerTask
 import kotlin.math.abs
 
 abstract class VideoPlayerController(val mContext: Context) : FrameLayout(mContext),
@@ -31,69 +30,25 @@ abstract class VideoPlayerController(val mContext: Context) : FrameLayout(mConte
     private var mNewPosition: Long = 0
 
     @JvmField
-    protected var canUpdateProgress = true // Aliplayer使用,是否允许更新进入ui,手动拖动进度条时为false
+    protected var canUpdateProgress = true // Aliplayer使用,是否允许更新进度ui,手动拖动进度条时为false
 
     init {
         this.setOnTouchListener(this)
     }
 
-    open fun setNiceVideoPlayer(niceVideoPlayer: IVideoPlayer?) {
+    open fun setVideoPlayer(niceVideoPlayer: IVideoPlayer?) {
         mNiceVideoPlayer = niceVideoPlayer
     }
 
     /**
-     * 设置播放的视频的标题
-     *
-     * @param title 视频标题
-     */
-    abstract fun setTitle(title: String?)
-
-    /**
-     * 视频底图
-     *
-     * @param resId 视频底图资源
-     */
-    abstract fun setImage(@DrawableRes resId: Int)
-
-    /**
-     * 视频底图ImageView控件，提供给外部用图片加载工具来加载网络图片
-     *
-     * @return 底图ImageView
-     */
-    abstract fun imageView(): ImageView?
-
-    /**
-     * 设置总时长.
-     */
-    abstract fun setLength(length: Long)
-
-    /**
-     * 当播放器的播放状态发生变化，在此方法中更新不同的播放状态的UI
-     *
-     * @param playState 播放状态：
-     *                  <ul>
-     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_IDLE}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_PREPARING}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_PREPARED}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_PLAYING}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_PAUSED}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_BUFFERING_PLAYING}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_BUFFERING_PAUSED}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_ERROR}</li>
-     *                  <li>{@link IJKSurfaceVideoPlayerJava#STATE_COMPLETED}</li>
-     *                  </ul>
+     * 当播放器的播放状态发生变化，在此方法中更新不同的播放状态UI
      */
     abstract fun onPlayStateChanged(playState: Int)
 
     /**
      * 当播放器的播放模式发生变化，在此方法中更新不同模式下的控制器界面。
      *
-     * @param playMode 播放器的模式：
-     *                 <ul>
-     *                 <li>{@link IJKSurfaceVideoPlayerJava#MODE_NORMAL}</li>
-     *                 <li>{@link IJKSurfaceVideoPlayerJava#MODE_FULL_SCREEN}</li>
-     *                 <li>{@link IJKSurfaceVideoPlayerJava#MODE_TINY_WINDOW}</li>
-     *                 </ul>
+     * @param playMode 播放器的模式：MODE_NORMAL MODE_FULL_SCREEN MODE_TINY_WINDOW
      */
     abstract fun onPlayModeChanged(playMode: Int)
 
