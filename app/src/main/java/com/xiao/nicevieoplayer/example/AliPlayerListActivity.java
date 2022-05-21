@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
-import com.xiao.nicevideoplayer.player.AliVideoPlayer;
+import com.xiao.nicevideoplayer.player.AliVideoView;
 import com.xiao.nicevideoplayer.utils.ScreenRotateUtils;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.adapter.AliVideoAdapter;
@@ -42,7 +42,7 @@ public class AliPlayerListActivity extends CompatHomeKeyActivity implements Scre
             public void onChildViewDetachedFromWindow(View view) {
                 //屏幕中最后一个可见item在进入全屏后会执行该回调，导致释放播放器了
                 //解决：设置一个一个标志变量进入全屏时禁止release，退出全屏可以release
-                AliVideoPlayer niceVideoPlayer = view.findViewById(R.id.nice_video_player);
+                AliVideoView niceVideoPlayer = view.findViewById(R.id.nice_video_player);
                 if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) {
                     NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
                 }

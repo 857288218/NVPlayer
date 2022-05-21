@@ -5,15 +5,15 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.xiao.nicevideoplayer.player.AliVideoPlayer;
+import com.xiao.nicevideoplayer.player.AliVideoView;
 import com.xiao.nicevideoplayer.utils.ScreenRotateUtils;
-import com.xiao.nicevideoplayer.TxVideoPlayerController;
+import com.xiao.nicevideoplayer.MyVideoViewController;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.base.CompatHomeKeyActivity;
 
 public class TinyWindowPlayActivity extends CompatHomeKeyActivity implements ScreenRotateUtils.OrientationChangeListener {
 
-    private AliVideoPlayer mNiceVideoPlayer;
+    private AliVideoView mNiceVideoPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +28,7 @@ public class TinyWindowPlayActivity extends CompatHomeKeyActivity implements Scr
         mNiceVideoPlayer.setUp(videoUrl, null);
         mNiceVideoPlayer.setLooping(true);
 
-        TxVideoPlayerController controller = new TxVideoPlayerController(this);
+        MyVideoViewController controller = new MyVideoViewController(this);
         controller.setTitle("办公室小野开番外了，居然在办公室开澡堂！老板还点赞？");
         controller.setLength(98000);
         Glide.with(this)

@@ -12,7 +12,7 @@ import java.util.Timer
 import java.util.TimerTask
 import kotlin.math.abs
 
-abstract class VideoPlayerController(val mContext: Context) : FrameLayout(mContext),
+abstract class VideoViewController(val mContext: Context) : FrameLayout(mContext),
     OnTouchListener {
 
     @JvmField

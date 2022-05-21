@@ -3,8 +3,8 @@ package com.xiao.nicevieoplayer.example
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.xiao.nicevideoplayer.player.AliVideoPlayer
-import com.xiao.nicevideoplayer.player.MediaVideoPlayer
+import com.xiao.nicevideoplayer.player.AliVideoView
+import com.xiao.nicevideoplayer.player.MediaVideoView
 import com.xiao.nicevieoplayer.R
 
 class VideoDetailActivity : AppCompatActivity() {
@@ -23,8 +23,8 @@ class VideoDetailActivity : AppCompatActivity() {
     private val videoUrlBottom =
         "https://mtenroll.oss-cn-hangzhou.aliyuncs.com/ueditor/video/20180131/6365302297303492635856363.mp4"
 
-    private lateinit var videoPlayer: AliVideoPlayer
-    private lateinit var videoPlayer2: MediaVideoPlayer
+    private lateinit var videoPlayer: AliVideoView
+    private lateinit var videoPlayer2: MediaVideoView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

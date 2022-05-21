@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoView;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.adapter.VideoAdapter;
 import com.xiao.nicevieoplayer.example.base.CompatHomeKeyActivity;
@@ -40,7 +40,7 @@ public class IJKSurfaceListActivity extends CompatHomeKeyActivity {
 
             @Override
             public void onChildViewDetachedFromWindow(View view) {
-                IJKSurfaceVideoPlayer niceVideoPlayer = view.findViewById(R.id.nice_video_player);
+                IJKSurfaceVideoView niceVideoPlayer = view.findViewById(R.id.nice_video_player);
                 if (niceVideoPlayer == NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) {
                     NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
                 }

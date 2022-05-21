@@ -7,9 +7,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.xiao.nicevideoplayer.Clarity;
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
-import com.xiao.nicevideoplayer.TxVideoPlayerController;
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
-import com.xiao.nicevideoplayer.player.IJKTextureVideoPlayer;
+import com.xiao.nicevideoplayer.MyVideoViewController;
+import com.xiao.nicevideoplayer.player.IJKTextureVideoView;
 import com.xiao.nicevieoplayer.R;
 
 import java.util.ArrayList;
@@ -17,7 +16,7 @@ import java.util.List;
 
 public class ChangeClarityActivity extends AppCompatActivity {
 
-    private IJKTextureVideoPlayer mNiceVideoPlayer;
+    private IJKTextureVideoView mNiceVideoPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,8 +26,8 @@ public class ChangeClarityActivity extends AppCompatActivity {
     }
 
     private void init() {
-        mNiceVideoPlayer = (IJKTextureVideoPlayer) findViewById(R.id.nice_video_player);
-        TxVideoPlayerController controller = new TxVideoPlayerController(this);
+        mNiceVideoPlayer = (IJKTextureVideoView) findViewById(R.id.nice_video_player);
+        MyVideoViewController controller = new MyVideoViewController(this);
         controller.setTitle("Beautiful China...");
         controller.setLength(117000);
         controller.setClarity(getClarites(), 0);

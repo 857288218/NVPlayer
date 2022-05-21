@@ -13,7 +13,7 @@ import android.view.SurfaceHolder
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.xiao.nicevideoplayer.NiceSurfaceView
-import com.xiao.nicevideoplayer.VideoPlayerController
+import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
@@ -25,7 +25,7 @@ import java.io.IOException
 // 1.切后台暂停后，回到前台不主动播放，会黑屏。使用TextureView或AliPlayer没问题；
 // 2.MEDIA_INFO_VIDEO_RENDERING_START回调不会马上显示画面会闪黑一下，使用TextureView或AliPlayer没问题
 // 如果使用IJKPlayer建议使用TextuewView显示画面;该类不是最新代码不维护了，如果非要使用surfaceView，需要将该类同步IJKTexture的逻辑代码
-class IJKSurfaceVideoPlayer(
+class IJKSurfaceVideoView(
     private val mContext: Context,
     attrs: AttributeSet? = null
 ) : FrameLayout(mContext, attrs), IVideoPlayer, SurfaceHolder.Callback {
@@ -38,7 +38,7 @@ class IJKSurfaceVideoPlayer(
     private var mContainer: FrameLayout? = null
     private var surfaceView: NiceSurfaceView? = null
     private var surfaceHolder: SurfaceHolder? = null
-    private var mController: VideoPlayerController? = null
+    private var mController: VideoViewController? = null
     private var mUrl: String? = null
     private var mRawId: Int? = null
     private var mHeaders: Map<String, String>? = null
@@ -89,12 +89,12 @@ class IJKSurfaceVideoPlayer(
         mRawId = rawId
     }
 
-    fun setController(controller: VideoPlayerController?, isAdd: Boolean = true) {
+    fun setController(controller: VideoViewController?, isAdd: Boolean = true) {
         mContainer?.removeView(mController)
         mController = controller
         mController?.run {
             reset()
-            setVideoPlayer(this@IJKSurfaceVideoPlayer)
+            setVideoPlayer(this@IJKSurfaceVideoView)
             if (isAdd) {
                 mContainer?.addView(
                     this, LayoutParams(

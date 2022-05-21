@@ -2,8 +2,8 @@ package com.xiao.nicevieoplayer.example.adapter.holder;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.xiao.nicevideoplayer.TxVideoPlayerController;
-import com.xiao.nicevideoplayer.player.AliVideoPlayer;
+import com.xiao.nicevideoplayer.MyVideoViewController;
+import com.xiao.nicevideoplayer.player.AliVideoView;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.bean.Video;
 
@@ -13,15 +13,15 @@ import android.view.View;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class AliVideoViewHolder extends RecyclerView.ViewHolder {
-    public TxVideoPlayerController mController;
-    public AliVideoPlayer mVideoPlayer;
+    public MyVideoViewController mController;
+    public AliVideoView mVideoPlayer;
 
     public AliVideoViewHolder(View itemView) {
         super(itemView);
         mVideoPlayer = itemView.findViewById(R.id.nice_video_player);
     }
 
-    public void setController(TxVideoPlayerController controller) {
+    public void setController(MyVideoViewController controller) {
         mController = controller;
         mVideoPlayer.setController(mController);
     }

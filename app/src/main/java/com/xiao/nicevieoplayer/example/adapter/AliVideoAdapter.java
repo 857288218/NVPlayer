@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.xiao.nicevideoplayer.TxVideoPlayerController;
+import com.xiao.nicevideoplayer.MyVideoViewController;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.adapter.holder.AliVideoViewHolder;
 import com.xiao.nicevieoplayer.example.bean.Video;
@@ -27,7 +27,7 @@ public class AliVideoAdapter extends RecyclerView.Adapter<AliVideoViewHolder>{
     public AliVideoViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_alivideo, parent, false);
         AliVideoViewHolder holder = new AliVideoViewHolder(itemView);
-        TxVideoPlayerController controller = new TxVideoPlayerController(mContext);
+        MyVideoViewController controller = new MyVideoViewController(mContext);
         holder.setController(controller);
 //        holder.mVideoPlayer.setLooping(true);
         return holder;

@@ -6,15 +6,15 @@ import android.view.ViewGroup;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.xiao.nicevideoplayer.TxVideoPlayerController;
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
+import com.xiao.nicevideoplayer.MyVideoViewController;
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoView;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.bean.Video;
 
 public class VideoViewHolder extends RecyclerView.ViewHolder {
 
-    public TxVideoPlayerController mController;
-    public IJKSurfaceVideoPlayer mVideoPlayer;
+    public MyVideoViewController mController;
+    public IJKSurfaceVideoView mVideoPlayer;
 
     public VideoViewHolder(View itemView) {
         super(itemView);
@@ -26,7 +26,7 @@ public class VideoViewHolder extends RecyclerView.ViewHolder {
         mVideoPlayer.setLayoutParams(params);
     }
 
-    public void setController(TxVideoPlayerController controller) {
+    public void setController(MyVideoViewController controller) {
         mController = controller;
         mVideoPlayer.setController(mController, true);
     }

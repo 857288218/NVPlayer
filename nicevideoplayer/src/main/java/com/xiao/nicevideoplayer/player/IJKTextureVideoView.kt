@@ -5,39 +5,35 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.SurfaceTexture
 import android.media.AudioManager
-import android.media.MediaPlayer
-import android.media.MediaPlayer.SEEK_CLOSEST
 import android.net.Uri
-import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.Surface
-import android.view.TextureView
+import android.view.TextureView.SurfaceTextureListener
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.xiao.nicevideoplayer.NiceTextureView
+import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
-import com.xiao.nicevideoplayer.VideoPlayerController
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
+import tv.danmaku.ijk.media.player.IMediaPlayer
+import tv.danmaku.ijk.media.player.IjkMediaPlayer
 import java.io.IOException
 
-//问题：
-// 1.start(pos)/startToPause(pos)精准seek显示画面慢(seek到的地方是关键帧不会慢),即首帧回调比prepared回调慢1.5s左右；IJKPlayer 700ms左右
-//   如果是start()那么prepared回调后会马上回调首帧回调
-// 2.只支持硬解
-class MediaVideoPlayer constructor(
+class IJKTextureVideoView(
     private val mContext: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(mContext, attrs), IVideoPlayer, TextureView.SurfaceTextureListener {
+) : FrameLayout(mContext, attrs), IVideoPlayer, SurfaceTextureListener {
+
     private var mCurrentState = IVideoPlayer.STATE_IDLE
     private var mCurrentMode = IVideoPlayer.MODE_NORMAL
 
     private var mAudioManager: AudioManager? = null
-    private var mMediaPlayer: MediaPlayer? = null
+    private var mMediaPlayer: IjkMediaPlayer? = null
     private var mContainer: FrameLayout? = null
     private var mTextureView: NiceTextureView? = null
-    private var mController: VideoPlayerController? = null
+    private var mController: VideoViewController? = null
     private var mSurfaceTexture: SurfaceTexture? = null
     private var mSurface: Surface? = null
     private var mUrl: String? = null
@@ -92,16 +88,15 @@ class MediaVideoPlayer constructor(
         mRawId = rawId
     }
 
-    fun setController(controller: VideoPlayerController?, isAdd: Boolean = true) {
+    fun setController(controller: VideoViewController?, isAdd: Boolean = true) {
         mContainer?.removeView(mController)
         mController = controller
-        mController?.let {
-            it.reset()
-            it.setVideoPlayer(this)
+        mController?.run {
+            reset()
+            setVideoPlayer(this@IJKTextureVideoView)
             if (isAdd) {
                 mContainer?.addView(
-                    it,
-                    LayoutParams(
+                    this, LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
@@ -134,6 +129,7 @@ class MediaVideoPlayer constructor(
     }
 
     override fun setSpeed(speed: Float) {
+        (mMediaPlayer as IjkMediaPlayer).setSpeed(speed)
     }
 
     override fun start() {
@@ -211,7 +207,7 @@ class MediaVideoPlayer constructor(
             onPauseCallback?.invoke()
             LogUtil.d("STATE_PAUSED")
         }
-        if (isBufferingPlaying) {
+        if (isBufferingPaused) {
             mMediaPlayer!!.pause()
             mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
@@ -224,11 +220,7 @@ class MediaVideoPlayer constructor(
         if (mMediaPlayer == null) {
             start(pos)
         } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                mMediaPlayer!!.seekTo(pos, SEEK_CLOSEST)
-            } else {
-                mMediaPlayer!!.seekTo(pos.toInt())
-            }
+            mMediaPlayer!!.seekTo(pos)
         }
     }
 
@@ -264,19 +256,13 @@ class MediaVideoPlayer constructor(
 
     override fun getVolume(): Int = mAudioManager?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: 0
 
-    override fun getDuration() = mMediaPlayer?.duration?.toLong() ?: 0
+    override fun getDuration(): Long = mMediaPlayer?.duration ?: 0
 
-    override fun getCurrentPosition(): Long {
-        return try {
-            mMediaPlayer?.currentPosition?.toLong() ?: 0
-        } catch (e: Exception) {
-            0
-        }
-    }
+    override fun getCurrentPosition(): Long = mMediaPlayer?.currentPosition ?: 0
 
     override fun getBufferPercentage(): Int = mBufferPercentage
 
-    override fun getSpeed(speed: Float) = 0f
+    override fun getSpeed(speed: Float) = mMediaPlayer?.getSpeed(speed) ?: 0F
 
     private fun initAudioManager() {
         if (mAudioManager == null) {
@@ -292,7 +278,17 @@ class MediaVideoPlayer constructor(
 
     private fun initMediaPlayer() {
         if (mMediaPlayer == null) {
-            mMediaPlayer = MediaPlayer()
+            // 这里player不设置属性，播放错误重新播放会主动调用reset清空属性 然后openMediaPlayer在这里设置
+            mMediaPlayer = IjkMediaPlayer()
+        }
+    }
+
+    private fun setOptions() {
+        if (mMediaPlayer != null) {
+            // 精准seek
+            mMediaPlayer?.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 1)
+            // 关闭prepared后自动播放
+            mMediaPlayer?.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0)
             mMediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
         }
     }
@@ -335,6 +331,7 @@ class MediaVideoPlayer constructor(
         // 屏幕常亮
         mContainer?.keepScreenOn = true
         mMediaPlayer?.run {
+            setOptions()
             //设置是否循环播放
             isLooping = isLoop
             // 设置监听
@@ -348,7 +345,8 @@ class MediaVideoPlayer constructor(
             try {
                 if (mRawId != null) {
                     val afd = resources.openRawResourceFd(mRawId!!)
-                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                    val rawDataSourceProvider = IJKRawDataSourceProvider(afd)
+                    setDataSource(rawDataSourceProvider)
                 } else {
                     setDataSource(mContext.applicationContext, Uri.parse(mUrl), mHeaders)
                 }
@@ -377,16 +375,16 @@ class MediaVideoPlayer constructor(
     }
 
     override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
-        // LogUtil.d("onSurfaceTextureUpdated")
     }
 
-    private val mOnPreparedListener = MediaPlayer.OnPreparedListener { mp ->
+    private val mOnPreparedListener = IMediaPlayer.OnPreparedListener { mp ->
         mCurrentState = IVideoPlayer.STATE_PREPARED
-        //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
+        //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration()
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
 
+        // seekTo只能在start后调用，start前调用seekTo无作用
         if (!isOnlyPrepare) {
             mp.start()
         }
@@ -409,12 +407,12 @@ class MediaVideoPlayer constructor(
     }
 
     private val mOnVideoSizeChangedListener =
-        MediaPlayer.OnVideoSizeChangedListener { _: MediaPlayer, width, height ->
+        IMediaPlayer.OnVideoSizeChangedListener { _: IMediaPlayer, width, height, _, _ ->
             mTextureView?.adaptVideoSize(width, height)
             LogUtil.d("onVideoSizeChanged ——> width：$width， height：$height")
         }
 
-    private val mOnCompletionListener = MediaPlayer.OnCompletionListener {
+    private val mOnCompletionListener = IMediaPlayer.OnCompletionListener {
         //设置了循环播放后，就不会再执行这个回调了
         mCurrentState = IVideoPlayer.STATE_COMPLETED
         mController?.onPlayStateChanged(mCurrentState)
@@ -423,11 +421,11 @@ class MediaVideoPlayer constructor(
         // 清除屏幕常亮
         mContainer?.keepScreenOn = false
         // 重置当前播放进度
-//        NiceUtil.savePlayPosition(context, mUrl, 0)
+        NiceUtil.savePlayPosition(context, mUrl, 0)
     }
 
     private val mOnErrorListener =
-        MediaPlayer.OnErrorListener { _: MediaPlayer, what, extra ->
+        IMediaPlayer.OnErrorListener { _: IMediaPlayer, what, extra ->
             // 直播流播放时去调用mediaPlayer.getDuration会导致-38和-2147483648错误，忽略该错误
             if (what != -38 && what != -2147483648 && extra != -38 && extra != -2147483648) {
                 mCurrentState = IVideoPlayer.STATE_ERROR
@@ -437,8 +435,8 @@ class MediaVideoPlayer constructor(
             true
         }
 
-    private val mOnInfoListener = MediaPlayer.OnInfoListener { _: MediaPlayer, what, extra ->
-        if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+    private val mOnInfoListener = IMediaPlayer.OnInfoListener { _: IMediaPlayer, what, extra ->
+        if (what == IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
             // 播放器开始渲染,当循环播放时，不会回调MEDIA_INFO_VIDEO_RENDERING_START
             LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_RENDERING_START：STATE_PLAYING")
             onVideoRenderStartCallback?.invoke()
@@ -452,9 +450,9 @@ class MediaVideoPlayer constructor(
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
             }
-        } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
-            // MediaPlayer暂时不播放，以缓冲更多的数据
-            if (isPaused || isBufferingPaused) {
+        } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
+            // MediaPlayer暂时不播放，以缓冲更多的数据；该回调可能早于MEDIA_INFO_VIDEO_RENDERING_START
+            if (mCurrentState == IVideoPlayer.STATE_PAUSED || mCurrentState == IVideoPlayer.STATE_BUFFERING_PAUSED) {
                 mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
                 onBufferPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
@@ -464,21 +462,25 @@ class MediaVideoPlayer constructor(
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING")
             }
             mController?.onPlayStateChanged(mCurrentState)
-        } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
+        } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_END) {
             // 填充缓冲区后，MediaPlayer恢复播放/暂停
-            if (isBufferingPlaying) {
+            if (mCurrentState == IVideoPlayer.STATE_BUFFERING_PLAYING) {
                 mCurrentState = IVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
             }
-            if (isBufferingPaused) {
+            if (mCurrentState == IVideoPlayer.STATE_BUFFERING_PAUSED) {
                 mCurrentState = IVideoPlayer.STATE_PAUSED
                 mController?.onPlayStateChanged(mCurrentState)
                 onPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED")
             }
-        } else if (what == MediaPlayer.MEDIA_INFO_NOT_SEEKABLE) {
+        } else if (what == IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED) {
+            // 视频旋转了extra度，需要恢复
+            mTextureView?.rotation = extra.toFloat()
+            LogUtil.d("视频旋转角度：$extra")
+        } else if (what == IMediaPlayer.MEDIA_INFO_NOT_SEEKABLE) {
             LogUtil.d("视频不能seekTo，为直播视频")
         } else {
             LogUtil.d("onInfo ——> what：$what")
@@ -487,7 +489,7 @@ class MediaVideoPlayer constructor(
     }
 
     private val mOnBufferingUpdateListener =
-        MediaPlayer.OnBufferingUpdateListener { _: MediaPlayer, percent ->
+        IMediaPlayer.OnBufferingUpdateListener { _: IMediaPlayer, percent ->
             mBufferPercentage = percent
         }
 
@@ -613,11 +615,11 @@ class MediaVideoPlayer constructor(
 
     override fun release() {
         // 保存播放位置
-//        if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
-//            NiceUtil.savePlayPosition(mContext, mUrl, currentPosition)
-//        } else if (isCompleted) {
-//            NiceUtil.savePlayPosition(mContext, mUrl, 0)
-//        }
+        if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
+            NiceUtil.savePlayPosition(mContext, mUrl, currentPosition)
+        } else if (isCompleted) {
+            NiceUtil.savePlayPosition(mContext, mUrl, 0)
+        }
         // 退出全屏或小窗口
         if (isFullScreen) {
             exitFullScreen()

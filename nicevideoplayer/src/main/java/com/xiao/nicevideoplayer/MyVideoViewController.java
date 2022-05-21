@@ -1,7 +1,7 @@
 package com.xiao.nicevideoplayer;
 
-import com.xiao.nicevideoplayer.player.AliVideoPlayer;
-import com.xiao.nicevideoplayer.player.IJKTextureVideoPlayer;
+import com.xiao.nicevideoplayer.player.AliVideoView;
+import com.xiao.nicevideoplayer.player.IJKTextureVideoView;
 import com.xiao.nicevideoplayer.player.IVideoPlayer;
 import com.xiao.nicevideoplayer.utils.NiceUtil;
 
@@ -31,8 +31,8 @@ import androidx.annotation.DrawableRes;
 /**
  * 仿腾讯视频热点列表页播放器控制器.
  */
-public class TxVideoPlayerController
-        extends VideoPlayerController
+public class MyVideoViewController
+        extends VideoViewController
         implements View.OnClickListener,
                    SeekBar.OnSeekBarChangeListener,
                    ChangeClarityDialog.OnClarityChangedListener {
@@ -88,7 +88,7 @@ public class TxVideoPlayerController
 
     private boolean hasRegisterBatteryReceiver; // 是否已经注册了电池广播
 
-    public TxVideoPlayerController(Context context) {
+    public MyVideoViewController(Context context) {
         super(context);
         mContext = context;
         init();
@@ -204,15 +204,15 @@ public class TxVideoPlayerController
                 mTop.setVisibility(View.GONE);
                 mBottom.setVisibility(View.GONE);
                 mLength.setVisibility(View.GONE);
-                if (!(mNiceVideoPlayer instanceof AliVideoPlayer)
-                        && !(mNiceVideoPlayer instanceof IJKTextureVideoPlayer)) {
+                if (!(mNiceVideoPlayer instanceof AliVideoView)
+                        && !(mNiceVideoPlayer instanceof IJKTextureVideoView)) {
                     mCenterStart.setVisibility(View.GONE);
                 }
                 break;
             case IVideoPlayer.STATE_PREPARED:
                 mLoading.setVisibility(View.GONE);
                 mCompleted.setVisibility(View.GONE);
-                if (!(mNiceVideoPlayer instanceof AliVideoPlayer)) {
+                if (!(mNiceVideoPlayer instanceof AliVideoView)) {
                     startUpdateProgressTimer();
                 }
                 break;
@@ -494,7 +494,7 @@ public class TxVideoPlayerController
         startDismissTopBottomTimer();
         canUpdateProgress = true;
         //先这样解决拖动进度条AliPlayer seekTo后在onInfo回调中取到的currentPosition不是最新的，有延时。目的是避免seekbar拖动后大幅度跳动
-        if (!(mNiceVideoPlayer instanceof AliVideoPlayer)) {
+        if (!(mNiceVideoPlayer instanceof AliVideoView)) {
             startUpdateProgressTimer();
         }
     }

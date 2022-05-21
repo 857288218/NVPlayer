@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.xiao.nicevideoplayer.TxVideoPlayerController
+import com.xiao.nicevideoplayer.MyVideoViewController
 import com.xiao.nicevieoplayer.R
 import com.xiao.nicevieoplayer.example.VideoDetailActivity
 import com.xiao.nicevieoplayer.example.adapter.holder.IJKTextureHolder
@@ -18,7 +18,7 @@ class IJKTextureAdapter(private val mContext: Context, private val mVideoList: L
         val itemView =
             LayoutInflater.from(mContext).inflate(R.layout.item_ijk_texture_video, parent, false)
         val holder = IJKTextureHolder(itemView)
-        val controller = TxVideoPlayerController(mContext)
+        val controller = MyVideoViewController(mContext)
         holder.setController(controller)
         itemView.findViewById<TextView>(R.id.tv_detail).setOnClickListener {
             VideoDetailActivity.startActivity(mContext as AppCompatActivity, holder.mVideoPlayer.getUrl(), holder.mVideoPlayer.currentPosition)

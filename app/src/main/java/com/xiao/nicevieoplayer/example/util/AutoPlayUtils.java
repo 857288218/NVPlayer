@@ -6,7 +6,7 @@ import android.view.View;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoPlayer;
+import com.xiao.nicevideoplayer.player.IJKSurfaceVideoView;
 
 /**
  * 列表自动播放工具类
@@ -25,8 +25,8 @@ public class AutoPlayUtils {
         for (int i = 0; i <= lastVisiblePosition - firstVisiblePosition; i++) {
             View child = recyclerView.getChildAt(i);
             View view = child.findViewById(jzvdId);
-            if (view instanceof IJKSurfaceVideoPlayer) {
-                IJKSurfaceVideoPlayer player = (IJKSurfaceVideoPlayer) view;
+            if (view instanceof IJKSurfaceVideoView) {
+                IJKSurfaceVideoView player = (IJKSurfaceVideoView) view;
                 if (getViewVisiblePercent(player) == 1f) {
                     if (positionInList != i + firstVisiblePosition) {
                         if (player.isIdle()) {

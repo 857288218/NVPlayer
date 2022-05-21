@@ -6,14 +6,14 @@ import android.view.ViewGroup;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.xiao.nicevideoplayer.TxVideoPlayerController;
-import com.xiao.nicevideoplayer.player.IJKTextureVideoPlayer;
+import com.xiao.nicevideoplayer.MyVideoViewController;
+import com.xiao.nicevideoplayer.player.IJKTextureVideoView;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.bean.Video;
 
 public class IJKTextureHolder extends RecyclerView.ViewHolder {
-    public TxVideoPlayerController mController;
-    public IJKTextureVideoPlayer mVideoPlayer;
+    public MyVideoViewController mController;
+    public IJKTextureVideoView mVideoPlayer;
 
     public IJKTextureHolder(View itemView) {
         super(itemView);
@@ -26,7 +26,7 @@ public class IJKTextureHolder extends RecyclerView.ViewHolder {
         mVideoPlayer.continueFromLastPosition(false);
     }
 
-    public void setController(TxVideoPlayerController controller) {
+    public void setController(MyVideoViewController controller) {
         mController = controller;
         mVideoPlayer.setController(mController, true);
     }

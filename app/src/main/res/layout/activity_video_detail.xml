@@ -8,14 +8,14 @@
     tools:context=".example.VideoDetailActivity"
     tools:ignore="MissingDefaultResource">
 
-    <com.xiao.nicevideoplayer.player.AliVideoPlayer
+    <com.xiao.nicevideoplayer.player.AliVideoView
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:id="@+id/nice_video_player"
         android:layout_width="match_parent"
         android:layout_height="200dp"/>
 
-    <com.xiao.nicevideoplayer.player.MediaVideoPlayer
+    <com.xiao.nicevideoplayer.player.MediaVideoView
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/nice_video_player"
         android:id="@+id/nice_video_player2"

@@ -2,34 +2,34 @@ package com.xiao.nicevideoplayer.player
 
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.graphics.SurfaceTexture
 import android.media.AudioManager
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.Surface
-import android.view.TextureView
+import android.view.SurfaceHolder
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.aliyun.player.AliPlayer
 import com.aliyun.player.AliPlayerFactory
 import com.aliyun.player.IPlayer
+import com.aliyun.player.IPlayer.OnLoadingStatusListener
+import com.aliyun.player.IPlayer.OnRenderingStartListener
 import com.aliyun.player.bean.InfoCode
 import com.aliyun.player.nativeclass.CacheConfig
 import com.aliyun.player.source.UrlSource
-import com.xiao.nicevideoplayer.NiceTextureView
-import com.xiao.nicevideoplayer.VideoPlayerController
+import com.xiao.nicevideoplayer.NiceSurfaceView
+import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 
-// 不维护该类；如果使用TextureView填充画面，只参考相关部分，逻辑部分用AliVideoPlayer的
-class AliTextureVideoPlayer(
+// 问题：1.不支持播放项目raw/assets文件夹中视频
+class AliVideoView(
     private val mContext: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(
-    mContext, attrs
-), IVideoPlayer, TextureView.SurfaceTextureListener {
+) : FrameLayout(mContext, attrs), IVideoPlayer, SurfaceHolder.Callback {
 
     private var mCurrentState = IVideoPlayer.STATE_IDLE
     private var mCurrentMode = IVideoPlayer.MODE_NORMAL
@@ -37,21 +37,21 @@ class AliTextureVideoPlayer(
     private var mAudioManager: AudioManager? = null
     private var aliPlayer: AliPlayer? = null
     private var mContainer: FrameLayout? = null
-    private var mTextureView: NiceTextureView? = null
-    private var mSurfaceTexture: SurfaceTexture? = null
-    private var mSurface: Surface? = null
-    private var mController: VideoPlayerController? = null
+    private var surfaceView: NiceSurfaceView? = null
+    private var surfaceHolder: SurfaceHolder? = null
+    private var mController: VideoViewController? = null
     private var mUrl: String? = null
     private var mHeaders: Map<String, String>? = null
     private var mBufferPercentage = 0
     private var continueFromLastPosition = false
-    private var skipToPosition: Long = 0
+    private var startToPosition: Long = 0
     private var isLooping = false
     private var videoBgColor: Int? = null
     private var isMute = false
     private var scaleMode = IPlayer.ScaleMode.SCALE_ASPECT_FIT
     private var currentPosition: Long = 0
     private var isStartToPause = false
+    private var isOnlyPrepare = false
 
     var onCompletionCallback: (() -> Unit)? = null
 
@@ -88,7 +88,7 @@ class AliTextureVideoPlayer(
         mHeaders = headers
     }
 
-    fun setController(controller: VideoPlayerController?) {
+    fun setController(controller: VideoViewController?) {
         mContainer?.removeView(mController)
         mController = controller
         mController?.let {
@@ -133,54 +133,64 @@ class AliTextureVideoPlayer(
         this.continueFromLastPosition = continueFromLastPosition
     }
 
+    //支持0.5～5倍速的播放，通常按0.5的倍数来设置，例如0.5倍、1倍、1.5倍等
     override fun setSpeed(speed: Float) {
         aliPlayer?.speed = speed
     }
 
     override fun start() {
-        if (mCurrentState == IVideoPlayer.STATE_IDLE) {
-            NiceVideoPlayerManager.instance().currentNiceVideoPlayer = this
+        if (isIdle) {
             initAudioManager()
             initMediaPlayer()
-            initTextureView()
+            initSurfaceView()
             addSurfaceView()
-        } else if (mCurrentState == IVideoPlayer.STATE_COMPLETED
-            || mCurrentState == IVideoPlayer.STATE_ERROR
-            || mCurrentState == IVideoPlayer.STATE_PAUSED
-            || mCurrentState == IVideoPlayer.STATE_BUFFERING_PAUSED
-        ) {
+        } else if (isCompleted || isError || isPaused || isBufferingPaused) {
             restart()
+        } else if (isPrepared) {
+            aliPlayer?.start()
+            customStartToPos()
         } else {
-            LogUtil.d("NiceVideoPlayer只有在mCurrentState == STATE_IDLE时才能调用start方法.")
+            LogUtil.d("NiceVideoPlayer mCurrentState == ${mCurrentState}.不能调用start()")
         }
     }
 
-    // 如果skipToPosition ！= 0，在start前可以选择调整skipToPosition
-    fun fixSkipToPosition(delta: Long) {
-        if (skipToPosition > 0) {
-            skipToPosition += delta
+    // 如果startToPosition ！= 0，在start前可以选择调整skipToPosition
+    fun fixStarToPosition(delta: Long) {
+        if (startToPosition > 0) {
+            startToPosition += delta
         }
     }
 
     override fun start(position: Long) {
-        skipToPosition = position
+        startToPosition = position
+        start()
+    }
+
+    override fun startToPause(pos: Long) {
+        isStartToPause = true
+        start(pos)
+    }
+
+    fun prepare() {
+        isOnlyPrepare = true
         start()
     }
 
     override fun restart() {
-        if (mCurrentState == IVideoPlayer.STATE_PAUSED) {
+        if (isPaused) {
             LogUtil.d("STATE_PLAYING")
             aliPlayer!!.start()
             mCurrentState = IVideoPlayer.STATE_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onPlayingCallback?.invoke()
-        } else if (mCurrentState == IVideoPlayer.STATE_BUFFERING_PAUSED) {
+        } else if (isBufferingPaused) {
             LogUtil.d("STATE_BUFFERING_PLAYING")
             aliPlayer!!.start()
             mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onBufferPlayingCallback?.invoke()
-        } else if (mCurrentState == IVideoPlayer.STATE_COMPLETED || mCurrentState == IVideoPlayer.STATE_ERROR) {
+        } else if (isCompleted || isError) {
+            // todo(rjq) 播放完成后 再次播放不reset？ 但是直接调用aliPlayer.start没有重新播放 ijk会重新播放
             aliPlayer!!.reset()
             openMediaPlayer()
         } else {
@@ -189,14 +199,14 @@ class AliTextureVideoPlayer(
     }
 
     override fun pause() {
-        if (mCurrentState == IVideoPlayer.STATE_PLAYING || isStartToPause) {
+        if (isPlaying) {
             LogUtil.d("STATE_PAUSED")
             aliPlayer!!.pause()
             mCurrentState = IVideoPlayer.STATE_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
             onPauseCallback?.invoke()
         }
-        if (mCurrentState == IVideoPlayer.STATE_BUFFERING_PLAYING) {
+        if (isBufferingPlaying) {
             LogUtil.d("STATE_BUFFERING_PAUSED")
             aliPlayer!!.pause()
             mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
@@ -211,11 +221,6 @@ class AliTextureVideoPlayer(
         } else {
             aliPlayer!!.seekTo(pos, IPlayer.SeekMode.Accurate)
         }
-    }
-
-    override fun startToPause(pos: Long) {
-        isStartToPause = true
-        seekTo(pos)
     }
 
     override fun setVolume(volume: Int) {
@@ -273,6 +278,11 @@ class AliTextureVideoPlayer(
     private fun initMediaPlayer() {
         if (aliPlayer == null) {
             aliPlayer = AliPlayerFactory.createAliPlayer(mContext)
+        }
+    }
+
+    private fun setConfig() {
+        if (aliPlayer != null) {
             val cacheConfig = CacheConfig()
             //开启缓存功能
             cacheConfig.mEnable = true
@@ -296,69 +306,60 @@ class AliTextureVideoPlayer(
         }
     }
 
-    private fun initTextureView() {
-        if (mTextureView == null) {
-            mTextureView = NiceTextureView(mContext)
-            mTextureView!!.surfaceTextureListener = this
+    private fun initSurfaceView() {
+        if (surfaceView == null) {
+            surfaceView = NiceSurfaceView(mContext)
+            surfaceView?.holder?.addCallback(this)
         }
     }
 
     private fun addSurfaceView() {
-        mContainer?.let {
-            it.removeView(mTextureView)
-            it.addView(
-                mTextureView, 0, LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    Gravity.CENTER
-                )
-            )
-        }
+        mContainer?.removeView(surfaceView)
+        val params = LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            Gravity.CENTER
+        )
+        //添加完surfaceView后，会回调surfaceCreated
+        mContainer?.addView(surfaceView, 0, params)
     }
 
-    override fun onSurfaceTextureAvailable(
-        surfaceTexture: SurfaceTexture,
-        width: Int,
-        height: Int
-    ) {
-        LogUtil.d("onSurfaceTextureAvailable")
-        if (mSurfaceTexture == null) {
-            mSurfaceTexture = surfaceTexture
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        if (surfaceHolder == null) {
+            surfaceHolder = holder
             openMediaPlayer()
         } else {
-            mTextureView?.setSurfaceTexture(mSurfaceTexture!!)
+            // activity onPause后，SurfaceView会被销毁，回调surfaceDestroyed()方法,
+            // 回到前台会回调surfaceCreated，需要重新添加holder,否则没有画面
+            aliPlayer!!.setSurface(holder.surface)
         }
+        LogUtil.d("surfaceCreated")
     }
 
-    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
-        LogUtil.d("onSurfaceTextureSizeChanged")
-        aliPlayer?.surfaceChanged()
-    }
-
-    override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
-        LogUtil.d("onSurfaceTextureDestroyed")
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        LogUtil.d("surfaceDestroyed")
         aliPlayer?.setSurface(null)
-        return false
     }
 
-    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        //解决切后台暂停后，回到前台不主动播放，会黑屏
+        //用来刷新视频画面的。如果view的大小变化了，调用此方法将会更新画面大小，保证视频画面与View的变化一致。
+        aliPlayer?.surfaceChanged()
+        LogUtil.d("surfaceChanged")
     }
 
     private fun openMediaPlayer() {
         // 屏幕常亮
         mContainer?.keepScreenOn = true
         aliPlayer?.run {
-            //设置是否循环播放
+            setConfig()
             isLoop = isLooping
-            //设置是否静音
-            isMute = this@AliTextureVideoPlayer.isMute
-            //设置播放器背景颜色
+            isMute = this@AliVideoView.isMute
             if (videoBgColor != null) {
                 setVideoBackgroundColor(videoBgColor!!)
             }
             //画面的填充模式
-            scaleMode = this@AliTextureVideoPlayer.scaleMode
-            // 设置监听
+            scaleMode = this@AliVideoView.scaleMode
             setOnPreparedListener(mOnPreparedListener)
             setOnVideoSizeChangedListener(mOnVideoSizeChangedListener)
             setOnCompletionListener(mOnCompletionListener)
@@ -368,14 +369,9 @@ class AliTextureVideoPlayer(
             setOnInfoListener(mOnInfoListener)
             setOnSeekCompleteListener(mOnSeekCompleteListener)
             // 设置dataSource
-            val urlSource = UrlSource()
-            urlSource.uri = mUrl
+            val urlSource = UrlSource().apply { uri = mUrl }
             setDataSource(urlSource)
-
-            if (mSurface == null) {
-                mSurface = Surface(mSurfaceTexture)
-            }
-            setSurface(mSurface)
+            setSurface(surfaceHolder?.surface)
             prepare()
             mCurrentState = IVideoPlayer.STATE_PREPARING
             mController?.onPlayStateChanged(mCurrentState)
@@ -384,28 +380,32 @@ class AliTextureVideoPlayer(
     }
 
     private val mOnPreparedListener = IPlayer.OnPreparedListener {
-        //自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
         mCurrentState = IVideoPlayer.STATE_PREPARED
         mController?.onPlayStateChanged(mCurrentState)
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
-        // 如果未开启自动播放，需要在OnPrepard回调中调用aliPlayer.start()开始播放视频。
-        // 如果开启了自动播放，则不需要调用aliPlayer.start()，数据解析完成后将开始自动播放视频
-        aliPlayer!!.start()
+        // 不设置autoPlay Prepared后不自动播放 && aliPlayer.start()前seekTo也不会播放只是定位到指定位置
+        if (!isStartToPause && !isOnlyPrepare) {
+            aliPlayer!!.start()
+        }
+        if (!isOnlyPrepare) {
+            customStartToPos()
+        }
+        isOnlyPrepare = false
+    }
+
+    private fun customStartToPos() {
         //这里用else if的方式只能执行一个，由于seekTo是异步方法，可能导致，清晰度切换后，又切到continueFromLastPosition的情况
-        when {
-            skipToPosition != 0L -> {
-                // 跳到指定位置播放,start前seekTo不会自动播放
-                seekTo(skipToPosition)
-                skipToPosition = 0
-            }
-            continueFromLastPosition -> {
-                // 从上次的保存位置播放
-                val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
-                aliPlayer!!.seekTo(savedPlayPosition, IPlayer.SeekMode.Accurate)
-            }
+        if (startToPosition > 0) {
+            seekTo(startToPosition)
+            startToPosition = 0
+        } else if (continueFromLastPosition) {
+            // 从上次的保存位置播放
+            val savedPlayPosition = NiceUtil.getSavedPlayPosition(mContext, mUrl)
+            seekTo(savedPlayPosition)
         }
     }
+
     private val mOnVideoSizeChangedListener =
         IPlayer.OnVideoSizeChangedListener { width, height ->
             // surfaceView.adaptVideoSize(width, height);
@@ -420,7 +420,7 @@ class AliTextureVideoPlayer(
         // 清除屏幕常亮
         mContainer?.keepScreenOn = false
         // 重置当前播放进度
-        // NiceUtil.savePlayPosition(context, mUrl, 0)
+        NiceUtil.savePlayPosition(context, mUrl, 0)
     }
     private val mOnErrorListener = IPlayer.OnErrorListener {
         //出错事件
@@ -428,24 +428,26 @@ class AliTextureVideoPlayer(
         mController?.onPlayStateChanged(mCurrentState)
         LogUtil.d("onError ——> STATE_ERROR")
     }
-    private val mOnRenderingStartListener = IPlayer.OnRenderingStartListener {
+    private val mOnRenderingStartListener = OnRenderingStartListener {
+        //首帧渲染显示事件
         LogUtil.d("onRenderingStart")
         onVideoRenderStartCallback?.invoke()
+        // 这里先回调mController#STATE_RENDERING_START，然后如果不是isStartToPause再回调STATE_PLAYING
+        mCurrentState = IVideoPlayer.STATE_PLAYING
         mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
         if (isStartToPause) {
             pause()
             isStartToPause = false
         } else {
-            mCurrentState = IVideoPlayer.STATE_PLAYING
             mController?.onPlayStateChanged(mCurrentState)
             onPlayingCallback?.invoke()
         }
     }
-    private val mOnLoadingStatusListener: IPlayer.OnLoadingStatusListener =
-        object : IPlayer.OnLoadingStatusListener {
+    private val mOnLoadingStatusListener: OnLoadingStatusListener =
+        object : OnLoadingStatusListener {
             override fun onLoadingBegin() {
                 //缓冲开始, 可能还没播放画面就开始缓冲
-                if (mCurrentState == IVideoPlayer.STATE_PAUSED || mCurrentState == IVideoPlayer.STATE_BUFFERING_PAUSED) {
+                if (isPaused || isBufferingPaused) {
                     mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
                     onBufferPauseCallback?.invoke()
                     LogUtil.d("onLoadingBegin ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
@@ -464,13 +466,13 @@ class AliTextureVideoPlayer(
 
             override fun onLoadingEnd() {
                 //缓冲结束
-                if (mCurrentState == IVideoPlayer.STATE_BUFFERING_PLAYING) {
+                if (isBufferingPlaying) {
                     LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
                     mCurrentState = IVideoPlayer.STATE_PLAYING
                     mController?.onPlayStateChanged(mCurrentState)
                     onPlayingCallback?.invoke()
                 }
-                if (mCurrentState == IVideoPlayer.STATE_BUFFERING_PAUSED) {
+                if (isBufferingPaused) {
                     LogUtil.d("onLoadingEnd ——> MEDIA_INFO_BUFFERING_END： STATE_PAUSED")
                     mCurrentState = IVideoPlayer.STATE_PAUSED
                     mController?.onPlayStateChanged(mCurrentState)
@@ -481,11 +483,8 @@ class AliTextureVideoPlayer(
     private val mOnInfoListener = IPlayer.OnInfoListener { infoBean ->
         when {
             infoBean.code.value == InfoCode.AutoPlayStart.value -> {
-                // 自动播放开始事件;注意：自动播放的时候将不会回调onPrepared回调，而会回调onInfo回调。
-                // 还没确认是否会回调onRenderingStart，如果不回调这里需要执行一下onPlayStateChanged（STATE_PLAYING）
+                // 自动播放开始事件：自动播放时依然会回调onPrepared，OnInfoListener.AutoPlayStart，onRenderingStart
                 LogUtil.d("onInfo ——> AutoPlayStart")
-                mCurrentState = IVideoPlayer.STATE_PREPARED
-                mController?.onPlayStateChanged(mCurrentState)
             }
             infoBean.code.value == InfoCode.LoopingStart.value -> {
                 //循环播放开始事件,不会回调onPrepared，onRenderingStart，onCompletion
@@ -509,7 +508,7 @@ class AliTextureVideoPlayer(
      * 以避免Activity重新走生命周期
      */
     override fun enterFullScreen() {
-        if (mCurrentMode == IVideoPlayer.MODE_FULL_SCREEN) return
+        if (isFullScreen) return
         NiceVideoPlayerManager.instance().setAllowRelease(false)
         // 隐藏ActionBar、状态栏，并横屏
         NiceUtil.hideActionBar(mContext)
@@ -517,7 +516,7 @@ class AliTextureVideoPlayer(
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val contentView = NiceUtil.scanForActivity(mContext)
             .findViewById<ViewGroup>(android.R.id.content)
-        if (mCurrentMode == IVideoPlayer.MODE_TINY_WINDOW) {
+        if (isTinyWindow) {
             contentView.removeView(mContainer)
         } else {
             removeView(mContainer)
@@ -540,7 +539,7 @@ class AliTextureVideoPlayer(
      * @return true退出全屏.
      */
     override fun exitFullScreen(): Boolean {
-        if (mCurrentMode == IVideoPlayer.MODE_FULL_SCREEN) {
+        if (isFullScreen) {
             NiceVideoPlayerManager.instance().setAllowRelease(true)
             NiceUtil.showActionBar(mContext)
             NiceUtil.scanForActivity(mContext).requestedOrientation =
@@ -565,7 +564,7 @@ class AliTextureVideoPlayer(
      * 进入小窗口播放，小窗口播放的实现原理与全屏播放类似。
      */
     override fun enterTinyWindow() {
-        if (mCurrentMode == IVideoPlayer.MODE_TINY_WINDOW) return
+        if (isTinyWindow) return
         removeView(mContainer)
         val contentView = NiceUtil.scanForActivity(mContext)
             .findViewById<ViewGroup>(android.R.id.content)
@@ -587,7 +586,7 @@ class AliTextureVideoPlayer(
      * 退出小窗口播放
      */
     override fun exitTinyWindow(): Boolean {
-        if (mCurrentMode == IVideoPlayer.MODE_TINY_WINDOW) {
+        if (isTinyWindow) {
             val contentView = NiceUtil.scanForActivity(mContext)
                 .findViewById<ViewGroup>(android.R.id.content)
             contentView.removeView(mContainer)
@@ -612,21 +611,19 @@ class AliTextureVideoPlayer(
             aliPlayer?.release()
             aliPlayer = null
         }.start()
-        mContainer?.removeView(mTextureView)
-        mSurface?.release()
-        mSurface = null
-        mSurfaceTexture?.release()
-        mSurfaceTexture = null
+        surfaceHolder = null
+        // 解决释放播放器时黑一下,使用TextureView没有该问题
+        Handler(Looper.getMainLooper()).post { mContainer?.removeView(surfaceView) }
         mCurrentState = IVideoPlayer.STATE_IDLE
     }
 
     override fun release() {
         // 保存播放位置
-        // if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
-        //     NiceUtil.savePlayPosition(mContext, mUrl, getCurrentPosition())
-        // } else if (isCompleted) {
-        //     NiceUtil.savePlayPosition(mContext, mUrl, 0)
-        // }
+        if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
+            NiceUtil.savePlayPosition(mContext, mUrl, getCurrentPosition())
+        } else if (isCompleted) {
+            NiceUtil.savePlayPosition(mContext, mUrl, 0)
+        }
         // 退出全屏或小窗口
         if (isFullScreen) {
             exitFullScreen()
@@ -635,12 +632,9 @@ class AliTextureVideoPlayer(
             exitTinyWindow()
         }
         mCurrentMode = IVideoPlayer.MODE_NORMAL
-
         // 恢复控制器
         mController?.reset()
-
         // 释放播放器
         releasePlayer()
-//        Runtime.getRuntime().gc();
     }
 }
