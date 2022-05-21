@@ -278,8 +278,6 @@ class MediaVideoPlayer constructor(
 
     override fun getSpeed(speed: Float) = 0f
 
-    override fun getTcpSpeed(): Long = 0
-
     private fun initAudioManager() {
         if (mAudioManager == null) {
             mAudioManager =
@@ -392,7 +390,9 @@ class MediaVideoPlayer constructor(
         if (!isOnlyPrepare) {
             mp.start()
         }
-        customStartToPos()
+        if (!isOnlyPrepare) {
+            customStartToPos()
+        }
         isOnlyPrepare = false
     }
 

@@ -133,6 +133,7 @@ class AliVideoPlayer(
         this.continueFromLastPosition = continueFromLastPosition
     }
 
+    //支持0.5～5倍速的播放，通常按0.5的倍数来设置，例如0.5倍、1倍、1.5倍等
     override fun setSpeed(speed: Float) {
         aliPlayer?.speed = speed
     }
@@ -262,8 +263,6 @@ class AliVideoPlayer(
 
     override fun getSpeed(speed: Float): Float = aliPlayer?.speed ?: 0F
 
-    override fun getTcpSpeed() = 0L
-
     private fun initAudioManager() {
         if (mAudioManager == null) {
             mAudioManager =
@@ -389,8 +388,10 @@ class AliVideoPlayer(
         if (!isStartToPause && !isOnlyPrepare) {
             aliPlayer!!.start()
         }
+        if (!isOnlyPrepare) {
+            customStartToPos()
+        }
         isOnlyPrepare = false
-        customStartToPos()
     }
 
     private fun customStartToPos() {

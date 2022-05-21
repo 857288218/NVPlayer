@@ -252,8 +252,6 @@ class IJKSurfaceVideoPlayer(
 
     override fun getSpeed(speed: Float) = mMediaPlayer?.getSpeed(speed) ?: 0F
 
-    override fun getTcpSpeed() = mMediaPlayer?.tcpSpeed ?: 0
-
     private fun initAudioManager() {
         if (mAudioManager == null) {
             mAudioManager =

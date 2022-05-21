@@ -258,8 +258,6 @@ class AliTextureVideoPlayer(
 
     override fun getSpeed(speed: Float): Float = aliPlayer?.speed ?: 0F
 
-    override fun getTcpSpeed() = 0L
-
     private fun initAudioManager() {
         if (mAudioManager == null) {
             mAudioManager =

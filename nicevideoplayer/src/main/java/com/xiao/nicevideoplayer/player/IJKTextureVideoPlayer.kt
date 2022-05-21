@@ -264,8 +264,6 @@ class IJKTextureVideoPlayer(
 
     override fun getSpeed(speed: Float) = mMediaPlayer?.getSpeed(speed) ?: 0F
 
-    override fun getTcpSpeed() = mMediaPlayer?.tcpSpeed ?: 0
-
     private fun initAudioManager() {
         if (mAudioManager == null) {
             mAudioManager =
@@ -280,7 +278,7 @@ class IJKTextureVideoPlayer(
 
     private fun initMediaPlayer() {
         if (mMediaPlayer == null) {
-            // 这里player别设置属性，播放完成点重新播放会主动调用reset清空属性 然后openMediaPlayer在这里设置
+            // 这里player不设置属性，播放错误重新播放会主动调用reset清空属性 然后openMediaPlayer在这里设置
             mMediaPlayer = IjkMediaPlayer()
         }
     }
@@ -390,7 +388,9 @@ class IJKTextureVideoPlayer(
         if (!isOnlyPrepare) {
             mp.start()
         }
-        customStartToPos()
+        if (!isOnlyPrepare) {
+            customStartToPos()
+        }
         isOnlyPrepare = false
     }
 
