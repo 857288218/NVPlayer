@@ -47,6 +47,7 @@ class MediaVideoView constructor(
     private var continueFromLastPosition = true
     private var startToPosition: Long = 0
     private var isLoop = false
+    private var isMute = false
     private var isStartToPause = false
     private var isOnlyPrepare = false
 
@@ -116,12 +117,13 @@ class MediaVideoView constructor(
     }
 
     // 该方法是使手机媒体静音，不是单纯的静音播放的视频
-    fun setMute(mute: Boolean) {
-        mAudioManager?.adjustStreamVolume(
-            AudioManager.STREAM_MUSIC,
-            if (mute) AudioManager.ADJUST_MUTE else AudioManager.ADJUST_UNMUTE,
-            0
-        )
+    override fun setMute(mute: Boolean) {
+        isMute = mute
+        if (mute) {
+            mMediaPlayer?.setVolume(0F, 0F)
+        } else {
+            mMediaPlayer?.setVolume(1F, 1F)
+        }
     }
 
     /**
@@ -193,11 +195,12 @@ class MediaVideoView constructor(
         } else if (isCompleted) {
             mController?.onPlayStateChanged(IVideoPlayer.STATE_PREPARED)
             onPreparedCallback?.invoke()
+            mMediaPlayer!!.start()
             mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
             onVideoRenderStartCallback?.invoke()
+            mCurrentState = IVideoPlayer.STATE_PLAYING
             mController?.onPlayStateChanged(IVideoPlayer.STATE_PLAYING)
             onPlayingCallback?.invoke()
-            mMediaPlayer!!.start()
         } else {
             LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
         }
@@ -337,6 +340,7 @@ class MediaVideoView constructor(
         mMediaPlayer?.run {
             //设置是否循环播放
             isLooping = isLoop
+            setMute(isMute)
             // 设置监听
             setOnPreparedListener(mOnPreparedListener)
             setOnVideoSizeChangedListener(mOnVideoSizeChangedListener)

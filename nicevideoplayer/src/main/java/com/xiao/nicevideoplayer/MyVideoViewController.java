@@ -57,7 +57,7 @@ public class MyVideoViewController
     private ImageView mFullScreen;
 
     private TextView mLength;
-
+    private TextView mMute;
     private LinearLayout mLoading;
     private TextView mLoadText;
 
@@ -87,6 +87,7 @@ public class MyVideoViewController
     private ChangeClarityDialog mClarityDialog;
 
     private boolean hasRegisterBatteryReceiver; // 是否已经注册了电池广播
+    private boolean isMute;
 
     public MyVideoViewController(Context context) {
         super(context);
@@ -127,7 +128,9 @@ public class MyVideoViewController
         mCompleted = findViewById(R.id.completed);
         mReplay = findViewById(R.id.replay);
         mShare = findViewById(R.id.share);
+        mMute = findViewById(R.id.tv_mute);
 
+        mMute.setOnClickListener(this);
         mCenterStart.setOnClickListener(this);
         mBack.setOnClickListener(this);
         mRestartPause.setOnClickListener(this);
@@ -358,11 +361,15 @@ public class MyVideoViewController
     @Override
     public void onClick(View v) {
         if (mNiceVideoPlayer != null) {
-            if (v == mCenterStart) {
+            if (v == mMute) {
+                (mNiceVideoPlayer).setMute(!isMute);
+                isMute = !isMute;
+            } else if (v == mCenterStart) {
                 NiceVideoPlayerManager.instance().setCurrentNiceVideoPlayer(mNiceVideoPlayer);
 //                mNiceVideoPlayer.startToPause(32000);
 //                mNiceVideoPlayer.start(15000);
                 mNiceVideoPlayer.start();
+
             } else if (v == mBack) {
                 if (mNiceVideoPlayer.isFullScreen()) {
                     mNiceVideoPlayer.exitFullScreen();

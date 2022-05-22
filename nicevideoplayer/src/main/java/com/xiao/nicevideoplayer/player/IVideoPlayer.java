@@ -102,11 +102,16 @@ public interface IVideoPlayer {
     void seekTo(long pos);
 
     /**
-     * 设置音量
+     * 设置音量,指手机媒体音量
      *
      * @param volume 音量值
      */
     void setVolume(int volume);
+
+    /**
+     * 设置视频静音，非手机媒体音量静音
+     */
+    void setMute(boolean isMute);
 
     /**
      * 设置播放速度，目前只有IjkPlayer有效果，原生MediaPlayer暂不支持
@@ -153,14 +158,14 @@ public interface IVideoPlayer {
     boolean isNormal();
 
     /**
-     * 获取最大音量
+     * 获取最大音量,指手机媒体音量
      *
      * @return 最大音量值
      */
     int getMaxVolume();
 
     /**
-     * 获取当前音量
+     * 获取当前音量,指手机媒体音量
      *
      * @return 当前音量值
      */

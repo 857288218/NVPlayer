@@ -109,7 +109,7 @@ class AliVideoView(
         this.isLooping = isLooping
     }
 
-    fun setMute(isMute: Boolean) {
+    override fun setMute(isMute: Boolean) {
         aliPlayer?.isMute = isMute
         this.isMute = isMute
     }
@@ -354,7 +354,7 @@ class AliVideoView(
         aliPlayer?.run {
             setConfig()
             isLoop = isLooping
-            isMute = this@AliVideoView.isMute
+            this@AliVideoView.setMute(this@AliVideoView.isMute)
             if (videoBgColor != null) {
                 setVideoBackgroundColor(videoBgColor!!)
             }

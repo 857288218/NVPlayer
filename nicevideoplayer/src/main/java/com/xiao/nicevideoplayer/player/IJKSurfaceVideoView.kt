@@ -112,12 +112,12 @@ class IJKSurfaceVideoView(
     }
 
     // 该方法是使手机媒体静音，不是单纯的静音播放的视频
-    fun setMute(mute: Boolean) {
-        mAudioManager?.adjustStreamVolume(
-            AudioManager.STREAM_MUSIC,
-            if (mute) AudioManager.ADJUST_MUTE else AudioManager.ADJUST_UNMUTE,
-            0
-        )
+    override fun setMute(mute: Boolean) {
+        if (mute) {
+            mMediaPlayer?.setVolume(0F, 0F)
+        } else {
+            mMediaPlayer?.setVolume(1F, 1F)
+        }
     }
 
     /**
