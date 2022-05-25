@@ -20,8 +20,8 @@ import com.aliyun.player.bean.InfoCode
 import com.aliyun.player.nativeclass.CacheConfig
 import com.aliyun.player.source.UrlSource
 import com.xiao.nicevideoplayer.NiceSurfaceView
-import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
+import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 
@@ -171,30 +171,51 @@ class AliVideoView(
         start(pos)
     }
 
-    fun prepare() {
+    // 提前准备视频不自动播放 需要再调用start()播放；用于视频的提前准备减少直接调用start()时的准备视频时间
+    fun onlyPrepare() {
         isOnlyPrepare = true
         start()
     }
 
     override fun restart() {
-        if (isPaused) {
-            LogUtil.d("STATE_PLAYING")
-            aliPlayer!!.start()
-            mCurrentState = IVideoPlayer.STATE_PLAYING
-            mController?.onPlayStateChanged(mCurrentState)
-            onPlayingCallback?.invoke()
-        } else if (isBufferingPaused) {
-            LogUtil.d("STATE_BUFFERING_PLAYING")
-            aliPlayer!!.start()
-            mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
-            mController?.onPlayStateChanged(mCurrentState)
-            onBufferPlayingCallback?.invoke()
-        } else if (isCompleted || isError) {
-            // todo(rjq) 播放完成后 再次播放不reset？ 但是直接调用aliPlayer.start没有重新播放 ijk会重新播放
-            aliPlayer!!.reset()
+        when {
+            isPaused -> {
+                LogUtil.d("STATE_PLAYING")
+                aliPlayer!!.start()
+                mCurrentState = IVideoPlayer.STATE_PLAYING
+                mController?.onPlayStateChanged(mCurrentState)
+                onPlayingCallback?.invoke()
+            }
+            isBufferingPaused -> {
+                LogUtil.d("STATE_BUFFERING_PLAYING")
+                aliPlayer!!.start()
+                mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
+                mController?.onPlayStateChanged(mCurrentState)
+                onBufferPlayingCallback?.invoke()
+            }
+            isError -> {
+                // 将播放器设置的属性都清空
+                aliPlayer?.reset()
+                openMediaPlayer()
+            }
+            isCompleted -> {
+                mCurrentState = IVideoPlayer.STATE_PREPARING
+                mController?.onPlayStateChanged(mCurrentState)
+                aliPlayer?.prepare()
+            }
+            else -> {
+                LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
+            }
+        }
+    }
+
+    // 切换另一个视频播放
+    fun startOtherVideo(videoPath: String) {
+        aliPlayer?.run {
+            setUp(videoPath, null)
+            stop()
+            reset()
             openMediaPlayer()
-        } else {
-            LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
         }
     }
 
@@ -217,7 +238,7 @@ class AliVideoView(
 
     override fun seekTo(pos: Long) {
         if (aliPlayer == null) {
-            start(pos)
+            LogUtil.d("AliVideoView seekTo需要在start后调用")
         } else {
             aliPlayer!!.seekTo(pos, IPlayer.SeekMode.Accurate)
         }
@@ -429,10 +450,10 @@ class AliVideoView(
         LogUtil.d("onError ——> STATE_ERROR")
     }
     private val mOnRenderingStartListener = OnRenderingStartListener {
-        //首帧渲染显示事件
+        //首帧渲染显示事件,循环播放时不会回调onRenderingStart
         LogUtil.d("onRenderingStart")
         onVideoRenderStartCallback?.invoke()
-        // 这里先回调mController#STATE_RENDERING_START，然后如果不是isStartToPause再回调STATE_PLAYING
+        // 这里先回调mController#STATE_RENDERING_START，然后如果不是 isStartToPause 再回调STATE_PLAYING
         mCurrentState = IVideoPlayer.STATE_PLAYING
         mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
         if (isStartToPause) {
@@ -483,11 +504,11 @@ class AliVideoView(
     private val mOnInfoListener = IPlayer.OnInfoListener { infoBean ->
         when {
             infoBean.code.value == InfoCode.AutoPlayStart.value -> {
-                // 自动播放开始事件：自动播放时依然会回调onPrepared，OnInfoListener.AutoPlayStart，onRenderingStart
+                // 自动播放开始事件：自动播放时依次回调onPrepared，OnInfoListener.AutoPlayStart，onRenderingStart
                 LogUtil.d("onInfo ——> AutoPlayStart")
             }
             infoBean.code.value == InfoCode.LoopingStart.value -> {
-                //循环播放开始事件,不会回调onPrepared，onRenderingStart，onCompletion
+                //循环播放开始事件,不会回调onCompletion,onPrepared,onRenderingStart
                 LogUtil.d("onInfo ——> LoopingStart")
             }
             infoBean.code == InfoCode.CurrentPosition -> {

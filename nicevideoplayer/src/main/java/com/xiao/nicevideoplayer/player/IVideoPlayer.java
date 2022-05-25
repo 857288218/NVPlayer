@@ -95,7 +95,7 @@ public interface IVideoPlayer {
     void pause();
 
     /**
-     * seek到指定的位置继续播放
+     * seek到指定的位置,如果是播放状态则继续播放，如果是暂停则还是暂停
      *
      * @param pos 播放位置
      */

@@ -57,7 +57,7 @@ public class MyVideoViewController
     private ImageView mFullScreen;
 
     private TextView mLength;
-    private TextView mMute;
+    private TextView mMute, tvChangeVideo;
     private LinearLayout mLoading;
     private TextView mLoadText;
 
@@ -129,7 +129,9 @@ public class MyVideoViewController
         mReplay = findViewById(R.id.replay);
         mShare = findViewById(R.id.share);
         mMute = findViewById(R.id.tv_mute);
+        tvChangeVideo = findViewById(R.id.tv_change_video);
 
+        tvChangeVideo.setOnClickListener(this);
         mMute.setOnClickListener(this);
         mCenterStart.setOnClickListener(this);
         mBack.setOnClickListener(this);
@@ -211,6 +213,7 @@ public class MyVideoViewController
                         && !(mNiceVideoPlayer instanceof IJKTextureVideoView)) {
                     mCenterStart.setVisibility(View.GONE);
                 }
+                mCenterStart.setVisibility(View.GONE);
                 break;
             case IVideoPlayer.STATE_PREPARED:
                 mLoading.setVisibility(View.GONE);
@@ -361,15 +364,18 @@ public class MyVideoViewController
     @Override
     public void onClick(View v) {
         if (mNiceVideoPlayer != null) {
-            if (v == mMute) {
+            if (v == tvChangeVideo) {
+                if (mNiceVideoPlayer instanceof AliVideoView) {
+                    ((AliVideoView) mNiceVideoPlayer).startOtherVideo("http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-10_10-20-26.mp4");
+                }
+            } else if (v == mMute) {
                 (mNiceVideoPlayer).setMute(!isMute);
                 isMute = !isMute;
             } else if (v == mCenterStart) {
                 NiceVideoPlayerManager.instance().setCurrentNiceVideoPlayer(mNiceVideoPlayer);
-//                mNiceVideoPlayer.startToPause(32000);
+                mNiceVideoPlayer.startToPause(32000);
 //                mNiceVideoPlayer.start(15000);
-                mNiceVideoPlayer.start();
-
+//                mNiceVideoPlayer.start();
             } else if (v == mBack) {
                 if (mNiceVideoPlayer.isFullScreen()) {
                     mNiceVideoPlayer.exitFullScreen();
@@ -414,6 +420,7 @@ public class MyVideoViewController
         Clarity clarity = clarities.get(clarityIndex);
         mClarity.setText(clarity.getGrade());
         long currentPosition = mNiceVideoPlayer.getCurrentPosition();
+        //todo(rjq) 不release,使用stop,reset,setup,openMediaPlayer
         mNiceVideoPlayer.releasePlayer();
         mNiceVideoPlayer.setUp(clarity.getVideoUrl(), null);
         mNiceVideoPlayer.start(currentPosition);
@@ -491,9 +498,9 @@ public class MyVideoViewController
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        if (mNiceVideoPlayer.isBufferingPaused() || mNiceVideoPlayer.isPaused()) {
-            mNiceVideoPlayer.restart();
-        }
+//        if (mNiceVideoPlayer.isBufferingPaused() || mNiceVideoPlayer.isPaused()) {
+//            mNiceVideoPlayer.restart();
+//        }
         // 为什么往前拖动进度条后，进度条还会往后退几秒：seekTo只支持关键帧，出现这个情况就是原始的视频文件中关键帧比较少，
         // 播放器会在拖动的位置找最近的关键帧，然后在updateProgress(1秒更一次)时候根据CurrentPosition重新计算正确的progress，所以mSeek可能出现退几秒
         long position = (long) (mNiceVideoPlayer.getDuration() * seekBar.getProgress() / 100f);

@@ -40,7 +40,7 @@ public class IJKTextureHolder extends RecyclerView.ViewHolder {
                 .load(video.getImageUrl())
 //                .placeholder(R.drawable.img_default)
                 .into(mController.imageView());
-        mVideoPlayer.prepare();
+//        mVideoPlayer.onlyPrepare();
         mVideoPlayer.setUp(video.getVideoUrl(), null);
     }
 }

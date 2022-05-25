@@ -13,14 +13,15 @@ import android.view.TextureView.SurfaceTextureListener
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.xiao.nicevideoplayer.NiceTextureView
-import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
+import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 import tv.danmaku.ijk.media.player.IMediaPlayer
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
 import java.io.IOException
 
+// 暂停时使用seekTo如果不主动播放更新画面很慢(info:MEDIA_INFO_VIDEO_SEEK_RENDERING_START回调慢),AliVideoView和MediaVideoView没有该问题
 class IJKTextureVideoView(
     private val mContext: Context,
     attrs: AttributeSet? = null
@@ -163,41 +164,48 @@ class IJKTextureVideoView(
 
     override fun startToPause(pos: Long) {
         isStartToPause = true
+        setMute(true)
         start(pos)
     }
 
-    fun prepare() {
+    fun onlyPrepare() {
         isOnlyPrepare = true
         start()
     }
 
     override fun restart() {
-        if (isPaused) {
-            mMediaPlayer!!.start()
-            mCurrentState = IVideoPlayer.STATE_PLAYING
-            mController?.onPlayStateChanged(mCurrentState)
-            onPlayingCallback?.invoke()
-            LogUtil.d("STATE_PLAYING")
-        } else if (isBufferingPaused) {
-            mMediaPlayer!!.start()
-            mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
-            mController?.onPlayStateChanged(mCurrentState)
-            onBufferPlayingCallback?.invoke()
-            LogUtil.d("STATE_BUFFERING_PLAYING")
-        } else if (isError) {
-            mMediaPlayer!!.reset()
-            openMediaPlayer()
-        } else if (isCompleted) {
-            mController?.onPlayStateChanged(IVideoPlayer.STATE_PREPARED)
-            onPreparedCallback?.invoke()
-            mMediaPlayer!!.start()
-            mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
-            onVideoRenderStartCallback?.invoke()
-            mCurrentState = IVideoPlayer.STATE_PLAYING
-            mController?.onPlayStateChanged(IVideoPlayer.STATE_PLAYING)
-            onPlayingCallback?.invoke()
-        } else {
-            LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
+        when {
+            isPaused -> {
+                mMediaPlayer!!.start()
+                mCurrentState = IVideoPlayer.STATE_PLAYING
+                mController?.onPlayStateChanged(mCurrentState)
+                onPlayingCallback?.invoke()
+                LogUtil.d("STATE_PLAYING")
+            }
+            isBufferingPaused -> {
+                mMediaPlayer!!.start()
+                mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
+                mController?.onPlayStateChanged(mCurrentState)
+                onBufferPlayingCallback?.invoke()
+                LogUtil.d("STATE_BUFFERING_PLAYING")
+            }
+            isError -> {
+                mMediaPlayer!!.reset()
+                openMediaPlayer()
+            }
+            isCompleted -> {
+                mController?.onPlayStateChanged(IVideoPlayer.STATE_PREPARED)
+                onPreparedCallback?.invoke()
+                mMediaPlayer!!.start()
+                mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
+                onVideoRenderStartCallback?.invoke()
+                mCurrentState = IVideoPlayer.STATE_PLAYING
+                mController?.onPlayStateChanged(IVideoPlayer.STATE_PLAYING)
+                onPlayingCallback?.invoke()
+            }
+            else -> {
+                LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
+            }
         }
     }
 
@@ -220,7 +228,7 @@ class IJKTextureVideoView(
 
     override fun seekTo(pos: Long) {
         if (mMediaPlayer == null) {
-            start(pos)
+            LogUtil.d("IJKVideoView seekTo需要在start后调用")
         } else {
             mMediaPlayer!!.seekTo(pos)
         }
@@ -390,8 +398,6 @@ class IJKTextureVideoView(
         // seekTo只能在start后调用，start前调用seekTo无作用
         if (!isOnlyPrepare) {
             mp.start()
-        }
-        if (!isOnlyPrepare) {
             customStartToPos()
         }
         isOnlyPrepare = false
@@ -448,18 +454,21 @@ class IJKTextureVideoView(
             mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
             if (isStartToPause) {
                 pause()
+                setMute(false)
                 isStartToPause = false
             } else {
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
             }
+        } else if (what == IMediaPlayer.MEDIA_INFO_VIDEO_SEEK_RENDERING_START) {
+            LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_SEEK_RENDERING_START")
         } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
             // MediaPlayer暂时不播放，以缓冲更多的数据；该回调可能早于MEDIA_INFO_VIDEO_RENDERING_START
-            if (mCurrentState == IVideoPlayer.STATE_PAUSED || mCurrentState == IVideoPlayer.STATE_BUFFERING_PAUSED) {
+            if (isPaused || isBufferingPaused) {
                 mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
                 onBufferPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
-            } else {
+            } else if (isPlaying || isBufferingPlaying) {
                 mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
                 onBufferPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING")
@@ -467,13 +476,13 @@ class IJKTextureVideoView(
             mController?.onPlayStateChanged(mCurrentState)
         } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_END) {
             // 填充缓冲区后，MediaPlayer恢复播放/暂停
-            if (mCurrentState == IVideoPlayer.STATE_BUFFERING_PLAYING) {
+            if (isBufferingPlaying) {
                 mCurrentState = IVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
             }
-            if (mCurrentState == IVideoPlayer.STATE_BUFFERING_PAUSED) {
+            if (isBufferingPaused) {
                 mCurrentState = IVideoPlayer.STATE_PAUSED
                 mController?.onPlayStateChanged(mCurrentState)
                 onPauseCallback?.invoke()

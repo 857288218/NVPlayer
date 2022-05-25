@@ -22,10 +22,7 @@ import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 import java.io.IOException
 
-//问题：
-// 1.start(pos)/startToPause(pos)精准seek显示画面慢(seek到的地方是关键帧不会慢),即首帧回调比prepared回调慢1.5s左右；IJKPlayer 700ms左右
-//   如果是start()那么prepared回调后会马上回调首帧回调
-// 2.只支持硬解
+//问题： 只支持硬解
 class MediaVideoView constructor(
     private val mContext: Context,
     attrs: AttributeSet? = null
@@ -171,38 +168,44 @@ class MediaVideoView constructor(
         start(pos)
     }
 
-    fun prepare() {
+    fun onlyPrepare() {
         isOnlyPrepare = true
         start()
     }
 
     override fun restart() {
-        if (isPaused) {
-            mMediaPlayer!!.start()
-            mCurrentState = IVideoPlayer.STATE_PLAYING
-            mController?.onPlayStateChanged(mCurrentState)
-            onPlayingCallback?.invoke()
-            LogUtil.d("STATE_PLAYING")
-        } else if (isBufferingPaused) {
-            mMediaPlayer!!.start()
-            mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
-            mController?.onPlayStateChanged(mCurrentState)
-            onBufferPlayingCallback?.invoke()
-            LogUtil.d("STATE_BUFFERING_PLAYING")
-        } else if (isError) {
-            mMediaPlayer!!.reset()
-            openMediaPlayer()
-        } else if (isCompleted) {
-            mController?.onPlayStateChanged(IVideoPlayer.STATE_PREPARED)
-            onPreparedCallback?.invoke()
-            mMediaPlayer!!.start()
-            mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
-            onVideoRenderStartCallback?.invoke()
-            mCurrentState = IVideoPlayer.STATE_PLAYING
-            mController?.onPlayStateChanged(IVideoPlayer.STATE_PLAYING)
-            onPlayingCallback?.invoke()
-        } else {
-            LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
+        when {
+            isPaused -> {
+                mMediaPlayer!!.start()
+                mCurrentState = IVideoPlayer.STATE_PLAYING
+                mController?.onPlayStateChanged(mCurrentState)
+                onPlayingCallback?.invoke()
+                LogUtil.d("STATE_PLAYING")
+            }
+            isBufferingPaused -> {
+                mMediaPlayer!!.start()
+                mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
+                mController?.onPlayStateChanged(mCurrentState)
+                onBufferPlayingCallback?.invoke()
+                LogUtil.d("STATE_BUFFERING_PLAYING")
+            }
+            isError -> {
+                mMediaPlayer!!.reset()
+                openMediaPlayer()
+            }
+            isCompleted -> {
+                mController?.onPlayStateChanged(IVideoPlayer.STATE_PREPARED)
+                onPreparedCallback?.invoke()
+                mMediaPlayer!!.start()
+                mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
+                onVideoRenderStartCallback?.invoke()
+                mCurrentState = IVideoPlayer.STATE_PLAYING
+                mController?.onPlayStateChanged(IVideoPlayer.STATE_PLAYING)
+                onPlayingCallback?.invoke()
+            }
+            else -> {
+                LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
+            }
         }
     }
 
@@ -225,7 +228,7 @@ class MediaVideoView constructor(
 
     override fun seekTo(pos: Long) {
         if (mMediaPlayer == null) {
-            start(pos)
+            LogUtil.d("seekTo需要在start后调用")
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 mMediaPlayer!!.seekTo(pos, SEEK_CLOSEST)
@@ -393,8 +396,6 @@ class MediaVideoView constructor(
 
         if (!isOnlyPrepare) {
             mp.start()
-        }
-        if (!isOnlyPrepare) {
             customStartToPos()
         }
         isOnlyPrepare = false

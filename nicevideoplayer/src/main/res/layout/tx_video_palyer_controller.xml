@@ -334,4 +334,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
+    <TextView
+        android:padding="10dp"
+        android:id="@+id/tv_change_video"
+        android:text="播另一个视频"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/tv_mute"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
 </RelativeLayout>
