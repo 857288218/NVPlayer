@@ -17,27 +17,39 @@ class TestActivity : AppCompatActivity() {
     }
 
     fun videoList(view: View?) {
-        startActivity(Intent(this, IJKSurfaceListActivity::class.java))
+        startActivity(Intent(this, IJKPlayerListActivity::class.java).apply {
+            putExtra("isUseTexture", false)
+        })
     }
 
     fun videoList2(view: View?) {
-        startActivity(Intent(this, IJKTextureListActivity::class.java))
+        startActivity(Intent(this, IJKPlayerListActivity::class.java).apply {
+            putExtra("isUseTexture", true)
+        })
     }
 
     fun videoList3(view: View?) {
-        startActivity(Intent(this, AliSurfaceListActivity::class.java))
+        startActivity(Intent(this, AliPlayerListActivity::class.java).apply {
+            putExtra("isUseTexture", false)
+        })
     }
 
     fun videoList4(view: View?) {
-        startActivity(Intent(this, AliTextureListActivity::class.java))
+        startActivity(Intent(this, AliPlayerListActivity::class.java).apply {
+            putExtra("isUseTexture", true)
+        })
     }
 
     fun videoList5(view: View?) {
-        startActivity(Intent(this, MediaSurfaceListActivity::class.java))
+        startActivity(Intent(this, MediaPlayerListActivity::class.java).apply {
+            putExtra("isUseTexture", false)
+        })
     }
 
     fun videoList6(view: View?) {
-        startActivity(Intent(this, MediaTextureListActivity::class.java))
+        startActivity(Intent(this, MediaPlayerListActivity::class.java).apply {
+            putExtra("isUseTexture", true)
+        })
     }
 
     fun changeClarity(view: View?) {

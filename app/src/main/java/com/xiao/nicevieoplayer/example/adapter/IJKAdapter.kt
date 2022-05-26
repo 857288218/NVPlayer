@@ -13,8 +13,7 @@ class IJKAdapter(
     private val mContext: Context,
     private val mVideoList: List<Video>,
     private val isUseTexture: Boolean = true
-) :
-    RecyclerView.Adapter<IJKHolder>() {
+) : RecyclerView.Adapter<IJKHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): IJKHolder {
         val itemView =
             LayoutInflater.from(mContext).inflate(R.layout.item_ijk_list_video, parent, false)

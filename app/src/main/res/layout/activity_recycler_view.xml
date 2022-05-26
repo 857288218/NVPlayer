@@ -6,6 +6,6 @@
     android:layout_width="match_parent"
     android:background="@android:color/white"
     android:layout_height="match_parent"
-    tools:context="com.xiao.nicevieoplayer.example.IJKSurfaceListActivity">
+    tools:context="com.xiao.nicevieoplayer.example.IJKPlayerListActivity">
 
 </androidx.recyclerview.widget.RecyclerView>

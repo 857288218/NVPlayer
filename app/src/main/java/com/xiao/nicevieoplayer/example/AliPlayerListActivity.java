@@ -14,14 +14,16 @@ import com.xiao.nicevieoplayer.example.adapter.AliAdapter;
 import com.xiao.nicevieoplayer.example.base.CompatHomeKeyActivity;
 import com.xiao.nicevieoplayer.example.util.DataUtil;
 
-public class AliSurfaceListActivity extends CompatHomeKeyActivity implements ScreenRotateUtils.OrientationChangeListener {
+public class AliPlayerListActivity extends CompatHomeKeyActivity implements ScreenRotateUtils.OrientationChangeListener {
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLayoutManager;
+    private boolean isUseTexture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recycler_view);
+        isUseTexture = getIntent().getBooleanExtra("isUseTexture", false);
         init();
     }
 
@@ -29,7 +31,7 @@ public class AliSurfaceListActivity extends CompatHomeKeyActivity implements Scr
         mRecyclerView = findViewById(R.id.recycler_view);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        AliAdapter adapter = new AliAdapter(this, DataUtil.getVideoListData(), false);
+        AliAdapter adapter = new AliAdapter(this, DataUtil.getVideoListData(), isUseTexture);
         mRecyclerView.setAdapter(adapter);
 
         mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
