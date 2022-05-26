@@ -18,6 +18,7 @@ import android.widget.FrameLayout
 import com.xiao.nicevideoplayer.NiceSurfaceView
 import com.xiao.nicevideoplayer.NiceTextureView
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
+import com.xiao.nicevideoplayer.R
 import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
@@ -58,6 +59,7 @@ class IJKVideoView(
     private var isMute = false
     private var isStartToPause = false
     private var isOnlyPrepare = false
+
     @JvmField
     var isUseTextureView = true
 
@@ -83,6 +85,10 @@ class IJKVideoView(
     var onPreparedCallback: (() -> Unit)? = null
 
     init {
+        val types = context.obtainStyledAttributes(attrs, R.styleable.IJKVideoView)
+        isUseTextureView = types.getBoolean(R.styleable.AliVideoView_isUseTexture, true)
+        types.recycle()
+
         mContainer = FrameLayout(mContext)
         this.addView(
             mContainer, LayoutParams(

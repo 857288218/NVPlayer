@@ -21,6 +21,7 @@ import android.widget.FrameLayout
 import com.xiao.nicevideoplayer.NiceSurfaceView
 import com.xiao.nicevideoplayer.NiceTextureView
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
+import com.xiao.nicevideoplayer.R
 import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
@@ -56,6 +57,7 @@ class MediaVideoView constructor(
     private var isMute = false
     private var isStartToPause = false
     private var isOnlyPrepare = false
+
     @JvmField
     var isUseTextureView = true
 
@@ -81,6 +83,10 @@ class MediaVideoView constructor(
     var onPreparedCallback: (() -> Unit)? = null
 
     init {
+        val types = context.obtainStyledAttributes(attrs, R.styleable.MediaVideoView)
+        isUseTextureView = types.getBoolean(R.styleable.AliVideoView_isUseTexture, true)
+        types.recycle()
+
         mContainer = FrameLayout(mContext)
         this.addView(
             mContainer, LayoutParams(
@@ -300,7 +306,13 @@ class MediaVideoView constructor(
 
     override fun getVolume(): Int = mAudioManager?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: 0
 
-    override fun getDuration() = mMediaPlayer?.duration?.toLong() ?: 0
+    override fun getDuration(): Long {
+        return try {
+            mMediaPlayer?.duration?.toLong() ?: 0
+        } catch (e: Exception) {
+            0
+        }
+    }
 
     override fun getCurrentPosition(): Long {
         return try {

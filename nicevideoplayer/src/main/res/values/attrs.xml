@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="isUseTexture" format="boolean" />
+
+    <declare-styleable name="AliVideoView">
+        <attr name="isUseTexture" />
+    </declare-styleable>
+
+    <declare-styleable name="IJKVideoView">
+        <attr name="isUseTexture" />
+    </declare-styleable>
+
+    <declare-styleable name="MediaVideoView">
+        <attr name="isUseTexture" />
+    </declare-styleable>
+</resources>

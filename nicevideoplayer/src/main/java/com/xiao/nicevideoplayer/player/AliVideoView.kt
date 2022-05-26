@@ -25,9 +25,12 @@ import com.aliyun.player.source.UrlSource
 import com.xiao.nicevideoplayer.NiceSurfaceView
 import com.xiao.nicevideoplayer.NiceTextureView
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
+import com.xiao.nicevideoplayer.R
 import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
+
+//todo(rjq) 模拟器API 31 32 报错视频解码失败(ERROR_DECODE_VIDEO)
 
 // 问题：1.不支持播放项目raw/assets文件夹中视频
 class AliVideoView(
@@ -57,6 +60,7 @@ class AliVideoView(
     private var currentPosition: Long = 0
     private var isStartToPause = false
     private var isOnlyPrepare = false
+
     @JvmField
     var isUseTextureView = false
 
@@ -81,6 +85,10 @@ class AliVideoView(
     var onPreparedCallback: (() -> Unit)? = null
 
     init {
+        val types = context.obtainStyledAttributes(attrs, R.styleable.AliVideoView)
+        isUseTextureView = types.getBoolean(R.styleable.AliVideoView_isUseTexture, false)
+        types.recycle()
+
         mContainer = FrameLayout(mContext)
         this.addView(
             mContainer, LayoutParams(
@@ -494,6 +502,7 @@ class AliVideoView(
         //出错事件
         mCurrentState = IVideoPlayer.STATE_ERROR
         mController?.onPlayStateChanged(mCurrentState)
+        aliPlayer?.stop()
         LogUtil.d("onError ——> STATE_ERROR: ${it.code},${it.extra},${it.msg}")
     }
     private val mOnRenderingStartListener = OnRenderingStartListener {
