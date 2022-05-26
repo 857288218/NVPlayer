@@ -14,45 +14,65 @@
         android:onClick="tinyWindow"
         android:text="小窗口"/>
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="changeClarity"
-        android:text="全屏切换清晰度"/>
+<!--    <Button-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="16dp"-->
+<!--        android:onClick="changeClarity"-->
+<!--        android:text="全屏切换清晰度"/>-->
 
     <Button
+        android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:onClick="videoList"
-        android:text="视频列表ijkplayer surfaceView"/>
+        android:text="视频列表Ijkplayer surfaceView"/>
 
     <Button
+        android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:onClick="videoList2"
-        android:text="视频列表ijkplayer TextureView"/>
+        android:text="视频列表Ijkplayer TextureView"/>
 
     <Button
+        android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:onClick="videoList3"
-        android:text="视频列表aliplayer surfaceView"/>
+        android:text="视频列表Aliplayer SurfaceView"/>
 
     <Button
+        android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:onClick="videoList4"
-        android:text="视频列表MediaPlayer TextureView"/>
+        android:text="视频列表Aliplayer TextureView"/>
 
     <Button
+        android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:onClick="processHomeKeyInFragment"
-        android:text="Fragment中时处理播放时按下Home键"/>
+        android:onClick="videoList5"
+        android:text="视频列表MediaPlayer SurfaceView"/>
+
+    <Button
+        android:textAllCaps="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:onClick="videoList6"
+        android:text="视频列表MediaPlayer TextureView"/>
+
+<!--    <Button-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="16dp"-->
+<!--        android:onClick="processHomeKeyInFragment"-->
+<!--        android:text="Fragment中时处理播放时按下Home键"/>-->
 </LinearLayout>

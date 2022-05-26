@@ -1,9 +1,9 @@
 package com.xiao.nicevieoplayer.example
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.xiao.nicevieoplayer.R
 
 class TestActivity : AppCompatActivity() {
@@ -25,10 +25,18 @@ class TestActivity : AppCompatActivity() {
     }
 
     fun videoList3(view: View?) {
-        startActivity(Intent(this, AliPlayerListActivity::class.java))
+        startActivity(Intent(this, AliSurfaceListActivity::class.java))
     }
 
     fun videoList4(view: View?) {
+        startActivity(Intent(this, AliTextureListActivity::class.java))
+    }
+
+    fun videoList5(view: View?) {
+        startActivity(Intent(this, MediaSurfaceListActivity::class.java))
+    }
+
+    fun videoList6(view: View?) {
         startActivity(Intent(this, MediaTextureListActivity::class.java))
     }
 

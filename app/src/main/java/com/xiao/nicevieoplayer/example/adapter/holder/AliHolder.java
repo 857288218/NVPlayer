@@ -12,13 +12,15 @@ import android.view.View;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-public class AliSurfaceHolder extends RecyclerView.ViewHolder {
+public class AliHolder extends RecyclerView.ViewHolder {
     public MyVideoViewController mController;
     public AliVideoView mVideoPlayer;
+    private boolean isUseTexture;
 
-    public AliSurfaceHolder(View itemView) {
+    public AliHolder(View itemView, boolean isUseTexture) {
         super(itemView);
         mVideoPlayer = itemView.findViewById(R.id.nice_video_player);
+        this.isUseTexture = isUseTexture;
     }
 
     public void setController(MyVideoViewController controller) {
@@ -44,10 +46,10 @@ public class AliSurfaceHolder extends RecyclerView.ViewHolder {
                              .fitCenter()
                                       )
              .load(video.getVideoUrl())
-//                .placeholder(R.drawable.img_default)
              .into(mController.imageView());
         mVideoPlayer.setUp(video.getVideoUrl(), null);
 //        mVideoPlayer.onlyPrepare();
-        mVideoPlayer.setVideoBackgroundColor(Color.parseColor("#000000"));
+        mVideoPlayer.setVideoBackgroundColor(Color.BLACK);
+        mVideoPlayer.isUseTextureView = isUseTexture;
     }
 }

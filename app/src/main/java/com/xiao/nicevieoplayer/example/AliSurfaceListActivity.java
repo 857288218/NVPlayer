@@ -10,11 +10,11 @@ import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
 import com.xiao.nicevideoplayer.player.AliVideoView;
 import com.xiao.nicevideoplayer.utils.ScreenRotateUtils;
 import com.xiao.nicevieoplayer.R;
-import com.xiao.nicevieoplayer.example.adapter.AliVideoAdapter;
+import com.xiao.nicevieoplayer.example.adapter.AliAdapter;
 import com.xiao.nicevieoplayer.example.base.CompatHomeKeyActivity;
 import com.xiao.nicevieoplayer.example.util.DataUtil;
-//todo 第一次打开列表滑动卡顿
-public class AliPlayerListActivity extends CompatHomeKeyActivity implements ScreenRotateUtils.OrientationChangeListener {
+
+public class AliSurfaceListActivity extends CompatHomeKeyActivity implements ScreenRotateUtils.OrientationChangeListener {
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLayoutManager;
 
@@ -29,7 +29,7 @@ public class AliPlayerListActivity extends CompatHomeKeyActivity implements Scre
         mRecyclerView = findViewById(R.id.recycler_view);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        AliVideoAdapter adapter = new AliVideoAdapter(this, DataUtil.getVideoListData());
+        AliAdapter adapter = new AliAdapter(this, DataUtil.getVideoListData(), false);
         mRecyclerView.setAdapter(adapter);
 
         mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {

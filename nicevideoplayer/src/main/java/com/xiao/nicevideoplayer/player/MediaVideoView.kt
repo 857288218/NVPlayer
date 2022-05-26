@@ -9,12 +9,16 @@ import android.media.MediaPlayer
 import android.media.MediaPlayer.SEEK_CLOSEST
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.Surface
+import android.view.SurfaceHolder
 import android.view.TextureView
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import com.xiao.nicevideoplayer.NiceSurfaceView
 import com.xiao.nicevideoplayer.NiceTextureView
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.VideoViewController
@@ -22,11 +26,14 @@ import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 import java.io.IOException
 
-//问题： 只支持硬解
+// 1.SurfaceView：切后台暂停后，回到前台不主动播放，会黑屏。使用TextureView或AliPlayer没问题；
+//                暂停时切全屏或退出全屏会黑屏。使用TextureView或AliPlayer没问题；
+// 只支持硬解
 class MediaVideoView constructor(
     private val mContext: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(mContext, attrs), IVideoPlayer, TextureView.SurfaceTextureListener {
+) : FrameLayout(mContext, attrs), IVideoPlayer, TextureView.SurfaceTextureListener,
+    SurfaceHolder.Callback {
     private var mCurrentState = IVideoPlayer.STATE_IDLE
     private var mCurrentMode = IVideoPlayer.MODE_NORMAL
 
@@ -37,6 +44,8 @@ class MediaVideoView constructor(
     private var mController: VideoViewController? = null
     private var mSurfaceTexture: SurfaceTexture? = null
     private var mSurface: Surface? = null
+    private var surfaceView: NiceSurfaceView? = null
+    private var surfaceHolder: SurfaceHolder? = null
     private var mUrl: String? = null
     private var mRawId: Int? = null
     private var mHeaders: Map<String, String>? = null
@@ -47,6 +56,8 @@ class MediaVideoView constructor(
     private var isMute = false
     private var isStartToPause = false
     private var isOnlyPrepare = false
+    @JvmField
+    var isUseTextureView = true
 
     // 播放完成回调
     var onCompletionCallback: (() -> Unit)? = null
@@ -79,6 +90,10 @@ class MediaVideoView constructor(
         )
     }
 
+    fun setVideoBackgroundColor(bgColor: Int) {
+        mContainer?.setBackgroundColor(bgColor)
+    }
+
     fun getUrl() = mUrl
 
     override fun setUp(url: String, headers: Map<String, String>?) {
@@ -93,13 +108,12 @@ class MediaVideoView constructor(
     fun setController(controller: VideoViewController?, isAdd: Boolean = true) {
         mContainer?.removeView(mController)
         mController = controller
-        mController?.let {
-            it.reset()
-            it.setVideoPlayer(this)
+        mController?.run {
+            reset()
+            setVideoPlayer(this@MediaVideoView)
             if (isAdd) {
                 mContainer?.addView(
-                    it,
-                    LayoutParams(
+                    this, LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
@@ -113,7 +127,6 @@ class MediaVideoView constructor(
         isLoop = looping
     }
 
-    // 该方法是使手机媒体静音，不是单纯的静音播放的视频
     override fun setMute(mute: Boolean) {
         isMute = mute
         if (mute) {
@@ -139,8 +152,14 @@ class MediaVideoView constructor(
         if (isIdle) {
             initAudioManager()
             initMediaPlayer()
-            initTextureView()
-            addTextureView()
+            if (isUseTextureView) {
+                initTextureView()
+                addTextureView()
+            } else {
+                initSurfaceView()
+                addSurfaceView()
+            }
+            openMediaPlayer()
         } else if (isCompleted || isError || isPaused || isBufferingPaused) {
             restart()
         } else if (isPrepared) {
@@ -207,6 +226,16 @@ class MediaVideoView constructor(
             else -> {
                 LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
             }
+        }
+    }
+
+    // 切换另一个视频播放
+    fun startOtherVideo(videoPath: String) {
+        mMediaPlayer?.run {
+            setUp(videoPath, null)
+            stop()
+            reset()
+            openMediaPlayer()
         }
     }
 
@@ -332,10 +361,59 @@ class MediaVideoView constructor(
         LogUtil.d("onSurfaceTextureAvailable")
         if (mSurfaceTexture == null) {
             mSurfaceTexture = surfaceTexture
-            openMediaPlayer()
+            mSurface = Surface(surfaceTexture)
+            mMediaPlayer?.setSurface(mSurface)
         } else {
+            // 避免暂停时进入(退出)全屏没有画面；进入(退出)全屏会回调onSurfaceTextureAvailable
             mTextureView?.setSurfaceTexture(mSurfaceTexture!!)
         }
+    }
+
+    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+        LogUtil.d("onSurfaceTextureSizeChanged")
+    }
+
+    override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
+        LogUtil.d("onSurfaceTextureDestroyed")
+        return false
+    }
+
+    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+        // LogUtil.d("onSurfaceTextureUpdated")
+    }
+
+    // 使用TextureView
+    private fun initSurfaceView() {
+        if (surfaceView == null) {
+            surfaceView = NiceSurfaceView(mContext)
+            surfaceView!!.holder.addCallback(this)
+        }
+    }
+
+    private fun addSurfaceView() {
+        mContainer!!.removeView(surfaceView)
+        //添加完surfaceView后，会回调surfaceCreated
+        mContainer!!.addView(
+            surfaceView, 0, LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER
+            )
+        )
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        surfaceHolder = holder
+        mMediaPlayer?.setDisplay(holder)
+        LogUtil.d("surfaceCreated")
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        LogUtil.d("surfaceDestroyed")
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        LogUtil.d("surfaceChanged")
     }
 
     private fun openMediaPlayer() {
@@ -360,10 +438,6 @@ class MediaVideoView constructor(
                 } else {
                     setDataSource(mContext.applicationContext, Uri.parse(mUrl), mHeaders)
                 }
-                if (mSurface == null) {
-                    mSurface = Surface(mSurfaceTexture)
-                }
-                setSurface(mSurface)
                 prepareAsync()
                 mCurrentState = IVideoPlayer.STATE_PREPARING
                 mController?.onPlayStateChanged(mCurrentState)
@@ -375,19 +449,6 @@ class MediaVideoView constructor(
         }
     }
 
-    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
-        LogUtil.d("onSurfaceTextureSizeChanged")
-    }
-
-    override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
-        LogUtil.d("onSurfaceTextureDestroyed")
-        return mSurfaceTexture == null
-    }
-
-    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
-        // LogUtil.d("onSurfaceTextureUpdated")
-    }
-
     private val mOnPreparedListener = MediaPlayer.OnPreparedListener { mp ->
         mCurrentState = IVideoPlayer.STATE_PREPARED
         //在视频准备完成后才能获取Duration，mMediaPlayer.getDuration();
@@ -395,6 +456,7 @@ class MediaVideoView constructor(
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
 
+        // seekTo只能在start后调用，start前调用seekTo无作用
         if (!isOnlyPrepare) {
             mp.start()
             customStartToPos()
@@ -417,6 +479,7 @@ class MediaVideoView constructor(
     private val mOnVideoSizeChangedListener =
         MediaPlayer.OnVideoSizeChangedListener { _: MediaPlayer, width, height ->
             mTextureView?.adaptVideoSize(width, height)
+            surfaceView?.adaptVideoSize(width, height)
             LogUtil.d("onVideoSizeChanged ——> width：$width， height：$height")
         }
 
@@ -610,11 +673,17 @@ class MediaVideoView constructor(
             mMediaPlayer?.release()
             mMediaPlayer = null
         }.start()
-        mContainer?.removeView(mTextureView)
-        mSurface?.release()
-        mSurface = null
-        mSurfaceTexture?.release()
-        mSurfaceTexture = null
+        if (isUseTextureView) {
+            mContainer?.removeView(mTextureView)
+            mSurface?.release()
+            mSurface = null
+            mSurfaceTexture?.release()
+            mSurfaceTexture = null
+        } else {
+            surfaceHolder = null
+            // 解决释放播放器黑一下,使用TextureView没有该问题
+            Handler(Looper.getMainLooper()).post { mContainer?.removeView(surfaceView) }
+        }
         mCurrentState = IVideoPlayer.STATE_IDLE
     }
 

@@ -9,25 +9,26 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiao.nicevideoplayer.MyVideoViewController;
 import com.xiao.nicevieoplayer.R;
-import com.xiao.nicevieoplayer.example.adapter.holder.IJKSurfaceHolder;
+import com.xiao.nicevieoplayer.example.adapter.holder.AliHolder;
 import com.xiao.nicevieoplayer.example.bean.Video;
 
 import java.util.List;
 
-public class VideoAdapter extends RecyclerView.Adapter<IJKSurfaceHolder> {
-
+public class AliAdapter extends RecyclerView.Adapter<AliHolder>{
     private Context mContext;
     private List<Video> mVideoList;
+    private boolean isUseTexture;
 
-    public VideoAdapter(Context context, List<Video> videoList) {
+    public AliAdapter(Context context, List<Video> videoList, boolean isUseTexture) {
         mContext = context;
         mVideoList = videoList;
+        this.isUseTexture = isUseTexture;
     }
 
     @Override
-    public IJKSurfaceHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_video, parent, false);
-        IJKSurfaceHolder holder = new IJKSurfaceHolder(itemView);
+    public AliHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_alivideo, parent, false);
+        AliHolder holder = new AliHolder(itemView, isUseTexture);
         MyVideoViewController controller = new MyVideoViewController(mContext);
         holder.setController(controller);
 //        holder.mVideoPlayer.setLooping(true);
@@ -35,7 +36,7 @@ public class VideoAdapter extends RecyclerView.Adapter<IJKSurfaceHolder> {
     }
 
     @Override
-    public void onBindViewHolder(IJKSurfaceHolder holder, int position) {
+    public void onBindViewHolder(AliHolder holder, int position) {
         Video video = mVideoList.get(position);
         holder.bindData(video);
     }

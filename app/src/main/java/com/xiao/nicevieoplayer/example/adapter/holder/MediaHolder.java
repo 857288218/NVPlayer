@@ -1,22 +1,25 @@
 package com.xiao.nicevieoplayer.example.adapter.holder;
 
+import com.bumptech.glide.Glide;
+import com.xiao.nicevideoplayer.MyVideoViewController;
+import com.xiao.nicevideoplayer.player.MediaVideoView;
+import com.xiao.nicevieoplayer.R;
+import com.xiao.nicevieoplayer.example.bean.Video;
+
+import android.graphics.Color;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.xiao.nicevideoplayer.MyVideoViewController;
-import com.xiao.nicevideoplayer.player.IJKTextureVideoView;
-import com.xiao.nicevieoplayer.R;
-import com.xiao.nicevieoplayer.example.bean.Video;
-
-public class IJKTextureHolder extends RecyclerView.ViewHolder {
+public class MediaHolder extends RecyclerView.ViewHolder {
     public MyVideoViewController mController;
-    public IJKTextureVideoView mVideoPlayer;
+    public MediaVideoView mVideoPlayer;
+    private boolean isUseTexture;
 
-    public IJKTextureHolder(View itemView) {
+    public MediaHolder(View itemView, boolean isUseTexture) {
         super(itemView);
+        this.isUseTexture = isUseTexture;
         mVideoPlayer = itemView.findViewById(R.id.nice_video_player);
         // 将列表中的每个视频设置为默认16:9的比例
         ViewGroup.LayoutParams params = mVideoPlayer.getLayoutParams();
@@ -37,10 +40,12 @@ public class IJKTextureHolder extends RecyclerView.ViewHolder {
         mController.setTitle(video.getTitle());
         mController.setLength(video.getLength());
         Glide.with(itemView.getContext())
-                .load(video.getImageUrl())
+             .load(video.getImageUrl())
 //                .placeholder(R.drawable.img_default)
-                .into(mController.imageView());
+             .into(mController.imageView());
 //        mVideoPlayer.onlyPrepare();
         mVideoPlayer.setUp(video.getVideoUrl(), null);
+        mVideoPlayer.setVideoBackgroundColor(Color.BLACK);
+        mVideoPlayer.isUseTextureView = isUseTexture;
     }
 }

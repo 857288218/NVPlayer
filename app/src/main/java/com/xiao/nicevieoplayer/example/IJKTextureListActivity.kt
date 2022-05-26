@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.player.IVideoPlayer
 import com.xiao.nicevieoplayer.R
-import com.xiao.nicevieoplayer.example.adapter.IJKTextureAdapter
+import com.xiao.nicevieoplayer.example.adapter.IJKAdapter
 import com.xiao.nicevieoplayer.example.base.CompatHomeKeyActivity
 import com.xiao.nicevieoplayer.example.util.DataUtil
 
@@ -24,7 +24,7 @@ class IJKTextureListActivity : CompatHomeKeyActivity() {
         mRecyclerView = findViewById(R.id.recycler_view)
         mLayoutManager = LinearLayoutManager(this)
         mRecyclerView?.layoutManager = mLayoutManager
-        val adapter = IJKTextureAdapter(this, DataUtil.getVideoListData())
+        val adapter = IJKAdapter(this, DataUtil.getVideoListData(), true)
         mRecyclerView?.adapter = adapter
         mRecyclerView?.addOnChildAttachStateChangeListener(object :
             RecyclerView.OnChildAttachStateChangeListener {

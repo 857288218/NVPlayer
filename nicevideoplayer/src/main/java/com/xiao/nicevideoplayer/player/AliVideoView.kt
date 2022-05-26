@@ -2,13 +2,16 @@ package com.xiao.nicevideoplayer.player
 
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.graphics.SurfaceTexture
 import android.media.AudioManager
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.Surface
 import android.view.SurfaceHolder
+import android.view.TextureView
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.aliyun.player.AliPlayer
@@ -20,6 +23,7 @@ import com.aliyun.player.bean.InfoCode
 import com.aliyun.player.nativeclass.CacheConfig
 import com.aliyun.player.source.UrlSource
 import com.xiao.nicevideoplayer.NiceSurfaceView
+import com.xiao.nicevideoplayer.NiceTextureView
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
 import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.utils.LogUtil
@@ -29,7 +33,8 @@ import com.xiao.nicevideoplayer.utils.NiceUtil
 class AliVideoView(
     private val mContext: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(mContext, attrs), IVideoPlayer, SurfaceHolder.Callback {
+) : FrameLayout(mContext, attrs), IVideoPlayer, SurfaceHolder.Callback,
+    TextureView.SurfaceTextureListener {
 
     private var mCurrentState = IVideoPlayer.STATE_IDLE
     private var mCurrentMode = IVideoPlayer.MODE_NORMAL
@@ -37,8 +42,8 @@ class AliVideoView(
     private var mAudioManager: AudioManager? = null
     private var aliPlayer: AliPlayer? = null
     private var mContainer: FrameLayout? = null
+    private var mTextureView: NiceTextureView? = null
     private var surfaceView: NiceSurfaceView? = null
-    private var surfaceHolder: SurfaceHolder? = null
     private var mController: VideoViewController? = null
     private var mUrl: String? = null
     private var mHeaders: Map<String, String>? = null
@@ -52,6 +57,8 @@ class AliVideoView(
     private var currentPosition: Long = 0
     private var isStartToPause = false
     private var isOnlyPrepare = false
+    @JvmField
+    var isUseTextureView = false
 
     var onCompletionCallback: (() -> Unit)? = null
 
@@ -142,8 +149,14 @@ class AliVideoView(
         if (isIdle) {
             initAudioManager()
             initMediaPlayer()
-            initSurfaceView()
-            addSurfaceView()
+            if (isUseTextureView) {
+                initTextureView()
+                addTextureView()
+            } else {
+                initSurfaceView()
+                addSurfaceView()
+            }
+            openMediaPlayer()
         } else if (isCompleted || isError || isPaused || isBufferingPaused) {
             restart()
         } else if (isPrepared) {
@@ -327,6 +340,7 @@ class AliVideoView(
         }
     }
 
+    // 使用SurfaceView
     private fun initSurfaceView() {
         if (surfaceView == null) {
             surfaceView = NiceSurfaceView(mContext)
@@ -336,24 +350,18 @@ class AliVideoView(
 
     private fun addSurfaceView() {
         mContainer?.removeView(surfaceView)
-        val params = LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            Gravity.CENTER
-        )
         //添加完surfaceView后，会回调surfaceCreated
-        mContainer?.addView(surfaceView, 0, params)
+        mContainer?.addView(
+            surfaceView, 0, LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER
+            )
+        )
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        if (surfaceHolder == null) {
-            surfaceHolder = holder
-            openMediaPlayer()
-        } else {
-            // activity onPause后，SurfaceView会被销毁，回调surfaceDestroyed()方法,
-            // 回到前台会回调surfaceCreated，需要重新添加holder,否则没有画面
-            aliPlayer!!.setSurface(holder.surface)
-        }
+        aliPlayer!!.setSurface(holder.surface)
         LogUtil.d("surfaceCreated")
     }
 
@@ -367,6 +375,46 @@ class AliVideoView(
         //用来刷新视频画面的。如果view的大小变化了，调用此方法将会更新画面大小，保证视频画面与View的变化一致。
         aliPlayer?.surfaceChanged()
         LogUtil.d("surfaceChanged")
+    }
+
+    // 使用TextureView
+    private fun initTextureView() {
+        if (mTextureView == null) {
+            mTextureView = NiceTextureView(mContext)
+            mTextureView!!.surfaceTextureListener = this
+        }
+    }
+
+    private fun addTextureView() {
+        mContainer?.let {
+            it.removeView(mTextureView)
+            it.addView(
+                mTextureView, 0, LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    Gravity.CENTER
+                )
+            )
+        }
+    }
+
+    override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
+        LogUtil.d("onSurfaceTextureAvailable")
+        aliPlayer?.setSurface(Surface(surface))
+    }
+
+    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+        aliPlayer?.surfaceChanged()
+        LogUtil.d("onSurfaceTextureSizeChanged")
+    }
+
+    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+    }
+
+    override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
+        LogUtil.d("onSurfaceTextureDestroyed")
+        aliPlayer?.setSurface(null)
+        return false
     }
 
     private fun openMediaPlayer() {
@@ -392,7 +440,6 @@ class AliVideoView(
             // 设置dataSource
             val urlSource = UrlSource().apply { uri = mUrl }
             setDataSource(urlSource)
-            setSurface(surfaceHolder?.surface)
             prepare()
             mCurrentState = IVideoPlayer.STATE_PREPARING
             mController?.onPlayStateChanged(mCurrentState)
@@ -429,7 +476,7 @@ class AliVideoView(
 
     private val mOnVideoSizeChangedListener =
         IPlayer.OnVideoSizeChangedListener { width, height ->
-            // surfaceView.adaptVideoSize(width, height);
+            // surfaceView?.adaptVideoSize(width, height);
             LogUtil.d("onVideoSizeChanged ——> width：$width， height：$height")
         }
     private val mOnCompletionListener = IPlayer.OnCompletionListener {
@@ -632,9 +679,12 @@ class AliVideoView(
             aliPlayer?.release()
             aliPlayer = null
         }.start()
-        surfaceHolder = null
-        // 解决释放播放器时黑一下,使用TextureView没有该问题
-        Handler(Looper.getMainLooper()).post { mContainer?.removeView(surfaceView) }
+        if (isUseTextureView) {
+            mContainer?.removeView(mTextureView)
+        } else {
+            // 解决释放播放器时黑一下,使用TextureView没有该问题
+            Handler(Looper.getMainLooper()).post { mContainer?.removeView(surfaceView) }
+        }
         mCurrentState = IVideoPlayer.STATE_IDLE
     }
 

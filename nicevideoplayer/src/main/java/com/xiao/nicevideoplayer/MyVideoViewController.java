@@ -1,8 +1,9 @@
 package com.xiao.nicevideoplayer;
 
 import com.xiao.nicevideoplayer.player.AliVideoView;
-import com.xiao.nicevideoplayer.player.IJKTextureVideoView;
+import com.xiao.nicevideoplayer.player.IJKVideoView;
 import com.xiao.nicevideoplayer.player.IVideoPlayer;
+import com.xiao.nicevideoplayer.player.MediaVideoView;
 import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import android.content.BroadcastReceiver;
@@ -210,7 +211,7 @@ public class MyVideoViewController
                 mBottom.setVisibility(View.GONE);
                 mLength.setVisibility(View.GONE);
                 if (!(mNiceVideoPlayer instanceof AliVideoView)
-                        && !(mNiceVideoPlayer instanceof IJKTextureVideoView)) {
+                        && !(mNiceVideoPlayer instanceof IJKVideoView)) {
                     mCenterStart.setVisibility(View.GONE);
                 }
                 mCenterStart.setVisibility(View.GONE);
@@ -366,16 +367,23 @@ public class MyVideoViewController
         if (mNiceVideoPlayer != null) {
             if (v == tvChangeVideo) {
                 if (mNiceVideoPlayer instanceof AliVideoView) {
-                    ((AliVideoView) mNiceVideoPlayer).startOtherVideo("http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-10_10-20-26.mp4");
+                    ((AliVideoView) mNiceVideoPlayer).startOtherVideo(
+                            "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-10_10-20-26.mp4");
+                } else if (mNiceVideoPlayer instanceof IJKVideoView) {
+                    ((IJKVideoView) mNiceVideoPlayer).startOtherVideo(
+                            "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-10_10-20-26.mp4");
+                } else if (mNiceVideoPlayer instanceof MediaVideoView) {
+                    ((MediaVideoView) mNiceVideoPlayer).startOtherVideo(
+                            "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-03_13-02-41.mp4");
                 }
             } else if (v == mMute) {
                 (mNiceVideoPlayer).setMute(!isMute);
                 isMute = !isMute;
             } else if (v == mCenterStart) {
                 NiceVideoPlayerManager.instance().setCurrentNiceVideoPlayer(mNiceVideoPlayer);
-                mNiceVideoPlayer.startToPause(32000);
+//                mNiceVideoPlayer.startToPause(32000);
 //                mNiceVideoPlayer.start(15000);
-//                mNiceVideoPlayer.start();
+                mNiceVideoPlayer.start();
             } else if (v == mBack) {
                 if (mNiceVideoPlayer.isFullScreen()) {
                     mNiceVideoPlayer.exitFullScreen();

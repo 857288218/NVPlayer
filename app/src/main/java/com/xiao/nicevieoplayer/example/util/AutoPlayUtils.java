@@ -1,12 +1,12 @@
 package com.xiao.nicevieoplayer.example.util;
 
+import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
+import com.xiao.nicevideoplayer.player.IJKVideoView;
+
 import android.graphics.Rect;
 import android.view.View;
 
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoView;
 
 /**
  * 列表自动播放工具类
@@ -21,12 +21,13 @@ public class AutoPlayUtils {
      * @param firstVisiblePosition 首个可见item位置
      * @param lastVisiblePosition  最后一个可见item位置
      */
-    public static void onScrollPlayVideo(RecyclerView recyclerView, int jzvdId, int firstVisiblePosition, int lastVisiblePosition) {
+    public static void onScrollPlayVideo(RecyclerView recyclerView, int jzvdId,
+                                         int firstVisiblePosition, int lastVisiblePosition) {
         for (int i = 0; i <= lastVisiblePosition - firstVisiblePosition; i++) {
             View child = recyclerView.getChildAt(i);
             View view = child.findViewById(jzvdId);
-            if (view instanceof IJKSurfaceVideoView) {
-                IJKSurfaceVideoView player = (IJKSurfaceVideoView) view;
+            if (view instanceof IJKVideoView) {
+                IJKVideoView player = (IJKVideoView) view;
                 if (getViewVisiblePercent(player) == 1f) {
                     if (positionInList != i + firstVisiblePosition) {
                         if (player.isIdle()) {
@@ -46,11 +47,17 @@ public class AutoPlayUtils {
      * @param lastVisiblePosition  最后一个可见item位置
      * @param percent              当item被遮挡percent/1时释放,percent取值0-1
      */
-    public static void onScrollReleaseAllVideos(int firstVisiblePosition, int lastVisiblePosition, float percent) {
-        if (NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer() == null) return;
+    public static void onScrollReleaseAllVideos(int firstVisiblePosition, int lastVisiblePosition,
+                                                float percent) {
+        if (NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer() == null) {
+            return;
+        }
         if (positionInList >= 0) {
-            if ((positionInList <= firstVisiblePosition || positionInList >= lastVisiblePosition - 1)) {
-                if (getViewVisiblePercent((View) NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer()) < percent) {
+            if ((positionInList <= firstVisiblePosition
+                    || positionInList >= lastVisiblePosition - 1)) {
+                if (getViewVisiblePercent(
+                        (View) NiceVideoPlayerManager.instance().getCurrentNiceVideoPlayer())
+                        < percent) {
                     NiceVideoPlayerManager.instance().releaseNiceVideoPlayer();
                 }
             }

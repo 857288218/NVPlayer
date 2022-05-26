@@ -43,9 +43,20 @@
             android:label="在RecylerView视频列表中"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".example.AliPlayerListActivity"
+            android:name=".example.AliSurfaceListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="在RecylerView视频列表中 AliPlayer surfaceView"
+            android:label="在RecylerView视频列表中 AliPlayer SurfaceView"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".example.AliTextureListActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="false"
+            android:label="在RecylerView视频列表中 AliPlayer TextureView"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".example.MediaSurfaceListActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="在RecylerView视频列表中 MediaPlayer SurfaceView"
             android:screenOrientation="portrait" />
         <activity
             android:name=".example.MediaTextureListActivity"

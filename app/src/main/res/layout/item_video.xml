@@ -9,8 +9,7 @@
         android:layout_height="8dp"
         android:background="#f1f1f1"/>
 
-    <com.xiao.nicevideoplayer.player.IJKSurfaceVideoView
-        android:background="#000000"
+    <com.xiao.nicevideoplayer.player.IJKVideoView
         android:id="@+id/nice_video_player"
         android:layout_width="match_parent"
         android:layout_height="200dp"/>

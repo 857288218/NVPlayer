@@ -1,10 +1,9 @@
 package com.xiao.nicevieoplayer.example;
 
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager;
-import com.xiao.nicevideoplayer.player.IJKSurfaceVideoView;
+import com.xiao.nicevideoplayer.player.MediaVideoView;
 import com.xiao.nicevieoplayer.R;
-import com.xiao.nicevieoplayer.example.adapter.MediaTextureAdapter;
-import com.xiao.nicevieoplayer.example.adapter.VideoAdapter;
+import com.xiao.nicevieoplayer.example.adapter.MediaAdapter;
 import com.xiao.nicevieoplayer.example.base.CompatHomeKeyActivity;
 import com.xiao.nicevieoplayer.example.util.DataUtil;
 
@@ -29,7 +28,7 @@ public class MediaTextureListActivity extends CompatHomeKeyActivity {
         mRecyclerView = findViewById(R.id.recycler_view);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        MediaTextureAdapter adapter = new MediaTextureAdapter(this, DataUtil.getVideoListData());
+        MediaAdapter adapter = new MediaAdapter(this, DataUtil.getVideoListData(), true);
         mRecyclerView.setAdapter(adapter);
 
         mRecyclerView.addOnChildAttachStateChangeListener(
@@ -41,7 +40,7 @@ public class MediaTextureListActivity extends CompatHomeKeyActivity {
 
                     @Override
                     public void onChildViewDetachedFromWindow(View view) {
-                        IJKSurfaceVideoView niceVideoPlayer =
+                        MediaVideoView niceVideoPlayer =
                                 view.findViewById(R.id.nice_video_player);
                         if (niceVideoPlayer == NiceVideoPlayerManager.instance()
                                                                      .getCurrentNiceVideoPlayer()) {
