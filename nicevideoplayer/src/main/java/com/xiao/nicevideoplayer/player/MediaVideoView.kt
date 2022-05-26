@@ -165,6 +165,7 @@ class MediaVideoView constructor(
 
     override fun startToPause(pos: Long) {
         isStartToPause = true
+        setMute(true)
         start(pos)
     }
 
@@ -452,6 +453,7 @@ class MediaVideoView constructor(
             mController?.onPlayStateChanged(IVideoPlayer.STATE_RENDERING_START)
             if (isStartToPause) {
                 pause()
+                setMute(false)
                 isStartToPause = false
             } else {
                 mController?.onPlayStateChanged(mCurrentState)

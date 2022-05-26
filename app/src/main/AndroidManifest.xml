@@ -48,6 +48,11 @@
             android:label="在RecylerView视频列表中 AliPlayer surfaceView"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".example.MediaTextureListActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="在RecylerView视频列表中 MediaPlayer TextureView"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".example.ChangeClarityActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="在全屏时可以切换清晰度"

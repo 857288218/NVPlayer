@@ -28,6 +28,10 @@ class TestActivity : AppCompatActivity() {
         startActivity(Intent(this, AliPlayerListActivity::class.java))
     }
 
+    fun videoList4(view: View?) {
+        startActivity(Intent(this, MediaTextureListActivity::class.java))
+    }
+
     fun changeClarity(view: View?) {
         startActivity(Intent(this, ChangeClarityActivity::class.java))
     }

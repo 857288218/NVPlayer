@@ -447,7 +447,7 @@ class AliVideoView(
         //出错事件
         mCurrentState = IVideoPlayer.STATE_ERROR
         mController?.onPlayStateChanged(mCurrentState)
-        LogUtil.d("onError ——> STATE_ERROR")
+        LogUtil.d("onError ——> STATE_ERROR: ${it.code},${it.extra},${it.msg}")
     }
     private val mOnRenderingStartListener = OnRenderingStartListener {
         //首帧渲染显示事件,循环播放时不会回调onRenderingStart
