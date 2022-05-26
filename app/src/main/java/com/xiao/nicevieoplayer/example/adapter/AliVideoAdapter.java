@@ -9,12 +9,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.xiao.nicevideoplayer.MyVideoViewController;
 import com.xiao.nicevieoplayer.R;
-import com.xiao.nicevieoplayer.example.adapter.holder.AliVideoViewHolder;
+import com.xiao.nicevieoplayer.example.adapter.holder.AliSurfaceHolder;
 import com.xiao.nicevieoplayer.example.bean.Video;
 
 import java.util.List;
 
-public class AliVideoAdapter extends RecyclerView.Adapter<AliVideoViewHolder>{
+public class AliVideoAdapter extends RecyclerView.Adapter<AliSurfaceHolder>{
     private Context mContext;
     private List<Video> mVideoList;
 
@@ -24,9 +24,9 @@ public class AliVideoAdapter extends RecyclerView.Adapter<AliVideoViewHolder>{
     }
 
     @Override
-    public AliVideoViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public AliSurfaceHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_alivideo, parent, false);
-        AliVideoViewHolder holder = new AliVideoViewHolder(itemView);
+        AliSurfaceHolder holder = new AliSurfaceHolder(itemView);
         MyVideoViewController controller = new MyVideoViewController(mContext);
         holder.setController(controller);
 //        holder.mVideoPlayer.setLooping(true);
@@ -34,7 +34,7 @@ public class AliVideoAdapter extends RecyclerView.Adapter<AliVideoViewHolder>{
     }
 
     @Override
-    public void onBindViewHolder(AliVideoViewHolder holder, int position) {
+    public void onBindViewHolder(AliSurfaceHolder holder, int position) {
         Video video = mVideoList.get(position);
         holder.bindData(video);
     }

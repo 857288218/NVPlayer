@@ -11,12 +11,12 @@ import com.xiao.nicevideoplayer.player.IJKSurfaceVideoView;
 import com.xiao.nicevieoplayer.R;
 import com.xiao.nicevieoplayer.example.bean.Video;
 
-public class VideoViewHolder extends RecyclerView.ViewHolder {
+public class IJKSurfaceHolder extends RecyclerView.ViewHolder {
 
     public MyVideoViewController mController;
     public IJKSurfaceVideoView mVideoPlayer;
 
-    public VideoViewHolder(View itemView) {
+    public IJKSurfaceHolder(View itemView) {
         super(itemView);
         mVideoPlayer = itemView.findViewById(R.id.nice_video_player);
         // 将列表中的每个视频设置为默认16:9的比例

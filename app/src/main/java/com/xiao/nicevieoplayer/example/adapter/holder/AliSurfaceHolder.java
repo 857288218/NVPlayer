@@ -12,11 +12,11 @@ import android.view.View;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-public class AliVideoViewHolder extends RecyclerView.ViewHolder {
+public class AliSurfaceHolder extends RecyclerView.ViewHolder {
     public MyVideoViewController mController;
     public AliVideoView mVideoPlayer;
 
-    public AliVideoViewHolder(View itemView) {
+    public AliSurfaceHolder(View itemView) {
         super(itemView);
         mVideoPlayer = itemView.findViewById(R.id.nice_video_player);
     }
