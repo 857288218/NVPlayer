@@ -10,8 +10,6 @@ import android.media.MediaPlayer
 import android.media.MediaPlayer.SEEK_CLOSEST
 import android.net.Uri
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.Surface
@@ -340,6 +338,7 @@ class MediaVideoView constructor(
             mTextureView = NiceTextureView(mContext)
             mTextureView!!.surfaceTextureListener = this
 
+            mContainer?.removeView(mTextureView)
             mContainer?.addView(
                 mTextureView, 0, LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -385,6 +384,7 @@ class MediaVideoView constructor(
             surfaceView = NiceSurfaceView(mContext)
             surfaceView!!.holder.addCallback(this)
 
+            mContainer?.removeView(surfaceView)
             //添加完surfaceView后，会回调surfaceCreated
             mContainer?.addView(
                 surfaceView, 0, LayoutParams(
@@ -708,11 +708,7 @@ class MediaVideoView constructor(
             mTextureView = null
         } else {
             surfaceHolder = null
-            // 解决释放播放器黑一下,使用TextureView没有该问题
-            Handler(Looper.getMainLooper()).post {
-                mContainer?.removeView(surfaceView)
-                surfaceView = null
-            }
+            surfaceView = null
         }
         mCurrentState = IVideoPlayer.STATE_IDLE
     }

@@ -5,8 +5,6 @@ import android.content.pm.ActivityInfo
 import android.graphics.SurfaceTexture
 import android.media.AudioManager
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.Surface
@@ -344,6 +342,7 @@ class AliVideoView(
             surfaceView = NiceSurfaceView(mContext)
             surfaceView?.holder?.addCallback(this)
 
+            mContainer?.removeView(surfaceView)
             //添加完surfaceView后，会回调surfaceCreated
             mContainer?.addView(
                 surfaceView, 0, LayoutParams(
@@ -378,6 +377,7 @@ class AliVideoView(
             mTextureView = NiceTextureView(mContext)
             mTextureView!!.surfaceTextureListener = this
 
+            mContainer?.removeView(mTextureView)
             mContainer?.addView(
                 mTextureView, 0, LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -696,11 +696,7 @@ class AliVideoView(
             mContainer?.removeView(mTextureView)
             mTextureView = null
         } else {
-            // 解决释放播放器时黑一下,使用TextureView没有该问题
-            Handler(Looper.getMainLooper()).post {
-                mContainer?.removeView(surfaceView)
-                surfaceView = null
-            }
+            surfaceView = null
         }
         mCurrentState = IVideoPlayer.STATE_IDLE
     }
