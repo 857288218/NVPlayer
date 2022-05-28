@@ -56,6 +56,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.1'
 
     implementation (name:'AliyunPlayer-5.4.6.0-full',ext:'aar')
+//    implementation 'com.aliyun.sdk.android:AliyunPlayer:5.4.6.0-full'
 }
 repositories {
     mavenCentral()

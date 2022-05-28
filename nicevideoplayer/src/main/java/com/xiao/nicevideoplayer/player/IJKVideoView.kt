@@ -160,15 +160,12 @@ class IJKVideoView(
     override fun start() {
         if (isIdle) {
             initAudioManager()
-            initMediaPlayer()
+            openMediaPlayer()
             if (isUseTextureView) {
-                initTextureView()
                 addTextureView()
             } else {
-                initSurfaceView()
                 addSurfaceView()
             }
-            openMediaPlayer()
         } else if (isCompleted || isError || isPaused || isBufferingPaused) {
             restart()
         } else if (isPrepared) {
@@ -327,32 +324,22 @@ class IJKVideoView(
         }
     }
 
-    private fun initMediaPlayer() {
-        if (mMediaPlayer == null) {
-            // 这里player不设置属性，播放错误重新播放会主动调用reset清空属性 然后openMediaPlayer在这里设置
-            mMediaPlayer = IjkMediaPlayer()
-        }
-    }
-
     private fun setOptions() {
-        if (mMediaPlayer != null) {
+        mMediaPlayer?.run {
             // 精准seek
-            mMediaPlayer?.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 1)
+            setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 1)
             // 关闭prepared后自动播放
-            mMediaPlayer?.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0)
-            mMediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+            setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0)
+            setAudioStreamType(AudioManager.STREAM_MUSIC)
         }
     }
 
     // 使用TextureView
-    private fun initTextureView() {
+    private fun addTextureView() {
         if (mTextureView == null) {
             mTextureView = NiceTextureView(mContext)
             mTextureView!!.surfaceTextureListener = this
         }
-    }
-
-    private fun addTextureView() {
         mContainer?.let {
             it.removeView(mTextureView)
             it.addView(
@@ -394,17 +381,14 @@ class IJKVideoView(
     }
 
     // 使用TextureView
-    private fun initSurfaceView() {
+    private fun addSurfaceView() {
         if (surfaceView == null) {
             surfaceView = NiceSurfaceView(mContext)
             surfaceView!!.holder.addCallback(this)
         }
-    }
-
-    private fun addSurfaceView() {
-        mContainer!!.removeView(surfaceView)
+        mContainer?.removeView(surfaceView)
         //添加完surfaceView后，会回调surfaceCreated
-        mContainer!!.addView(
+        mContainer?.addView(
             surfaceView, 0, LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -428,9 +412,12 @@ class IJKVideoView(
     }
 
     private fun openMediaPlayer() {
+        if (mMediaPlayer == null) {
+            mMediaPlayer = IjkMediaPlayer()
+        }
         // 屏幕常亮
         mContainer?.keepScreenOn = true
-        mMediaPlayer?.run {
+        mMediaPlayer!!.run {
             setOptions()
             //设置是否循环播放
             isLooping = isLoop

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.SurfaceTexture
+import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.MediaPlayer.SEEK_CLOSEST
@@ -29,7 +30,6 @@ import java.io.IOException
 
 // 1.SurfaceView：切后台暂停后，回到前台不主动播放，会黑屏。使用TextureView或AliPlayer没问题；
 //                暂停时切全屏或退出全屏会黑屏。使用TextureView或AliPlayer没问题；
-// 只支持硬解
 class MediaVideoView constructor(
     private val mContext: Context,
     attrs: AttributeSet? = null
@@ -157,15 +157,12 @@ class MediaVideoView constructor(
     override fun start() {
         if (isIdle) {
             initAudioManager()
-            initMediaPlayer()
+            openMediaPlayer()
             if (isUseTextureView) {
-                initTextureView()
                 addTextureView()
             } else {
-                initSurfaceView()
                 addSurfaceView()
             }
-            openMediaPlayer()
         } else if (isCompleted || isError || isPaused || isBufferingPaused) {
             restart()
         } else if (isPrepared) {
@@ -338,21 +335,11 @@ class MediaVideoView constructor(
         }
     }
 
-    private fun initMediaPlayer() {
-        if (mMediaPlayer == null) {
-            mMediaPlayer = MediaPlayer()
-            mMediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
-        }
-    }
-
-    private fun initTextureView() {
+    private fun addTextureView() {
         if (mTextureView == null) {
             mTextureView = NiceTextureView(mContext)
             mTextureView!!.surfaceTextureListener = this
         }
-    }
-
-    private fun addTextureView() {
         mContainer?.let {
             it.removeView(mTextureView)
             it.addView(
@@ -394,18 +381,15 @@ class MediaVideoView constructor(
         // LogUtil.d("onSurfaceTextureUpdated")
     }
 
-    // 使用TextureView
-    private fun initSurfaceView() {
+    // 使用SurfaceView
+    private fun addSurfaceView() {
         if (surfaceView == null) {
             surfaceView = NiceSurfaceView(mContext)
             surfaceView!!.holder.addCallback(this)
         }
-    }
-
-    private fun addSurfaceView() {
-        mContainer!!.removeView(surfaceView)
+        mContainer?.removeView(surfaceView)
         //添加完surfaceView后，会回调surfaceCreated
-        mContainer!!.addView(
+        mContainer?.addView(
             surfaceView, 0, LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -429,9 +413,18 @@ class MediaVideoView constructor(
     }
 
     private fun openMediaPlayer() {
+        if (mMediaPlayer == null) {
+            mMediaPlayer = MediaPlayer()
+            mMediaPlayer!!.setAudioAttributes(
+                AudioAttributes
+                    .Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+        }
         // 屏幕常亮
         mContainer?.keepScreenOn = true
-        mMediaPlayer?.run {
+        mMediaPlayer!!.run {
             //设置是否循环播放
             isLooping = isLoop
             setMute(isMute)

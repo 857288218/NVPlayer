@@ -156,22 +156,19 @@ class AliVideoView(
     override fun start() {
         if (isIdle) {
             initAudioManager()
-            initMediaPlayer()
+            openMediaPlayer()
             if (isUseTextureView) {
-                initTextureView()
                 addTextureView()
             } else {
-                initSurfaceView()
                 addSurfaceView()
             }
-            openMediaPlayer()
         } else if (isCompleted || isError || isPaused || isBufferingPaused) {
             restart()
         } else if (isPrepared) {
             aliPlayer?.start()
             customStartToPos()
         } else {
-            LogUtil.d("NiceVideoPlayer mCurrentState == ${mCurrentState}.不能调用start()")
+            LogUtil.d("NiceVideoPlayer mCurrentState = ${mCurrentState}, 不能调用start()")
         }
     }
 
@@ -215,7 +212,7 @@ class AliVideoView(
                 onBufferPlayingCallback?.invoke()
             }
             isError -> {
-                // 将播放器设置的属性都清空
+                // 将播放器设置的属性都清空,重新设置打开
                 aliPlayer?.reset()
                 openMediaPlayer()
             }
@@ -225,7 +222,7 @@ class AliVideoView(
                 aliPlayer?.prepare()
             }
             else -> {
-                LogUtil.d("NiceVideoPlayer在mCurrentState == " + mCurrentState + "时不能调用restart()方法.")
+                LogUtil.d("NiceVideoPlayer在mCurrentState = " + mCurrentState + "时不能调用restart()方法.")
             }
         }
     }
@@ -317,19 +314,13 @@ class AliVideoView(
         }
     }
 
-    private fun initMediaPlayer() {
-        if (aliPlayer == null) {
-            aliPlayer = AliPlayerFactory.createAliPlayer(mContext)
-        }
-    }
-
     private fun setConfig() {
         if (aliPlayer != null) {
             val cacheConfig = CacheConfig()
             //开启缓存功能
             cacheConfig.mEnable = true
             //能够缓存的单个文件最大时长。超过此长度则不缓存
-            cacheConfig.mMaxDurationS = 100
+            cacheConfig.mMaxDurationS = 2 * 60L
             //缓存目录的位置
             cacheConfig.mDir =
                 mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?.absolutePath
@@ -349,14 +340,11 @@ class AliVideoView(
     }
 
     // 使用SurfaceView
-    private fun initSurfaceView() {
+    private fun addSurfaceView() {
         if (surfaceView == null) {
             surfaceView = NiceSurfaceView(mContext)
             surfaceView?.holder?.addCallback(this)
         }
-    }
-
-    private fun addSurfaceView() {
         mContainer?.removeView(surfaceView)
         //添加完surfaceView后，会回调surfaceCreated
         mContainer?.addView(
@@ -369,7 +357,7 @@ class AliVideoView(
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        aliPlayer!!.setSurface(holder.surface)
+        aliPlayer?.setSurface(holder.surface)
         LogUtil.d("surfaceCreated")
     }
 
@@ -386,14 +374,11 @@ class AliVideoView(
     }
 
     // 使用TextureView
-    private fun initTextureView() {
+    private fun addTextureView() {
         if (mTextureView == null) {
             mTextureView = NiceTextureView(mContext)
             mTextureView!!.surfaceTextureListener = this
         }
-    }
-
-    private fun addTextureView() {
         mContainer?.let {
             it.removeView(mTextureView)
             it.addView(
@@ -426,16 +411,18 @@ class AliVideoView(
     }
 
     private fun openMediaPlayer() {
+        if (aliPlayer == null) {
+            aliPlayer = AliPlayerFactory.createAliPlayer(mContext)
+        }
         // 屏幕常亮
         mContainer?.keepScreenOn = true
-        aliPlayer?.run {
+        aliPlayer!!.run {
             setConfig()
             isLoop = isLooping
             this@AliVideoView.setMute(this@AliVideoView.isMute)
             if (videoBgColor != null) {
                 setVideoBackgroundColor(videoBgColor!!)
             }
-            //画面的填充模式
             scaleMode = this@AliVideoView.scaleMode
             setOnPreparedListener(mOnPreparedListener)
             setOnVideoSizeChangedListener(mOnVideoSizeChangedListener)
@@ -572,6 +559,7 @@ class AliVideoView(
                 currentPosition = infoBean.extraValue
                 mController?.updateProgress()
             }
+            else -> LogUtil.d("onInfo ——> code：${infoBean.code}, msg: ${infoBean.extraMsg}")
         }
     }
     private val mOnSeekCompleteListener = IPlayer.OnSeekCompleteListener {

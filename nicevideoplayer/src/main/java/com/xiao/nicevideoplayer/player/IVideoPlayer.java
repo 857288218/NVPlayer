@@ -85,7 +85,7 @@ public interface IVideoPlayer {
     void startToPause(long pos);
 
     /**
-     * 重新播放，播放器被暂停、播放错误、播放完成后，需要调用此方法重新播放
+     * 重新播放，播放器暂停、播放错误、播放完成后，需要调用此方法重新播放
      */
     void restart();
 
@@ -114,7 +114,7 @@ public interface IVideoPlayer {
     void setMute(boolean isMute);
 
     /**
-     * 设置播放速度，目前只有IjkPlayer有效果，原生MediaPlayer暂不支持
+     * 设置播放速度，原生MediaPlayer暂不支持
      *
      * @param speed 播放速度
      */
