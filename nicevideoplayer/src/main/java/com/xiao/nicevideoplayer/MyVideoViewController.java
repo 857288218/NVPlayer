@@ -3,7 +3,6 @@ package com.xiao.nicevideoplayer;
 import com.xiao.nicevideoplayer.player.AliVideoView;
 import com.xiao.nicevideoplayer.player.IJKVideoView;
 import com.xiao.nicevideoplayer.player.IVideoPlayer;
-import com.xiao.nicevideoplayer.player.MediaVideoView;
 import com.xiao.nicevideoplayer.utils.NiceUtil;
 
 import android.content.BroadcastReceiver;
@@ -366,16 +365,8 @@ public class MyVideoViewController
     public void onClick(View v) {
         if (mNiceVideoPlayer != null) {
             if (v == tvChangeVideo) {
-                if (mNiceVideoPlayer instanceof AliVideoView) {
-                    ((AliVideoView) mNiceVideoPlayer).startOtherVideo(
-                            "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-10_10-20-26.mp4");
-                } else if (mNiceVideoPlayer instanceof IJKVideoView) {
-                    ((IJKVideoView) mNiceVideoPlayer).startOtherVideo(
-                            "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-10_10-20-26.mp4");
-                } else if (mNiceVideoPlayer instanceof MediaVideoView) {
-                    ((MediaVideoView) mNiceVideoPlayer).startOtherVideo(
-                            "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-03_13-02-41.mp4");
-                }
+                mNiceVideoPlayer.playOtherVideo(
+                        "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-03_13-02-41.mp4", 0);
             } else if (v == mMute) {
                 (mNiceVideoPlayer).setMute(!isMute);
                 isMute = !isMute;
@@ -428,10 +419,8 @@ public class MyVideoViewController
         Clarity clarity = clarities.get(clarityIndex);
         mClarity.setText(clarity.getGrade());
         long currentPosition = mNiceVideoPlayer.getCurrentPosition();
-        //todo(rjq) 不release,使用stop,reset,setup,openMediaPlayer
-        mNiceVideoPlayer.releasePlayer();
-        mNiceVideoPlayer.setUp(clarity.getVideoUrl(), null);
-        mNiceVideoPlayer.start(currentPosition);
+
+        mNiceVideoPlayer.playOtherVideo(clarity.getVideoUrl(), currentPosition);
     }
 
     @Override

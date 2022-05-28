@@ -130,7 +130,7 @@ class IJKVideoView(
         }
     }
 
-    fun setLooping(looping: Boolean) {
+    override fun setLooping(looping: Boolean) {
         mMediaPlayer?.isLooping = looping
         isLoop = looping
     }
@@ -217,7 +217,7 @@ class IJKVideoView(
             }
             isError -> {
                 mMediaPlayer!!.reset()
-                openMediaPlayer()
+                start()
             }
             isCompleted -> {
                 mController?.onPlayStateChanged(IVideoPlayer.STATE_PREPARED)
@@ -235,13 +235,13 @@ class IJKVideoView(
         }
     }
 
-    // 切换另一个视频播放
-    fun startOtherVideo(videoPath: String) {
+    // start后调用，切换另一个视频播放
+    override fun playOtherVideo(videoPath: String, startPosition: Long) {
         mMediaPlayer?.run {
             setUp(videoPath, null)
             stop()
-            reset()
-            openMediaPlayer()
+            this@IJKVideoView.reset()
+            start(startPosition)
             // 不setSurface(mSurface)画面不会切换,AliVideoView、MediaVideoView不需要调用
             setSurface(mSurface ?: surfaceHolder?.surface)
         }
@@ -254,8 +254,7 @@ class IJKVideoView(
             mController?.onPlayStateChanged(mCurrentState)
             onPauseCallback?.invoke()
             LogUtil.d("STATE_PAUSED")
-        }
-        if (isBufferingPaused) {
+        } else if (isBufferingPlaying) {
             mMediaPlayer!!.pause()
             mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
@@ -266,7 +265,7 @@ class IJKVideoView(
 
     override fun seekTo(pos: Long) {
         if (mMediaPlayer == null) {
-            LogUtil.d("IJKVideoView seekTo需要在start后调用")
+            LogUtil.d("seekTo需要在start后调用")
         } else {
             mMediaPlayer!!.seekTo(pos)
         }
@@ -339,10 +338,8 @@ class IJKVideoView(
         if (mTextureView == null) {
             mTextureView = NiceTextureView(mContext)
             mTextureView!!.surfaceTextureListener = this
-        }
-        mContainer?.let {
-            it.removeView(mTextureView)
-            it.addView(
+
+            mContainer?.addView(
                 mTextureView, 0, LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -385,16 +382,16 @@ class IJKVideoView(
         if (surfaceView == null) {
             surfaceView = NiceSurfaceView(mContext)
             surfaceView!!.holder.addCallback(this)
-        }
-        mContainer?.removeView(surfaceView)
-        //添加完surfaceView后，会回调surfaceCreated
-        mContainer?.addView(
-            surfaceView, 0, LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                Gravity.CENTER
+
+            //添加完surfaceView后，会回调surfaceCreated
+            mContainer?.addView(
+                surfaceView, 0, LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    Gravity.CENTER
+                )
             )
-        )
+        }
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
@@ -672,24 +669,8 @@ class IJKVideoView(
         return false
     }
 
-    override fun releasePlayer() {
-        mAudioManager?.abandonAudioFocus(null)
-        mAudioManager = null
-        Thread {
-            mMediaPlayer?.release()
-            mMediaPlayer = null
-        }.start()
-        if (isUseTextureView) {
-            mContainer?.removeView(mTextureView)
-            mSurface?.release()
-            mSurface = null
-            mSurfaceTexture?.release()
-            mSurfaceTexture = null
-        } else {
-            surfaceHolder = null
-            // 解决释放播放器黑一下,使用TextureView没有该问题
-            Handler(Looper.getMainLooper()).post { mContainer?.removeView(surfaceView) }
-        }
+    override fun reset() {
+        mMediaPlayer?.reset()
         mCurrentState = IVideoPlayer.STATE_IDLE
     }
 
@@ -708,10 +689,31 @@ class IJKVideoView(
             exitTinyWindow()
         }
         mCurrentMode = IVideoPlayer.MODE_NORMAL
-        // 释放播放器
-        releasePlayer()
         // 恢复控制器
         mController?.reset()
         LogUtil.d("release")
+
+        mAudioManager?.abandonAudioFocus(null)
+        mAudioManager = null
+        Thread {
+            mMediaPlayer?.release()
+            mMediaPlayer = null
+        }.start()
+        if (isUseTextureView) {
+            mContainer?.removeView(mTextureView)
+            mSurface?.release()
+            mSurface = null
+            mSurfaceTexture?.release()
+            mSurfaceTexture = null
+            mTextureView = null
+        } else {
+            surfaceHolder = null
+            // 解决释放播放器黑一下,使用TextureView没有该问题
+            Handler(Looper.getMainLooper()).post {
+                mContainer?.removeView(surfaceView)
+                surfaceView = null
+            }
+        }
+        mCurrentState = IVideoPlayer.STATE_IDLE
     }
 }

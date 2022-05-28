@@ -119,9 +119,9 @@ class AliVideoView(
         }
     }
 
-    fun setLooping(isLooping: Boolean) {
-        aliPlayer?.isLoop = isLooping
-        this.isLooping = isLooping
+    override fun setLooping(looping: Boolean) {
+        aliPlayer?.isLoop = looping
+        this.isLooping = looping
     }
 
     override fun setMute(isMute: Boolean) {
@@ -213,8 +213,8 @@ class AliVideoView(
             }
             isError -> {
                 // 将播放器设置的属性都清空,重新设置打开
-                aliPlayer?.reset()
-                openMediaPlayer()
+                reset()
+                start()
             }
             isCompleted -> {
                 mCurrentState = IVideoPlayer.STATE_PREPARING
@@ -227,13 +227,13 @@ class AliVideoView(
         }
     }
 
-    // 切换另一个视频播放
-    fun startOtherVideo(videoPath: String) {
+    // start后调用，切换另一个视频播放
+    override fun playOtherVideo(videoPath: String, startPosition: Long) {
         aliPlayer?.run {
             setUp(videoPath, null)
             stop()
-            reset()
-            openMediaPlayer()
+            this@AliVideoView.reset()
+            start(startPosition)
         }
     }
 
@@ -244,8 +244,7 @@ class AliVideoView(
             mCurrentState = IVideoPlayer.STATE_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
             onPauseCallback?.invoke()
-        }
-        if (isBufferingPlaying) {
+        } else if (isBufferingPlaying) {
             LogUtil.d("STATE_BUFFERING_PAUSED")
             aliPlayer!!.pause()
             mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
@@ -256,7 +255,7 @@ class AliVideoView(
 
     override fun seekTo(pos: Long) {
         if (aliPlayer == null) {
-            LogUtil.d("AliVideoView seekTo需要在start后调用")
+            LogUtil.d("seekTo需要在start后调用")
         } else {
             aliPlayer!!.seekTo(pos, IPlayer.SeekMode.Accurate)
         }
@@ -344,16 +343,16 @@ class AliVideoView(
         if (surfaceView == null) {
             surfaceView = NiceSurfaceView(mContext)
             surfaceView?.holder?.addCallback(this)
-        }
-        mContainer?.removeView(surfaceView)
-        //添加完surfaceView后，会回调surfaceCreated
-        mContainer?.addView(
-            surfaceView, 0, LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                Gravity.CENTER
+
+            //添加完surfaceView后，会回调surfaceCreated
+            mContainer?.addView(
+                surfaceView, 0, LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    Gravity.CENTER
+                )
             )
-        )
+        }
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
@@ -378,10 +377,8 @@ class AliVideoView(
         if (mTextureView == null) {
             mTextureView = NiceTextureView(mContext)
             mTextureView!!.surfaceTextureListener = this
-        }
-        mContainer?.let {
-            it.removeView(mTextureView)
-            it.addView(
+
+            mContainer?.addView(
                 mTextureView, 0, LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -668,20 +665,8 @@ class AliVideoView(
         return false
     }
 
-    override fun releasePlayer() {
-        mAudioManager?.abandonAudioFocus(null)
-        mAudioManager = null
-        //缓解当列表滑动到正在播放的item不可见时，释放会造成列表卡一下的问题
-        Thread {
-            aliPlayer?.release()
-            aliPlayer = null
-        }.start()
-        if (isUseTextureView) {
-            mContainer?.removeView(mTextureView)
-        } else {
-            // 解决释放播放器时黑一下,使用TextureView没有该问题
-            Handler(Looper.getMainLooper()).post { mContainer?.removeView(surfaceView) }
-        }
+    override fun reset() {
+        aliPlayer?.reset()
         mCurrentState = IVideoPlayer.STATE_IDLE
     }
 
@@ -693,16 +678,30 @@ class AliVideoView(
             NiceUtil.savePlayPosition(mContext, mUrl, 0)
         }
         // 退出全屏或小窗口
-        if (isFullScreen) {
-            exitFullScreen()
-        }
-        if (isTinyWindow) {
-            exitTinyWindow()
-        }
+        exitFullScreen()
+        exitTinyWindow()
         mCurrentMode = IVideoPlayer.MODE_NORMAL
         // 恢复控制器
         mController?.reset()
-        // 释放播放器
-        releasePlayer()
+        LogUtil.d("release")
+
+        mAudioManager?.abandonAudioFocus(null)
+        mAudioManager = null
+        //缓解当列表滑动到正在播放的item不可见时，释放会造成列表卡一下的问题
+        Thread {
+            aliPlayer?.release()
+            aliPlayer = null
+        }.start()
+        if (isUseTextureView) {
+            mContainer?.removeView(mTextureView)
+            mTextureView = null
+        } else {
+            // 解决释放播放器时黑一下,使用TextureView没有该问题
+            Handler(Looper.getMainLooper()).post {
+                mContainer?.removeView(surfaceView)
+                surfaceView = null
+            }
+        }
+        mCurrentState = IVideoPlayer.STATE_IDLE
     }
 }

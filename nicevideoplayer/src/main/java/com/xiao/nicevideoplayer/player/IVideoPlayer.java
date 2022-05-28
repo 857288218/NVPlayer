@@ -102,11 +102,9 @@ public interface IVideoPlayer {
     void seekTo(long pos);
 
     /**
-     * 设置音量,指手机媒体音量
-     *
-     * @param volume 音量值
+     * 播放另一个视频: 正在播放视频时，可以调用该方法切换其他视频播放
      */
-    void setVolume(int volume);
+    void playOtherVideo(String videoPath, long startPosition);
 
     /**
      * 设置视频静音，非手机媒体音量静音
@@ -114,11 +112,45 @@ public interface IVideoPlayer {
     void setMute(boolean isMute);
 
     /**
+     * 设置是否循环播放
+     */
+    void setLooping(boolean looping);
+
+    /**
      * 设置播放速度，原生MediaPlayer暂不支持
      *
      * @param speed 播放速度
      */
     void setSpeed(float speed);
+
+    /**
+     * 获取播放速度
+     *
+     * @param speed 播放速度
+     * @return 播放速度
+     */
+    float getSpeed(float speed);
+
+    /**
+     * 获取总时长，毫秒
+     *
+     * @return 视频总时长ms
+     */
+    long getDuration();
+
+    /**
+     * 获取当前播放的位置，毫秒
+     *
+     * @return 当前播放位置，ms
+     */
+    long getCurrentPosition();
+
+    /**
+     * 获取视频缓冲百分比
+     *
+     * @return 缓冲白百分比
+     */
+    int getBufferPercentage();
 
     /**
      * 开始播放时，是否从上一次的位置继续播放
@@ -158,6 +190,13 @@ public interface IVideoPlayer {
     boolean isNormal();
 
     /**
+     * 设置音量,指手机媒体音量
+     *
+     * @param volume 音量值
+     */
+    void setVolume(int volume);
+
+    /**
      * 获取最大音量,指手机媒体音量
      *
      * @return 最大音量值
@@ -170,35 +209,6 @@ public interface IVideoPlayer {
      * @return 当前音量值
      */
     int getVolume();
-
-    /**
-     * 获取总时长，毫秒
-     *
-     * @return 视频总时长ms
-     */
-    long getDuration();
-
-    /**
-     * 获取当前播放的位置，毫秒
-     *
-     * @return 当前播放位置，ms
-     */
-    long getCurrentPosition();
-
-    /**
-     * 获取视频缓冲百分比
-     *
-     * @return 缓冲白百分比
-     */
-    int getBufferPercentage();
-
-    /**
-     * 获取播放速度
-     *
-     * @param speed 播放速度
-     * @return 播放速度
-     */
-    float getSpeed(float speed);
 
     /**
      * 进入全屏模式
@@ -224,14 +234,11 @@ public interface IVideoPlayer {
      */
     boolean exitTinyWindow();
 
-    /**
-     * 此处只释放播放器（如果要释放播放器并恢复控制器状态需要调用{@link #release()}方法） 不管是全屏、小窗口还是Normal状态下控制器的UI都不恢复初始状态
-     * 这样以便在当前播放器状态下可以方便的切换不同的清晰度的视频地址
-     */
-    void releasePlayer();
+    // 重置播放器，使播放器设置的属性全部清空;一般用于播放另一个视频，出错重播
+    void reset();
 
     /**
-     * 释放INiceVideoPlayer，释放后，内部的播放器被释放掉，同时如果在全屏、小窗口模式下都会退出 并且控制器的UI也应该恢复到最初始的状态.
+     * 释放INiceVideoPlayer，释放后，内部的播放器被释放掉，同时如果在全屏、小窗口模式下都会退出且控制器的UI也应该恢复到最初始的状态.
      */
     void release();
 }
