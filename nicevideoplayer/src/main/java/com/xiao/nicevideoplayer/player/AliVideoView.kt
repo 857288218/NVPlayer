@@ -165,6 +165,8 @@ class AliVideoView(
         } else if (isPrepared) {
             aliPlayer?.start()
             customStartToPos()
+        } else if (isPreparing && isOnlyPrepare) {
+            isOnlyPrepare = false
         } else {
             LogUtil.d("NiceVideoPlayer mCurrentState = ${mCurrentState}, 不能调用start()")
         }
@@ -445,10 +447,10 @@ class AliVideoView(
         onPreparedCallback?.invoke()
         LogUtil.d("onPrepared ——> STATE_PREPARED")
         // 不设置autoPlay Prepared后不自动播放 && aliPlayer.start()前seekTo也不会播放只是定位到指定位置
-        if (!isStartToPause && !isOnlyPrepare) {
-            aliPlayer!!.start()
-        }
         if (!isOnlyPrepare) {
+            if (!isStartToPause) {
+                aliPlayer!!.start()
+            }
             customStartToPos()
         }
         isOnlyPrepare = false

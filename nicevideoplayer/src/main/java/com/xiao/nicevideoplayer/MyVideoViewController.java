@@ -209,11 +209,10 @@ public class MyVideoViewController
                 mTop.setVisibility(View.GONE);
                 mBottom.setVisibility(View.GONE);
                 mLength.setVisibility(View.GONE);
-                if (!(mNiceVideoPlayer instanceof AliVideoView)
-                        && !(mNiceVideoPlayer instanceof IJKVideoView)) {
+                if (!(mNiceVideoPlayer instanceof AliVideoView)) {
                     mCenterStart.setVisibility(View.GONE);
                 }
-                mCenterStart.setVisibility(View.GONE);
+//                mCenterStart.setVisibility(View.GONE);
                 break;
             case IVideoPlayer.STATE_PREPARED:
                 mLoading.setVisibility(View.GONE);

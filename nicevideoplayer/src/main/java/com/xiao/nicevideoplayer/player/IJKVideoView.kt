@@ -169,6 +169,8 @@ class IJKVideoView(
         } else if (isPrepared) {
             mMediaPlayer?.start()
             customStartToPos()
+        } else if (isPreparing && isOnlyPrepare) {
+            isOnlyPrepare = false
         } else {
             LogUtil.d("NiceVideoPlayer mCurrentState == ${mCurrentState}.不能调用start()")
         }
