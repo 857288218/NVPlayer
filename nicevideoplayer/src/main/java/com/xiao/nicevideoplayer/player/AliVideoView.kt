@@ -14,12 +14,13 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.aliyun.player.AliPlayer
 import com.aliyun.player.AliPlayerFactory
+import com.aliyun.player.AliPlayerGlobalSettings
 import com.aliyun.player.IPlayer
 import com.aliyun.player.IPlayer.OnLoadingStatusListener
 import com.aliyun.player.IPlayer.OnRenderingStartListener
 import com.aliyun.player.bean.InfoCode
-import com.aliyun.player.nativeclass.CacheConfig
 import com.aliyun.player.source.UrlSource
+import com.xiao.nicevideoplayer.BaseApplication
 import com.xiao.nicevideoplayer.NiceSurfaceView
 import com.xiao.nicevideoplayer.NiceTextureView
 import com.xiao.nicevideoplayer.NiceVideoPlayerManager
@@ -55,6 +56,7 @@ class AliVideoView(
     private var videoBgColor: Int? = null
     private var isMute = false
     private var scaleMode = IPlayer.ScaleMode.SCALE_ASPECT_FIT
+    var enableLocalCache = false
     private var currentPosition: Long = 0
     private var isStartToPause = false
     private var isOnlyPrepare = false
@@ -82,6 +84,19 @@ class AliVideoView(
     // 视频准备完成回调
     var onPreparedCallback: (() -> Unit)? = null
 
+    companion object {
+        init {
+            // 本地缓存 https://help.aliyun.com/document_detail/124714.html#p-gzq-d6a-r9r
+            AliPlayerGlobalSettings.enableLocalCache(
+                true,
+                100 * 1024,
+                BaseApplication.getApplication()
+                    .getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?.absolutePath
+            )
+            AliPlayerGlobalSettings.setCacheFileClearConfig(0, 100, 0)
+        }
+    }
+
     init {
         val types = context.obtainStyledAttributes(attrs, R.styleable.AliVideoView)
         isUseTextureView = types.getBoolean(R.styleable.AliVideoView_isUseTexture, false)
@@ -101,19 +116,21 @@ class AliVideoView(
         mHeaders = headers
     }
 
-    fun setController(controller: VideoViewController?) {
+    fun setController(controller: VideoViewController?, isAdd: Boolean = true) {
         mContainer?.removeView(mController)
         mController = controller
         mController?.let {
             it.reset()
             it.setVideoPlayer(this)
-            mContainer?.addView(
-                it,
-                LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
+            if (isAdd) {
+                mContainer?.addView(
+                    it,
+                    LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -315,21 +332,12 @@ class AliVideoView(
 
     private fun setConfig() {
         if (aliPlayer != null) {
-            //todo(rjq) 本地缓存方法更改，https://help.aliyun.com/document_detail/124714.html#p-gzq-d6a-r9r
-            val cacheConfig = CacheConfig()
-            //开启缓存功能
-            cacheConfig.mEnable = true
-            //能够缓存的单个文件最大时长。超过此长度则不缓存
-            cacheConfig.mMaxDurationS = 2 * 60L
-            //缓存目录的位置
-            cacheConfig.mDir =
-                mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?.absolutePath
-            //缓存目录的最大大小。超过此大小，将会删除最旧的缓存文件
-            cacheConfig.mMaxSizeMB = 200
-            //设置缓存配置给到播放器
-            aliPlayer!!.setCacheConfig(cacheConfig)
-
             val config = aliPlayer!!.config
+
+            // 是否针对播放的URL开启本地缓存，默认值为true。当AliPlayerGlobalSettings处的本地缓开启时，且同时开启此处的本地缓存，
+            // 该URL的本地缓存才会生效；若此处设置为false，则关闭该URL的本地缓存。
+            config.mEnableLocalCache = enableLocalCache
+
             // 配置缓冲区
             // 最大缓冲区时长。单位ms。播放器每次最多加载这么长时间的缓冲数据。
             config.mMaxBufferDuration = 50000
@@ -339,12 +347,14 @@ class AliVideoView(
             config.mStartBufferDuration = 500
 
             // 设置HTTP Header
-            val headers = arrayOfNulls<String>(mHeaders?.size ?: 0)
-            var i = 0
-            mHeaders?.forEach {
-                headers[i++] = "${it.key}:${it.value}"
+            if (mHeaders?.size ?: 0 > 0) {
+                val headers = arrayOfNulls<String>(mHeaders?.size ?: 0)
+                var i = 0
+                mHeaders?.forEach {
+                    headers[i++] = "${it.key}:${it.value}"
+                }
+                config.customHeaders = headers
             }
-            config.customHeaders = headers
             aliPlayer!!.config = config
         }
     }

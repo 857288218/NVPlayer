@@ -684,12 +684,8 @@ class IJKVideoView(
         //     NiceUtil.savePlayPosition(mContext, mUrl, 0)
         // }
         // 退出全屏或小窗口
-        if (isFullScreen) {
-            exitFullScreen()
-        }
-        if (isTinyWindow) {
-            exitTinyWindow()
-        }
+        exitFullScreen()
+        exitTinyWindow()
         mCurrentMode = IVideoPlayer.MODE_NORMAL
         // 恢复控制器
         mController?.reset()
