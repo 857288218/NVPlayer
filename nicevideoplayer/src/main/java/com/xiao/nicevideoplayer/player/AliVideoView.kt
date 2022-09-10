@@ -315,6 +315,7 @@ class AliVideoView(
 
     private fun setConfig() {
         if (aliPlayer != null) {
+            //todo(rjq) 本地缓存方法更改，https://help.aliyun.com/document_detail/124714.html#p-gzq-d6a-r9r
             val cacheConfig = CacheConfig()
             //开启缓存功能
             cacheConfig.mEnable = true
@@ -327,13 +328,23 @@ class AliVideoView(
             cacheConfig.mMaxSizeMB = 200
             //设置缓存配置给到播放器
             aliPlayer!!.setCacheConfig(cacheConfig)
+
             val config = aliPlayer!!.config
+            // 配置缓冲区
             // 最大缓冲区时长。单位ms。播放器每次最多加载这么长时间的缓冲数据。
             config.mMaxBufferDuration = 50000
             //高缓冲时长。单位ms。当网络不好导致加载数据时，如果加载的缓冲时长到达这个值，结束加载状态。
             config.mHighBufferDuration = 3000
             // 起播缓冲区时长。单位ms。这个时间设置越短，起播越快。也可能会导致播放之后很快就会进入加载状态。
             config.mStartBufferDuration = 500
+
+            // 设置HTTP Header
+            val headers = arrayOfNulls<String>(mHeaders?.size ?: 0)
+            var i = 0
+            mHeaders?.forEach {
+                headers[i++] = "${it.key}:${it.value}"
+            }
+            config.customHeaders = headers
             aliPlayer!!.config = config
         }
     }

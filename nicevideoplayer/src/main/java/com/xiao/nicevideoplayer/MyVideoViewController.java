@@ -209,10 +209,10 @@ public class MyVideoViewController
                 mTop.setVisibility(View.GONE);
                 mBottom.setVisibility(View.GONE);
                 mLength.setVisibility(View.GONE);
-                if (!(mNiceVideoPlayer instanceof AliVideoView)) {
-                    mCenterStart.setVisibility(View.GONE);
-                }
-//                mCenterStart.setVisibility(View.GONE);
+//                if (!(mNiceVideoPlayer instanceof AliVideoView)) {
+//                    mCenterStart.setVisibility(View.GONE);
+//                }
+                mCenterStart.setVisibility(View.GONE);
                 break;
             case IVideoPlayer.STATE_PREPARED:
                 mLoading.setVisibility(View.GONE);
@@ -365,7 +365,7 @@ public class MyVideoViewController
         if (mNiceVideoPlayer != null) {
             if (v == tvChangeVideo) {
                 mNiceVideoPlayer.playOtherVideo(
-                        "http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-03_13-02-41.mp4", 0);
+                        "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8", 0);
             } else if (v == mMute) {
                 (mNiceVideoPlayer).setMute(!isMute);
                 isMute = !isMute;

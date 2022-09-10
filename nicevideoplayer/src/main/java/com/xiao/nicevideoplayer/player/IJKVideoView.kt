@@ -84,7 +84,7 @@ class IJKVideoView(
 
     init {
         val types = context.obtainStyledAttributes(attrs, R.styleable.IJKVideoView)
-        isUseTextureView = types.getBoolean(R.styleable.AliVideoView_isUseTexture, true)
+        isUseTextureView = types.getBoolean(R.styleable.IJKVideoView_isUseTexture, true)
         types.recycle()
 
         mContainer = FrameLayout(mContext)
@@ -678,11 +678,11 @@ class IJKVideoView(
 
     override fun release() {
         // 保存播放位置
-        if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
-            NiceUtil.savePlayPosition(mContext, mUrl, currentPosition)
-        } else if (isCompleted) {
-            NiceUtil.savePlayPosition(mContext, mUrl, 0)
-        }
+        // if (isPlaying || isBufferingPlaying || isBufferingPaused || isPaused) {
+        //     NiceUtil.savePlayPosition(mContext, mUrl, currentPosition)
+        // } else if (isCompleted) {
+        //     NiceUtil.savePlayPosition(mContext, mUrl, 0)
+        // }
         // 退出全屏或小窗口
         if (isFullScreen) {
             exitFullScreen()

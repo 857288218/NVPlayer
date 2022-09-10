@@ -82,7 +82,7 @@ class MediaVideoView constructor(
 
     init {
         val types = context.obtainStyledAttributes(attrs, R.styleable.MediaVideoView)
-        isUseTextureView = types.getBoolean(R.styleable.AliVideoView_isUseTexture, true)
+        isUseTextureView = types.getBoolean(R.styleable.MediaVideoView_isUseTexture, true)
         types.recycle()
 
         mContainer = FrameLayout(mContext)
