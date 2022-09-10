@@ -84,6 +84,8 @@ class AliVideoView(
     // 视频准备完成回调
     var onPreparedCallback: (() -> Unit)? = null
 
+    var onVideoSizeChangedListener: ((Int, Int) -> Unit)? = null
+
     companion object {
         init {
             // 本地缓存 https://help.aliyun.com/document_detail/124714.html#p-gzq-d6a-r9r
@@ -493,6 +495,7 @@ class AliVideoView(
         IPlayer.OnVideoSizeChangedListener { width, height ->
             // surfaceView?.adaptVideoSize(width, height);
             LogUtil.d("onVideoSizeChanged ——> width：$width， height：$height")
+            onVideoSizeChangedListener?.invoke(width, height)
         }
     private val mOnCompletionListener = IPlayer.OnCompletionListener {
         //设置了循环播放后，就不会再执行这个回调了
