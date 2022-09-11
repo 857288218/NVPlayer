@@ -35,7 +35,7 @@ public class TinyWindowPlayActivity extends CompatHomeKeyActivity implements Scr
                 .load("http://tanzi27niu.cdsb.mobi/wps/wp-content/uploads/2017/05/2017-05-17_17-30-43.jpg")
                 .placeholder(R.drawable.img_default)
                 .into(controller.imageView());
-        mNiceVideoPlayer.setController(controller);
+        mNiceVideoPlayer.setController(controller, true);
         ScreenRotateUtils.getInstance(getApplicationContext()).setOrientationChangeListener(this);
     }
 
