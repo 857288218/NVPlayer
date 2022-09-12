@@ -57,6 +57,7 @@ class AliVideoView(
     private var isMute = false
     private var scaleMode = IPlayer.ScaleMode.SCALE_ASPECT_FIT
     var enableLocalCache = false
+    var userAgent = ""
     private var currentPosition: Long = 0
     private var isStartToPause = false
     private var isOnlyPrepare = false
@@ -346,17 +347,20 @@ class AliVideoView(
             //高缓冲时长。单位ms。当网络不好导致加载数据时，如果加载的缓冲时长到达这个值，结束加载状态。
             config.mHighBufferDuration = 3000
             // 起播缓冲区时长。单位ms。这个时间设置越短，起播越快。也可能会导致播放之后很快就会进入加载状态。
-            config.mStartBufferDuration = 500
+            config.mStartBufferDuration = 200
 
             // 设置HTTP Header
             if (mHeaders?.size ?: 0 > 0) {
-                val headers = arrayOfNulls<String>(mHeaders?.size ?: 0)
+                val headers = arrayOfNulls<String>(mHeaders!!.size)
                 var i = 0
-                mHeaders?.forEach {
+                mHeaders!!.forEach {
                     headers[i++] = "${it.key}:${it.value}"
                 }
                 config.customHeaders = headers
             }
+            // 设置UserAgent
+            if (userAgent.isNotEmpty())
+                config.mUserAgent = userAgent
             aliPlayer!!.config = config
         }
     }
