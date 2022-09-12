@@ -5,7 +5,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
 import android.widget.FrameLayout
-import com.aliyun.player.AliPlayer
+import com.xiao.nicevideoplayer.player.AliVideoView
 import com.xiao.nicevideoplayer.player.IVideoPlayer
 import com.xiao.nicevideoplayer.utils.NiceUtil
 import java.util.Timer
@@ -177,7 +177,7 @@ abstract class VideoViewController(val mContext: Context) : FrameLayout(mContext
                 if (mNeedChangePosition) {
                     mNiceVideoPlayer!!.seekTo(mNewPosition)
                     hideChangePosition()
-                    if (mNiceVideoPlayer !is AliPlayer) {
+                    if (mNiceVideoPlayer !is AliVideoView) {
                         startUpdateProgressTimer()
                     }
                     canUpdateProgress = true
