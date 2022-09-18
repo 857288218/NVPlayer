@@ -615,7 +615,7 @@ class AliVideoView(
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
-        NiceUtil.hideActionBar(mContext)
+        // NiceUtil.hideActionBar(mContext)
         portraitSystemUiVisibility = activity.window.decorView.systemUiVisibility
         // 全屏显示，隐藏状态栏和导航栏，拉出状态栏和导航栏显示一会儿后消失
         NiceUtil.scanForActivity(mContext).window.decorView.systemUiVisibility =
@@ -656,7 +656,7 @@ class AliVideoView(
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             // 恢复状态栏和导航栏
             activity.window.decorView.systemUiVisibility = portraitSystemUiVisibility
-            NiceUtil.showActionBar(mContext)
+            // NiceUtil.showActionBar(mContext)
             val contentView = NiceUtil.scanForActivity(mContext)
                 .findViewById<ViewGroup>(android.R.id.content)
             contentView.removeView(mContainer)

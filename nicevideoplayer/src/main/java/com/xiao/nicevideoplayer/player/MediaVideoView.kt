@@ -15,7 +15,9 @@ import android.view.Gravity
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.TextureView
+import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.FrameLayout
 import com.xiao.nicevideoplayer.NiceSurfaceView
 import com.xiao.nicevideoplayer.NiceTextureView
@@ -55,6 +57,7 @@ class MediaVideoView constructor(
     private var isMute = false
     private var isStartToPause = false
     private var isOnlyPrepare = false
+    private var portraitSystemUiVisibility = -1
 
     @JvmField
     var isUseTextureView = true
@@ -574,10 +577,25 @@ class MediaVideoView constructor(
     override fun enterFullScreen() {
         if (isFullScreen) return
         NiceVideoPlayerManager.instance()!!.setAllowRelease(false)
-        // 隐藏ActionBar、状态栏，并横屏
+        val activity = NiceUtil.scanForActivity(mContext)
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        // 解决横屏时刘海处变为黑条问题
+        activity.window.attributes = activity.window.attributes.apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
         NiceUtil.hideActionBar(mContext)
-        NiceUtil.scanForActivity(mContext).requestedOrientation =
-            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        portraitSystemUiVisibility = activity.window.decorView.systemUiVisibility
+        // 全屏显示，隐藏状态栏和导航栏，拉出状态栏和导航栏显示一会儿后消失
+        NiceUtil.scanForActivity(mContext).window.decorView.systemUiVisibility =
+            (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         val contentView =
             NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
         if (isTinyWindow) {
@@ -607,9 +625,11 @@ class MediaVideoView constructor(
     override fun exitFullScreen(): Boolean {
         if (isFullScreen) {
             NiceVideoPlayerManager.instance()!!.setAllowRelease(true)
+            val activity = NiceUtil.scanForActivity(mContext)
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            // 恢复状态栏和导航栏
+            activity.window.decorView.systemUiVisibility = portraitSystemUiVisibility
             NiceUtil.showActionBar(mContext)
-            NiceUtil.scanForActivity(mContext).requestedOrientation =
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             val contentView =
                 NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
             contentView.removeView(mContainer)

@@ -90,9 +90,11 @@ abstract class VideoViewController(val mContext: Context) : FrameLayout(mContext
      */
     abstract fun updateProgress()
 
+    open fun canDragChangeVoice() = false
+
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         // 只有全屏的时候才能拖动位置、亮度、声音
-        if (!mNiceVideoPlayer!!.isFullScreen) {
+        if (!(mNiceVideoPlayer!!.isFullScreen && canDragChangeVoice())) {
             return false
         }
         // 只有在播放、暂停、缓冲的时候能够拖动改变位置、亮度和声音
