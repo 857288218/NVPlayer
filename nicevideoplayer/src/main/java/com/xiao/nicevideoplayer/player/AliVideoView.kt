@@ -32,9 +32,8 @@ import com.xiao.nicevideoplayer.VideoViewController
 import com.xiao.nicevideoplayer.utils.LogUtil
 import com.xiao.nicevideoplayer.utils.NiceUtil
 
-//todo(rjq) 模拟器API 31 32 报错视频解码失败(ERROR_DECODE_VIDEO)
-
 // 问题：1.不支持播放项目raw/assets文件夹中视频
+//      2.使用surfaceView在Activity#onStop中暂停正在播放的视频后回到前台不播放视频会黑屏，onPause中没事,使用TextureView没事
 class AliVideoView(
     private val mContext: Context,
     attrs: AttributeSet? = null
