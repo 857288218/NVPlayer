@@ -109,7 +109,12 @@ class MediaVideoView constructor(
     }
 
     fun setUp(rawId: Int) {
-        mRawId = rawId
+        // 该方式在8.0、8.1无法播放raw目录下视频
+//        val afd = resources.openRawResourceFd(mRawId!!)
+//        setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+        // 使用Uri方式播放raw目录中视频，在8.0、8.1需要使用SurfaceView,TextureView无法播放；8.1以上都可以播放
+        isUseTextureView = false
+        mUrl = "android.resource://" + context.packageName + "/" + rawId
     }
 
     fun setController(controller: VideoViewController?, isAdd: Boolean = true) {
@@ -440,12 +445,7 @@ class MediaVideoView constructor(
             setOnBufferingUpdateListener(mOnBufferingUpdateListener)
             // 设置dataSource
             try {
-                if (mRawId != null) {
-                    val afd = resources.openRawResourceFd(mRawId!!)
-                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                } else {
-                    setDataSource(mContext.applicationContext, Uri.parse(mUrl), mHeaders)
-                }
+                setDataSource(mContext.applicationContext, Uri.parse(mUrl), mHeaders)
                 prepareAsync()
                 mCurrentState = IVideoPlayer.STATE_PREPARING
                 mController?.onPlayStateChanged(mCurrentState)

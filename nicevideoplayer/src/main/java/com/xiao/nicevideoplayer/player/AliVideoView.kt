@@ -10,6 +10,7 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.Surface
 import android.view.SurfaceHolder
+import android.view.SurfaceView
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
@@ -46,8 +47,8 @@ class AliVideoView(
     private var mAudioManager: AudioManager? = null
     private var aliPlayer: AliPlayer? = null
     private var mContainer: FrameLayout? = null
-    private var mTextureView: NiceTextureView? = null
-    private var surfaceView: NiceSurfaceView? = null
+    private var mTextureView: TextureView? = null
+    private var surfaceView: SurfaceView? = null
     private var mController: VideoViewController? = null
     private var mUrl: String? = null
     private var mHeaders: Map<String, String>? = null
@@ -64,6 +65,9 @@ class AliVideoView(
     private var isStartToPause = false
     private var isOnlyPrepare = false
     private var portraitSystemUiVisibility = -1
+
+    // 标记是否还未开始播放时候的暂停,即mCurrentState < IVideoPlayer.STATE_PLAYING
+    private var notPlayingPause = false
 
     @JvmField
     var isUseTextureView = false
@@ -273,6 +277,12 @@ class AliVideoView(
             mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
             onBufferPauseCallback?.invoke()
+        } else if (isIdle || isPreparing) {
+            notPlayingPause = true
+        } else if (isPrepared) {
+            // mOnPreparedListener中start了
+            mCurrentState = IVideoPlayer.STATE_PLAYING
+            pause()
         }
     }
 
@@ -482,6 +492,12 @@ class AliVideoView(
                 aliPlayer!!.start()
             }
             customStartToPos()
+            if (notPlayingPause) {
+                // 这里mCurrentState = IVideoPlayer.STATE_PLAYING就是为了满足pause()条件
+                mCurrentState = IVideoPlayer.STATE_PLAYING
+                pause()
+                notPlayingPause = false
+            }
         }
         isOnlyPrepare = false
     }
@@ -589,7 +605,7 @@ class AliVideoView(
                 currentPosition = infoBean.extraValue
                 mController?.updateProgress()
             }
-            else -> LogUtil.d("onInfo ——> code：${infoBean.code}, msg: ${infoBean.extraMsg}")
+            // else -> LogUtil.d("onInfo ——> code：${infoBean.code}, msg: ${infoBean.extraMsg}")
         }
     }
     private val mOnSeekCompleteListener = IPlayer.OnSeekCompleteListener {
