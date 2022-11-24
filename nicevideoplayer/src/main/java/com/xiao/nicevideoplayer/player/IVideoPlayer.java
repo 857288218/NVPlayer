@@ -104,7 +104,7 @@ public interface IVideoPlayer {
     /**
      * 播放另一个视频: 正在播放视频时，可以调用该方法切换其他视频播放
      */
-    void playOtherVideo(String videoPath, long startPosition);
+    void playOtherVideo(String videoPath, long startPosition, boolean isAutoPlay);
 
     /**
      * 设置视频静音，非手机媒体音量静音

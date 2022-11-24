@@ -241,13 +241,17 @@ class MediaVideoView constructor(
     }
 
     // start后调用，切换另一个视频播放
-    override fun playOtherVideo(videoPath: String, startPosition: Long) {
+    override fun playOtherVideo(videoPath: String, startPosition: Long, isAutoPlay: Boolean) {
         mMediaPlayer?.run {
             setUp(videoPath, null)
             stop()
             this@MediaVideoView.reset()
             // openMediaPlayer()
-            start(startPosition)
+            if (isAutoPlay) {
+                start(startPosition)
+            } else {
+                startToPause(startPosition)
+            }
         }
     }
 

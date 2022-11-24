@@ -240,12 +240,16 @@ class IJKVideoView(
     }
 
     // start后调用，切换另一个视频播放
-    override fun playOtherVideo(videoPath: String, startPosition: Long) {
+    override fun playOtherVideo(videoPath: String, startPosition: Long, iaAutoPlay: Boolean) {
         mMediaPlayer?.run {
             setUp(videoPath, null)
             stop()
             this@IJKVideoView.reset()
-            start(startPosition)
+            if (iaAutoPlay) {
+                start(startPosition)
+            } else {
+                startToPause(startPosition)
+            }
             // 不setSurface(mSurface)画面不会切换,AliVideoView、MediaVideoView不需要调用
             setSurface(mSurface ?: surfaceHolder?.surface)
         }
