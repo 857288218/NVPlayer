@@ -146,21 +146,12 @@ class IJKVideoView(
         }
     }
 
-    /**
-     * 是否从上一次的位置继续播放
-     *
-     * @param continueFromLastPosition true从上一次的位置继续播放
-     */
-    override fun continueFromLastPosition(continueFromLastPosition: Boolean) {
-        this.continueFromLastPosition = continueFromLastPosition
-    }
-
     override fun setSpeed(speed: Float) {
         mMediaPlayer?.setSpeed(speed)
     }
 
     override fun start() {
-        if (isIdle) {
+        if (isIdle()) {
             initAudioManager()
             openMediaPlayer()
             if (isUseTextureView) {
@@ -168,12 +159,12 @@ class IJKVideoView(
             } else {
                 addSurfaceView()
             }
-        } else if (isCompleted || isError || isPaused || isBufferingPaused) {
+        } else if (isCompleted() || isError() || isPaused() || isBufferingPaused()) {
             restart()
-        } else if (isPrepared) {
+        } else if (isPrepared()) {
             mMediaPlayer?.start()
             customStartToPos()
-        } else if (isPreparing && isOnlyPrepare) {
+        } else if (isPreparing() && isOnlyPrepare) {
             isOnlyPrepare = false
         } else {
             LogUtil.d("NiceVideoPlayer mCurrentState == ${mCurrentState}.不能调用start()")
@@ -192,12 +183,6 @@ class IJKVideoView(
         start()
     }
 
-    override fun startToPause(pos: Long) {
-        isStartToPause = true
-        setMute(true)
-        start(pos)
-    }
-
     fun onlyPrepare() {
         isOnlyPrepare = true
         start()
@@ -205,25 +190,25 @@ class IJKVideoView(
 
     override fun restart() {
         when {
-            isPaused -> {
+            isPaused() -> {
                 mMediaPlayer!!.start()
                 mCurrentState = IVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
                 LogUtil.d("STATE_PLAYING")
             }
-            isBufferingPaused -> {
+            isBufferingPaused() -> {
                 mMediaPlayer!!.start()
                 mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onBufferPlayingCallback?.invoke()
                 LogUtil.d("STATE_BUFFERING_PLAYING")
             }
-            isError -> {
+            isError() -> {
                 mMediaPlayer!!.reset()
                 start()
             }
-            isCompleted -> {
+            isCompleted() -> {
                 mController?.onPlayStateChanged(IVideoPlayer.STATE_PREPARED)
                 onPreparedCallback?.invoke()
                 mMediaPlayer!!.start()
@@ -239,30 +224,14 @@ class IJKVideoView(
         }
     }
 
-    // start后调用，切换另一个视频播放
-    override fun playOtherVideo(videoPath: String, startPosition: Long, iaAutoPlay: Boolean) {
-        mMediaPlayer?.run {
-            setUp(videoPath, null)
-            stop()
-            this@IJKVideoView.reset()
-            if (iaAutoPlay) {
-                start(startPosition)
-            } else {
-                startToPause(startPosition)
-            }
-            // 不setSurface(mSurface)画面不会切换,AliVideoView、MediaVideoView不需要调用
-            setSurface(mSurface ?: surfaceHolder?.surface)
-        }
-    }
-
     override fun pause() {
-        if (isPlaying) {
+        if (isPlaying()) {
             mMediaPlayer!!.pause()
             mCurrentState = IVideoPlayer.STATE_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
             onPauseCallback?.invoke()
             LogUtil.d("STATE_PAUSED")
-        } else if (isBufferingPlaying) {
+        } else if (isBufferingPlaying()) {
             mMediaPlayer!!.pause()
             mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
@@ -533,11 +502,11 @@ class IJKVideoView(
             LogUtil.d("onInfo ——> MEDIA_INFO_VIDEO_SEEK_RENDERING_START")
         } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
             // MediaPlayer暂时不播放，以缓冲更多的数据；该回调可能早于MEDIA_INFO_VIDEO_RENDERING_START
-            if (isPaused || isBufferingPaused) {
+            if (isPaused() || isBufferingPaused()) {
                 mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
                 onBufferPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
-            } else if (isPlaying || isBufferingPlaying) {
+            } else if (isPlaying() || isBufferingPlaying()) {
                 mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
                 onBufferPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PLAYING")
@@ -545,13 +514,13 @@ class IJKVideoView(
             mController?.onPlayStateChanged(mCurrentState)
         } else if (what == IMediaPlayer.MEDIA_INFO_BUFFERING_END) {
             // 填充缓冲区后，MediaPlayer恢复播放/暂停
-            if (isBufferingPlaying) {
+            if (isBufferingPlaying()) {
                 mCurrentState = IVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
             }
-            if (isBufferingPaused) {
+            if (isBufferingPaused()) {
                 mCurrentState = IVideoPlayer.STATE_PAUSED
                 mController?.onPlayStateChanged(mCurrentState)
                 onPauseCallback?.invoke()
@@ -580,7 +549,7 @@ class IJKVideoView(
      * 以避免Activity重新走生命周期
      */
     override fun enterFullScreen() {
-        if (isFullScreen) return
+        if (isFullScreen()) return
         NiceVideoPlayerManager.instance().setAllowRelease(false)
         val activity = NiceUtil.scanForActivity(mContext)
         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -603,7 +572,7 @@ class IJKVideoView(
                 or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         val contentView =
             NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
-        if (isTinyWindow) {
+        if (isTinyWindow()) {
             contentView.removeView(mContainer)
         } else {
             removeView(mContainer)
@@ -628,7 +597,7 @@ class IJKVideoView(
      */
     @SuppressLint("SourceLockedOrientationActivity")
     override fun exitFullScreen(): Boolean {
-        if (isFullScreen) {
+        if (isFullScreen()) {
             NiceVideoPlayerManager.instance().setAllowRelease(true)
             val activity = NiceUtil.scanForActivity(mContext)
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -655,7 +624,7 @@ class IJKVideoView(
      * 进入小窗口播放，小窗口播放的实现原理与全屏播放类似。
      */
     override fun enterTinyWindow() {
-        if (isTinyWindow) return
+        if (isTinyWindow()) return
         removeView(mContainer)
         val contentView =
             NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
@@ -677,7 +646,7 @@ class IJKVideoView(
      * 退出小窗口播放
      */
     override fun exitTinyWindow(): Boolean {
-        if (isTinyWindow) {
+        if (isTinyWindow()) {
             val contentView =
                 NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
             contentView.removeView(mContainer)

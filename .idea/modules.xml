@@ -4,7 +4,13 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/NVPlayer.iml" filepath="$PROJECT_DIR$/.idea/modules/NVPlayer.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/NVPlayer.app.unitTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.iml" filepath="$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/nicevideoplayer/NVPlayer.nicevideoplayer.unitTest.iml" />
     </modules>
   </component>
 </project>

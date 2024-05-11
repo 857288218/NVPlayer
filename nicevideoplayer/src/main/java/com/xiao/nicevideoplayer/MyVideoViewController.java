@@ -1,7 +1,6 @@
 package com.xiao.nicevideoplayer;
 
 import com.xiao.nicevideoplayer.player.AliVideoView;
-import com.xiao.nicevideoplayer.player.IJKVideoView;
 import com.xiao.nicevideoplayer.player.IVideoPlayer;
 import com.xiao.nicevideoplayer.utils.NiceUtil;
 
@@ -364,8 +363,8 @@ public class MyVideoViewController
     public void onClick(View v) {
         if (mNiceVideoPlayer != null) {
             if (v == tvChangeVideo) {
-                mNiceVideoPlayer.playOtherVideo(
-                        "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8", 4000, false);
+//                mNiceVideoPlayer.playOtherVideo(
+//                        "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8", 4000, false);
             } else if (v == mMute) {
                 (mNiceVideoPlayer).setMute(!isMute);
                 isMute = !isMute;
@@ -419,7 +418,7 @@ public class MyVideoViewController
         mClarity.setText(clarity.getGrade());
         long currentPosition = mNiceVideoPlayer.getCurrentPosition();
 
-        mNiceVideoPlayer.playOtherVideo(clarity.getVideoUrl(), currentPosition, false);
+//        mNiceVideoPlayer.playOtherVideo(clarity.getVideoUrl(), currentPosition, false);
     }
 
     @Override

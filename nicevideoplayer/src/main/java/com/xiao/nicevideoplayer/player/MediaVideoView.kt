@@ -148,20 +148,11 @@ class MediaVideoView constructor(
         }
     }
 
-    /**
-     * 是否从上一次的位置继续播放
-     *
-     * @param continueFromLastPosition true从上一次的位置继续播放
-     */
-    override fun continueFromLastPosition(continueFromLastPosition: Boolean) {
-        this.continueFromLastPosition = continueFromLastPosition
-    }
-
     override fun setSpeed(speed: Float) {
     }
 
     override fun start() {
-        if (isIdle) {
+        if (isIdle()) {
             initAudioManager()
             openMediaPlayer()
             if (isUseTextureView) {
@@ -169,12 +160,12 @@ class MediaVideoView constructor(
             } else {
                 addSurfaceView()
             }
-        } else if (isCompleted || isError || isPaused || isBufferingPaused) {
+        } else if (isCompleted() || isError() || isPaused() || isBufferingPaused()) {
             restart()
-        } else if (isPrepared) {
+        } else if (isPrepared()) {
             mMediaPlayer?.start()
             customStartToPos()
-        } else if (isPreparing && isOnlyPrepare) {
+        } else if (isPreparing() && isOnlyPrepare) {
             isOnlyPrepare = false
         } else {
             LogUtil.d("NiceVideoPlayer mCurrentState == ${mCurrentState}.不能调用start()")
@@ -193,12 +184,6 @@ class MediaVideoView constructor(
         start()
     }
 
-    override fun startToPause(pos: Long) {
-        isStartToPause = true
-        setMute(true)
-        start(pos)
-    }
-
     fun onlyPrepare() {
         isOnlyPrepare = true
         start()
@@ -206,25 +191,25 @@ class MediaVideoView constructor(
 
     override fun restart() {
         when {
-            isPaused -> {
+            isPaused() -> {
                 mMediaPlayer!!.start()
                 mCurrentState = IVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
                 LogUtil.d("STATE_PLAYING")
             }
-            isBufferingPaused -> {
+            isBufferingPaused() -> {
                 mMediaPlayer!!.start()
                 mCurrentState = IVideoPlayer.STATE_BUFFERING_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onBufferPlayingCallback?.invoke()
                 LogUtil.d("STATE_BUFFERING_PLAYING")
             }
-            isError -> {
+            isError() -> {
                 mMediaPlayer!!.reset()
                 start()
             }
-            isCompleted -> {
+            isCompleted() -> {
                 mController?.onPlayStateChanged(IVideoPlayer.STATE_PREPARED)
                 onPreparedCallback?.invoke()
                 mMediaPlayer!!.start()
@@ -240,29 +225,14 @@ class MediaVideoView constructor(
         }
     }
 
-    // start后调用，切换另一个视频播放
-    override fun playOtherVideo(videoPath: String, startPosition: Long, isAutoPlay: Boolean) {
-        mMediaPlayer?.run {
-            setUp(videoPath, null)
-            stop()
-            this@MediaVideoView.reset()
-            // openMediaPlayer()
-            if (isAutoPlay) {
-                start(startPosition)
-            } else {
-                startToPause(startPosition)
-            }
-        }
-    }
-
     override fun pause() {
-        if (isPlaying) {
+        if (isPlaying()) {
             mMediaPlayer!!.pause()
             mCurrentState = IVideoPlayer.STATE_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
             onPauseCallback?.invoke()
             LogUtil.d("STATE_PAUSED")
-        } else if (isBufferingPlaying) {
+        } else if (isBufferingPlaying()) {
             mMediaPlayer!!.pause()
             mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
             mController?.onPlayStateChanged(mCurrentState)
@@ -536,7 +506,7 @@ class MediaVideoView constructor(
             }
         } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
             // MediaPlayer暂时不播放，以缓冲更多的数据
-            if (isPaused || isBufferingPaused) {
+            if (isPaused() || isBufferingPaused()) {
                 mCurrentState = IVideoPlayer.STATE_BUFFERING_PAUSED
                 onBufferPauseCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_START：STATE_BUFFERING_PAUSED")
@@ -548,13 +518,13 @@ class MediaVideoView constructor(
             mController?.onPlayStateChanged(mCurrentState)
         } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
             // 填充缓冲区后，MediaPlayer恢复播放/暂停
-            if (isBufferingPlaying) {
+            if (isBufferingPlaying()) {
                 mCurrentState = IVideoPlayer.STATE_PLAYING
                 mController?.onPlayStateChanged(mCurrentState)
                 onPlayingCallback?.invoke()
                 LogUtil.d("onInfo ——> MEDIA_INFO_BUFFERING_END： STATE_PLAYING")
             }
-            if (isBufferingPaused) {
+            if (isBufferingPaused()) {
                 mCurrentState = IVideoPlayer.STATE_PAUSED
                 mController?.onPlayStateChanged(mCurrentState)
                 onPauseCallback?.invoke()
@@ -579,7 +549,7 @@ class MediaVideoView constructor(
      * 以避免Activity重新走生命周期
      */
     override fun enterFullScreen() {
-        if (isFullScreen) return
+        if (isFullScreen()) return
         NiceVideoPlayerManager.instance()!!.setAllowRelease(false)
         val activity = NiceUtil.scanForActivity(mContext)
         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -602,7 +572,7 @@ class MediaVideoView constructor(
                 or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         val contentView =
             NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
-        if (isTinyWindow) {
+        if (isTinyWindow()) {
             contentView.removeView(mContainer)
         } else {
             removeView(mContainer)
@@ -627,7 +597,7 @@ class MediaVideoView constructor(
      */
     @SuppressLint("SourceLockedOrientationActivity")
     override fun exitFullScreen(): Boolean {
-        if (isFullScreen) {
+        if (isFullScreen()) {
             NiceVideoPlayerManager.instance()!!.setAllowRelease(true)
             val activity = NiceUtil.scanForActivity(mContext)
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -655,7 +625,7 @@ class MediaVideoView constructor(
      * 进入小窗口播放，小窗口播放的实现原理与全屏播放类似。
      */
     override fun enterTinyWindow() {
-        if (isTinyWindow) return
+        if (isTinyWindow()) return
         removeView(mContainer)
         val contentView =
             NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
@@ -677,7 +647,7 @@ class MediaVideoView constructor(
      * 退出小窗口播放
      */
     override fun exitTinyWindow(): Boolean {
-        if (isTinyWindow) {
+        if (isTinyWindow()) {
             val contentView =
                 NiceUtil.scanForActivity(mContext).findViewById<ViewGroup>(android.R.id.content)
             contentView.removeView(mContainer)
@@ -708,10 +678,10 @@ class MediaVideoView constructor(
 //            NiceUtil.savePlayPosition(mContext, mUrl, 0)
 //        }
         // 退出全屏或小窗口
-        if (isFullScreen) {
+        if (isFullScreen()) {
             exitFullScreen()
         }
-        if (isTinyWindow) {
+        if (isTinyWindow()) {
             exitTinyWindow()
         }
         mCurrentMode = IVideoPlayer.MODE_NORMAL

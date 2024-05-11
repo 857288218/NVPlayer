@@ -94,15 +94,15 @@ abstract class VideoViewController(val mContext: Context) : FrameLayout(mContext
 
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         // 只有全屏的时候才能拖动位置、亮度、声音
-        if (!(mNiceVideoPlayer!!.isFullScreen && canDragChangeVoice())) {
+        if (!(mNiceVideoPlayer!!.isFullScreen() && canDragChangeVoice())) {
             return false
         }
         // 只有在播放、暂停、缓冲的时候能够拖动改变位置、亮度和声音
-        if (mNiceVideoPlayer!!.isIdle
-            || mNiceVideoPlayer!!.isError
-            || mNiceVideoPlayer!!.isPreparing
-            || mNiceVideoPlayer!!.isPrepared
-            || mNiceVideoPlayer!!.isCompleted
+        if (mNiceVideoPlayer!!.isIdle()
+            || mNiceVideoPlayer!!.isError()
+            || mNiceVideoPlayer!!.isPreparing()
+            || mNiceVideoPlayer!!.isPrepared()
+            || mNiceVideoPlayer!!.isCompleted()
         ) {
             hideChangePosition()
             hideChangeBrightness()
@@ -130,7 +130,7 @@ abstract class VideoViewController(val mContext: Context) : FrameLayout(mContext
                         cancelUpdateProgressTimer()
                         canUpdateProgress = false
                         mNeedChangePosition = true
-                        mGestureDownPosition = mNiceVideoPlayer!!.currentPosition
+                        mGestureDownPosition = mNiceVideoPlayer!!.getCurrentPosition()
                     } else if (absDeltaY >= THRESHOLD) {
                         if (mDownX < width * 0.5f) {
                             // 左侧改变亮度
@@ -140,12 +140,12 @@ abstract class VideoViewController(val mContext: Context) : FrameLayout(mContext
                         } else {
                             // 右侧改变声音
                             mNeedChangeVolume = true
-                            mGestureDownVolume = mNiceVideoPlayer!!.volume
+                            mGestureDownVolume = mNiceVideoPlayer!!.getVolume()
                         }
                     }
                 }
                 if (mNeedChangePosition) {
-                    val duration = mNiceVideoPlayer!!.duration
+                    val duration = mNiceVideoPlayer!!.getDuration()
                     val toPosition = (mGestureDownPosition + duration * deltaX / width).toLong()
                     mNewPosition = Math.max(0, Math.min(duration, toPosition))
                     val newPositionProgress = (100f * mNewPosition / duration).toInt()
@@ -166,11 +166,11 @@ abstract class VideoViewController(val mContext: Context) : FrameLayout(mContext
                 }
                 if (mNeedChangeVolume) {
                     deltaY = -deltaY
-                    val maxVolume = mNiceVideoPlayer!!.maxVolume
+                    val maxVolume = mNiceVideoPlayer!!.getMaxVolume()
                     val deltaVolume = (maxVolume * deltaY * 3 / height).toInt()
                     var newVolume = mGestureDownVolume + deltaVolume
                     newVolume = Math.max(0, Math.min(maxVolume, newVolume))
-                    mNiceVideoPlayer!!.volume = newVolume
+                    mNiceVideoPlayer!!.setVolume(newVolume)
                     val newVolumeProgress = (100f * newVolume / maxVolume).toInt()
                     showChangeVolume(newVolumeProgress)
                 }

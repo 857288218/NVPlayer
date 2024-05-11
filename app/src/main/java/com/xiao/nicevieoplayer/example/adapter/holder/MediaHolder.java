@@ -26,7 +26,7 @@ public class MediaHolder extends RecyclerView.ViewHolder {
         params.width = itemView.getResources().getDisplayMetrics().widthPixels; // 宽度为屏幕宽度
 //        params.height = (int) (params.width * 9f / 16f);    // 高度为宽度的9/16
         mVideoPlayer.setLayoutParams(params);
-        mVideoPlayer.continueFromLastPosition(false);
+//        mVideoPlayer.continueFromLastPosition(false);
     }
 
     public void setController(MyVideoViewController controller) {
